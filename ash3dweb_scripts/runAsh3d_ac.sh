@@ -18,6 +18,8 @@
 #      and its documentation for any purpose.  We assume no responsibility to provide
 #      technical support to users of this software.
 
+#      Usage: runAsh3d_ac.sh rundir zipname dash_flag advanced_flag
+
 echo "------------------------------------------------------------"
 echo "running runAsh3d_ac.sh"
 echo `date`
@@ -30,7 +32,8 @@ rc=0                                             # error message accumulator
 HOST=`hostname | cut -c1-9`
 echo "HOST=$HOST"
 
-ASH3DROOT="/opt/USGS/Ash3d"
+USGSROOT="/opt/USGS"
+ASH3DROOT="${USGSROOT}/Ash3d"
 WINDROOT="/data/WindFiles"
 
 ASH3DBINDIR="${ASH3DROOT}/bin"
@@ -54,6 +57,7 @@ echo "checking input argument"
 if [ -z $1 ]
 then
     echo "Error: you must specify an input directory containing the file ash3d_input_ac.inp"
+    echo "Usage: runAsh3d_ac.sh rundir zipname dash_flag advanced_flag"
     exit 1
   else
     RUNDIR=$1
@@ -114,7 +118,7 @@ if [ "$ADVANCED_RUN" != "advanced2" ]; then
     cp ${ASH3DSHARE_PP}/USGS_warning3.png .
     ln -s ${ASH3DSHARE_PP}/world_cities.txt .
     cp ${ASH3DSHARE_PP}/concentration_legend.png .
-    cp ${ASH3DSHARE_PP}/CloudHeight_hsv.jpg .
+    cp ${ASH3DSHARE_PP}/CloudHeight_hsv.png .
     cp ${ASH3DSHARE_PP}/CloudLoad_hsv.png .
     cp ${ASH3DSHARE_PP}/cloud_arrival_time.png .
     rc=$((rc + $?))
@@ -236,7 +240,7 @@ zip cloud_arrivaltimes_hours.kmz    CloudArrivalTime.kml   USGS_warning3.png clo
 rc=$((rc + $?))
 zip CloudConcentration.kmz          CloudConcentration.kml USGS_warning3.png concentration_legend.png
 rc=$((rc + $?))
-zip CloudHeight.kmz                 CloudHeight.kml        USGS_warning3.png CloudHeight_hsv.jpg
+zip CloudHeight.kmz                 CloudHeight.kml        USGS_warning3.png CloudHeight_hsv.png
 rc=$((rc + $?))
 zip CloudLoad.kmz                   CloudLoad.kml          USGS_warning3.png CloudLoad_hsv.png
 rc=$((rc + $?))
@@ -325,6 +329,9 @@ if [[ $DASHBOARD_RUN == T* ]]
     echo "Now creating gif images of the hysplit run"
     ${ASH3DWEBSCRIPTDIR}/GFSVolc_to_gif_ac_hysplit.sh
 
+
+    # HFS: add check here to verify GFS is being used, that
+    #      puff is installed and puff windfiles are available
     # Run the puff model with the parameters in the simple input file
     echo "Calling runGFS_puff.sh"
     ${ASH3DWEBSCRIPTDIR}/runGFS_puff.sh
@@ -361,11 +368,11 @@ rc=$((rc + $?))
 echo "removing extraneous files"
 echo "rm -f tmp1.txt tmp2.txt"
 echo "rm -f *.cpt caption.txt fort.18 current_time.txt dep_thick.txt  Temp.epsi cities.xy"
-echo "rm -f USGS_warning3.png concentration_legend.png CloudHeight_hsv.jpg CloudLoad_hsv.png cloud_arrival_time.png"
+echo "rm -f USGS_warning3.png concentration_legend.png CloudHeight_hsv.png CloudLoad_hsv.png cloud_arrival_time.png"
 echo "rm -f world_cities.txt test.txt"
 rm -f tmp1.txt tmp2.txt
 rm -f *.cpt caption.txt fort.18 current_time.txt dep_thick.txt  Temp.epsi cities.xy
-rm -f USGS_warning3.png concentration_legend.png CloudHeight_hsv.jpg CloudLoad_hsv.png cloud_arrival_time.png
+rm -f USGS_warning3.png concentration_legend.png CloudHeight_hsv.png CloudLoad_hsv.png cloud_arrival_time.png
 rm -f world_cities.txt test.txt
 
 if [[ $rc -ne 0 ]]; then
