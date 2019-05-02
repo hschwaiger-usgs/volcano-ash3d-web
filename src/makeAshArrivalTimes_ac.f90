@@ -137,7 +137,7 @@
        real              :: hours, minutes
        integer           :: int_minutes, int_hours
        character(len=5)  :: hoursminutes
-       character(len=1)  :: answer
+       !character(len=1)  :: answer
 
        if (hours.eq.-9999.0) then
              hoursminutes = '--:--'

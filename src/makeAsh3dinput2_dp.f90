@@ -143,7 +143,7 @@
           deposit(iii+1:iii+10,j) = row(1:10)
           !read(11,2) (deposit(i,j), i=1,10)
           !read(11,2) (deposit(i,j), i=11,20)
-2         format(10f10.3)
+!2         format(10f10.3)
         enddo
         if (remainder.gt.0) then
           read(11,*)row(1:remainder)

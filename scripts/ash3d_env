@@ -1,0 +1,3 @@
+#!/bin/bash
+TOPO=/data/TOPO/ETOPO1/ETOPO1_Ice_c_gmt4.nc
+

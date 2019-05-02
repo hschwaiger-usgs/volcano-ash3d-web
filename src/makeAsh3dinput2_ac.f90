@@ -191,7 +191,7 @@
           endif
              !read(11,3) (CloudLoad(i,j,k), i=1,10)
              !read(11,3) (CloudLoad(i,j,k), i=11,20)
-3            format(10f10.3)
+!3            format(10f10.3)
              read(11,*)
          end do
       end do
