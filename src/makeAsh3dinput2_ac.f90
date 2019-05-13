@@ -31,8 +31,10 @@
       real(kind=8) :: dx_new, dy_new, Height_new, Height_new2
       real(kind=8) :: lonLL_new, latLL_new, width_new, width_new2
       real(kind=8) :: aspect_ratio, latUR_new, lonUR_new, resolution
+      real(kind=8) :: CloudLoad_thresh
       integer      :: ifirst, ilast, ilines, i_volcano_old, jfirst, jlast, j_volcano_old
       integer      :: nWriteTimes
+      integer      :: nbuffer
       real(kind=8) :: Duration, e_volume, FineAshFraction, height_km, lat_mean, pHeight
       real(kind=8) :: SimTime, StartTime
       real(kind=8) :: TimeNow, v_lon, v_lat, v_elevation, width_km, WriteTimes(18)
@@ -56,6 +58,8 @@
       resolution = 100.     !model resolution in x and y
       aspect_ratio = 1.5   !map aspect ratio
       FineAshFraction = 0.05  !mass fraction of fine ash that goes into the cloud
+      CloudLoad_thresh = 0.03    !threshold for setting model boundary
+      nbuffer          = 2       !number of cells buffer between ifirst and model boundary
 
 !     TEST READ COMMAND LINE ARGUMENTS
       nargs = iargc()
@@ -199,7 +203,7 @@
       do i=1,ilast                                !find ifirst
         do j=1,jlast
           do k=1,nWriteTimes
-             if (CloudLoad(i,j,k).ge.0.03) then
+             if (CloudLoad(i,j,k).ge.0.01) then
                 ifirst = i
                 go to 100
              end if
@@ -210,7 +214,7 @@
       do i=ilast,1,-1                             !find ilast
         do j=1,jlast
            do k=1,nWriteTimes
-              if (CloudLoad(i,j,k).ge.0.03) then
+              if (CloudLoad(i,j,k).ge.CloudLoad_thresh) then
                  ilast = i
                  go to 200
               end if
@@ -221,7 +225,7 @@
       do j=1,jlast                                !find jfirst
         do i=1,ilast
            do k=1,nWriteTimes
-              if (CloudLoad(i,j,k).ge.0.03) then
+              if (CloudLoad(i,j,k).ge.CloudLoad_thresh) then
                  jfirst = j
                  go to 300
               end if
@@ -232,7 +236,7 @@
       do j=jlast,1,-1                             !find jlast
         do i=1,ilast
            do k=1,nWriteTimes
-              if (CloudLoad(i,j,k).ge.0.03) then
+              if (CloudLoad(i,j,k).ge.CloudLoad_thresh) then
                  jlast = j
                  go to 400
               end if
@@ -248,16 +252,17 @@
       if (jlast .le.j_volcano_old) jlast  = j_volcano_old+1
 
       !calculate new model boundaries
-      lonLL_new  = lonLL_old + float(ifirst-1)*dx_old
-      latLL_new  = latLL_old + float(jfirst-1)*dy_old
-      width_new  = float(ilast-ifirst+1)*dx_old
-      height_new = float(jlast-jfirst+1)*dy_old
+      lonLL_new  = lonLL_old + float(ifirst-nbuffer)*dx_old
+      latLL_new  = latLL_old + float(jfirst-nbuffer)*dy_old
+      width_new  = float(ilast-ifirst+nbuffer)*dx_old
+      height_new = float(jlast-jfirst+nbuffer)*dy_old
       latUR_new  = latLL_new + height_new
       lonUR_new  = lonLL_new + width_new
 
       write(6,*) 'volcano name :', volcano_name
       write(6,*) 'Start time (year, month, day, hour):',iyear, imonth, iday, StartTime
       write(6,*) 'i_volcano_old=', i_volcano_old, ', j_volcano_old=', j_volcano_old
+      write(6,*) 'CloudLoad_thresh = ',CloudLoad_thresh
       write(6,*) 'ifirst=',ifirst, ', ilast=', ilast
       write(6,*) 'jfirst=',jfirst, ', jlast=', jlast
       write(6,*) 'lonLL:  old=',lonLL_old,   ', new=',lonLL_new
