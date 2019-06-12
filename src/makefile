@@ -260,5 +260,6 @@ install:
 	install -m 644 ../share/readme.pdf                 $(INSTALLDIR)/share/
 	install -m 644 ../share/post_proc/*cpt             $(INSTALLDIR)/share/post_proc/
 	install -m 644 ../share/post_proc/*png             $(INSTALLDIR)/share/post_proc/
+	install -m 644 ../share/post_proc/*xy              $(INSTALLDIR)/share/post_proc/
 	install -m 644 ../share/post_proc/world_cities.txt $(INSTALLDIR)/share/post_proc/
 

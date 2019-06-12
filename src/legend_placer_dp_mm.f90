@@ -273,6 +273,7 @@
           ((vclon>legend2x_LL_alt2).and.(vclat>legend2y_LL_alt2)))legend2_alt2_overlaps_volcano=.true.
 
       write(6,*) 'vclon=',vclon,', vclat=',vclat
+      write(6,*) 'legend1x_LR=',legend1x_LR,', legend1y_LR=',legend1y_LR
       write(6,*) 'legend2x_LL_alt=',legend2x_LL_alt,', legend2y_LL_alt=',legend2y_LL_alt
       write(6,*) 'legend1_overlaps_volcano=',legend1_overlaps_volcano
       write(6,*) 'legend1_alt_overlaps_volcano=',legend1_alt_overlaps_volcano

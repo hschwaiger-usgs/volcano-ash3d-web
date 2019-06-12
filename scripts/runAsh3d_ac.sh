@@ -204,9 +204,13 @@ if [ "$CLEANFILES" == "T" ]; then
 fi
 
 # Run the trajectory model with the parameters in the simple input file
-echo "Calling runGFS_traj.sh"
-${ASH3DSCRIPTDIR}/runGFS_traj.sh
-${ASH3DSCRIPTDIR}/GFSVolc_to_gif_ac_traj.sh 0
+if test -r ${USGSROOT}/MetTraj; then
+   echo "Calling runGFS_traj.sh"
+   ${ASH3DSCRIPTDIR}/runGFS_traj.sh
+   ${ASH3DSCRIPTDIR}/GFSVolc_to_gif_ac_traj.sh 0
+else
+   echo "${USGSROOT}/MetTraj does not exist.  Skipping trajectory runs."
+fi
 if [ "$ADVANCED_RUN" = "advanced1" ]; then
     echo "Created input file for advanced tab.  Stopping"
     exit 1
@@ -308,8 +312,11 @@ ${ASH3DSCRIPTDIR}/GFSVolc_to_gif_tvar.sh 3
 
 # Recreating the trajectory plot (using previously calculated trajecties), but using
 # the consistant basemap
-${ASH3DSCRIPTDIR}/GFSVolc_to_gif_ac_traj.sh 1
-
+if test -r *traj*; then
+   ${ASH3DSCRIPTDIR}/GFSVolc_to_gif_ac_traj.sh 1
+else
+   echo "skipping trajectory plots: no traj files exist in this directory."
+fi
 
 if [[ $DASHBOARD_RUN == T* ]]
   then
@@ -361,7 +368,10 @@ mv Ash3d.lst ash3d_runlog.txt
 
 zip $ZIPNAME.zip *UTC*.gif cloud_animation.gif cloud_arrivaltimes_airports.txt ${INFILE_MAIN} \
     cloud_arrivaltimes_airports.kmz cloud_arrivaltimes_hours.kmz CloudConcentration.kmz CloudHeight.kmz \
-    CloudLoad.kmz readme.pdf *rajector*gif ash3d_runlog.txt ftraj*.dat
+    CloudLoad.kmz readme.pdf *rajector*gif ash3d_runlog.txt
+if test -r ftraj*.dat; then
+   zip -a $ZIPNAME.zip traj*.dat
+fi
 rc=$((rc + $?))
 
 echo "removing extraneous files"

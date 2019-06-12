@@ -218,6 +218,9 @@ do
    ### Plot the base map
    echo "${GMTpre[GMTv]} pscoast $AREA $PROJ $BASE $DETAIL $COAST $BOUNDARIES -K  > temp.ps"
    ${GMTpre[GMTv]} pscoast $AREA $PROJ $BASE $DETAIL $COAST $BOUNDARIES -K  > temp.ps
+   ${GMTpre[GMTv]} psxy VAAC_Anchorage.xy   $AREA $PROJ -P -A -K -O -W1p,gray -V >> temp.ps
+   ${GMTpre[GMTv]} psxy VAAC_Montreal.xy    $AREA $PROJ -P -A -K -O -W1p,gray -V >> temp.ps
+   ${GMTpre[GMTv]} psxy VAAC_Washington.xy  $AREA $PROJ -P -A -K -O -W1p,gray -V >> temp.ps
    ##################
    #Plot full grain-size - 3D wind
    if [ $1 -eq 2 ]; then
@@ -290,6 +293,7 @@ EOF
    else
        ${GMTpre[GMTv]} pstext caption.txt $AREA $PROJ -M -Gwhite -Wblack,. -N -O >> temp.ps  #-Wwhite,o paints a white recctangle with outline
    fi
+
 
    #  Convert to gif
    if [ $GMTv -eq 4 ] ; then

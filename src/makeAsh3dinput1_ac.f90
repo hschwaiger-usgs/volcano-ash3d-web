@@ -233,6 +233,12 @@
       dx      = width/20.1
       dy      = height/20.1
       dz      = pHeight/20.
+      if (((pHeight-(v_elevation/1000.))/dz).lt.5.0) then       !Added to ensure enough nodes for low plumes
+            dz = (pHeight-(v_elevation/1000.))/5.0
+      end if
+      !write(6,*) 'plume height=',pHeight,', vent elevation=',v_elevation
+      !write(6,*) 'dz=',dz
+      !stop
 
       if (SimTime.le.8.) then                    !calculate time interval between write times
          WriteInterval = 0.5
