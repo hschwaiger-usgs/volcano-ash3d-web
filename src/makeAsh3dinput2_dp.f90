@@ -197,10 +197,10 @@
       if (jlast .le.j_volcano_old) jlast  = j_volcano_old+1
 
       !calculate new model boundaries
-      lonLL_new  = lonLL_old + float(ifirst-1)*dx_old
-      latLL_new  = latLL_old + float(jfirst-1)*dy_old
-      width_new  = float(ilast-ifirst+1)*dx_old
-      height_new = float(jlast-jfirst+1)*dy_old
+      lonLL_new  = lonLL_old + float(ifirst-2)*dx_old
+      latLL_new  = latLL_old + float(jfirst-2)*dy_old
+      width_new  = float(ilast-ifirst+4)*dx_old
+      height_new = float(jlast-jfirst+4)*dy_old
       latUR_new  = latLL_new + height_new
       lonUR_new  = lonLL_new + width_new
 

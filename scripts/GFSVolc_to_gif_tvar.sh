@@ -221,6 +221,8 @@ do
    ${GMTpre[GMTv]} psxy VAAC_Anchorage.xy   $AREA $PROJ -P -A -K -O -W1p,gray -V >> temp.ps
    ${GMTpre[GMTv]} psxy VAAC_Montreal.xy    $AREA $PROJ -P -A -K -O -W1p,gray -V >> temp.ps
    ${GMTpre[GMTv]} psxy VAAC_Washington.xy  $AREA $PROJ -P -A -K -O -W1p,gray -V >> temp.ps
+   ${GMTpre[GMTv]} psxy VAAC_Washington.xy  $AREA $PROJ -P -A -K -O -W1p,gray -V >> temp.ps
+   ${GMTpre[GMTv]} psxy VAAC_BuenosAires.xy $AREA $PROJ -P -A -K -O -W1p,gray -V >> temp.ps
    ##################
    #Plot full grain-size - 3D wind
    if [ $1 -eq 2 ]; then
