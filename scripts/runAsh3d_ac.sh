@@ -120,6 +120,7 @@ if [ "$ADVANCED_RUN" != "advanced2" ]; then
     cp ${ASH3DSHARE_PP}/CloudHeight_hsv.png .
     cp ${ASH3DSHARE_PP}/CloudLoad_hsv.png .
     cp ${ASH3DSHARE_PP}/cloud_arrival_time.png .
+    cp ${ASH3DSHARE_PP}/VAAC* .
     rc=$((rc + $?))
     echo "rc=$rc"
 

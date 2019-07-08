@@ -33,7 +33,7 @@
       real(kind=8)     :: Duration, Height, HourNow, Hours1900Erupt, Hours1900Now
       real(kind=8)     :: Hours1900Wind
       real(kind=8)     :: hours_since_1900, min_duration, min_vol, pHeight
-      real(kind=8)     :: SimTime, StartTime
+      real(kind=8)     :: SimTime, StartTime, min_SimTime, max_SimTime
       real(kind=8)     :: v_lon, v_lat, v_elevation, width
       real(kind=8)     :: windhour, WriteInterval, WriteTimes(20)
       integer          :: i,iargc,iday,imonth,imonthdays(12),iyear,iwind,iwindformat
@@ -68,6 +68,8 @@
       runtype='now'
       min_vol = 0.0001                                         !minimum erupted volume (km3 DRE)
       min_duration = 0.1                                       !minimum eruption duration (hrs)
+      min_SimTime = 3.0
+      max_SimTime = 120.0
 
 !     get current date & time
       timezone = "+0000"
@@ -145,17 +147,17 @@
                write(6,*) 'the day in that month you entered is:',iday
                write(6,*) 'Program stopped'
          end if
-         if (SimTime.lt.3.0) then
-               write(6,2413) SimTime
+         if (SimTime.lt.min_SimTime) then
+               write(6,2413) SimTime, min_SimTime
 2413           format('Error: you gave a simulation time of ',f6.2,' hours.',/, &
-                      'Simulation time must be =>3 hrs.  Program stopped')
+                      'Simulation time must be =>',f3.1,'.  Program stopped')
                stop 1
          end if
  
          !calculate eruption time before present
          Hours1900Erupt = hours_since_1900(iyear,imonth,iday,StartTime)
          Hours1900Wind  = hours_since_1900(windyear,windmonth,windday,windhour)
-         if ((Hours1900Erupt+SimTime).gt.(Hours1900Wind+99.)) then             !if the time is in the future
+         if ((Hours1900Erupt+SimTime).gt.(Hours1900Wind+198.)) then             !if the time is in the future
               write(6,*) 'Error.  You entered an eruption start time'
               write(6,*) 'that extends beyond the last currently available'
               write(6,*) 'wind file.  the last currently available wind file'
