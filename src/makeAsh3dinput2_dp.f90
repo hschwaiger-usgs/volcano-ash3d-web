@@ -397,7 +397,7 @@
       'yes     #Write out ESRI ASCII file of final deposit thickness?                    ',/, &
       'yes     #Write out        KML file of final deposit thickness?                   ',/, &
       'no      #Write out ESRI ASCII deposit files at specified times?                  ',/, &
-      'yes     #Write out        KML deposit files at specified times?                  ',/, &
+      'no      #Write out        KML deposit files at specified times?                  ',/, &
       'no      #Write out ESRI ASCII files of ash-cloud concentration?                  ',/, &
       'no      #Write out        KML files of ash-cloud concentration ?                 ',/, &
       'no      #Write out ESRI ASCII files of ash-cloud height?                        ',/, &
