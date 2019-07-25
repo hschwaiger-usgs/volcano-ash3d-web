@@ -181,20 +181,20 @@ DLON_INT="$(echo $DLON | sed 's/\.[0-9]*//')"  #convert DLON to an integer
 if [ $DLON_INT -le 2 ]
 then
    BASE="-Ba0.25/a0.25"                  # label every 5 degress lat/lon
-   KMSCALE="20"
-   MISCALE="10"
- elif [ $DLON_INT -le 5 ] ; then
-   BASE="-Ba1/a1"                  # label every 5 degress lat/lon
    KMSCALE="30"
    MISCALE="20"
+ elif [ $DLON_INT -le 5 ] ; then
+   BASE="-Ba1/a1"                  # label every 5 degress lat/lon
+   KMSCALE="50"
+   MISCALE="30"
  elif [ $DLON_INT -le 10 ] ; then
    BASE="-Ba2/a2"                  # label every 5 degress lat/lon
-   KMSCALE="50"
-   MISCALE="25"
- else
-   BASE="-Ba5/a5"                    #label every 10 degrees lat/lon
    KMSCALE="100"
    MISCALE="50"
+ else
+   BASE="-Ba5/a5"                    #label every 10 degrees lat/lon
+   KMSCALE="200"
+   MISCALE="100"
 fi
 #set mapping parameters
 AREA="-R$lonmin/$lonmax/$latmin/$latmax"
@@ -216,10 +216,9 @@ if [ $GMTv -eq 4 ] ; then
     SCALE1="-L${mapscale1_x}/${mapscale1_y}/${km_symbol}/${KMSCALE}+p+f255"  #specs for drawing km scale bar
     SCALE2="-L${mapscale2_x}/${mapscale2_y}/${mile_symbol}/${MISCALE}m+p+f255"  #specs for drawing mile scale bar
 else
-    SCALE1="-L${mapscale1_x}/${mapscale1_y}/${km_symbol}/${KMSCALE} -F"  #specs for drawing km scale bar
-    SCALE2="-L${mapscale2_x}/${mapscale2_y}/${mile_symbol}/${MISCALE}M+ -F"  #specs for drawing mile scale bar
+    SCALE1="-L${mapscale1_x}/${mapscale1_y}/${km_symbol}/${KMSCALE}"  #specs for drawing km scale bar
+    SCALE2="-L${mapscale2_x}/${mapscale2_y}/${mile_symbol}/${MISCALE}M+"  #specs for drawing mile scale bar
 fi
-cp ${ASH3DSHARE_PP}/world_cities.txt .
 ###############################################################################
 #MAKE THE DEPOSIT MAP
 echo " ${volc} : Creating deposit map"

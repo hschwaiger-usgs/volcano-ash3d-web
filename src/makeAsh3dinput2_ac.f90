@@ -37,7 +37,7 @@
       integer      :: nbuffer
       real(kind=8) :: Duration, e_volume, FineAshFraction, height_km, lat_mean, pHeight
       real(kind=8) :: SimTime, StartTime
-      real(kind=8) :: TimeNow, v_lon, v_lat, v_elevation, width_km, WriteTimes(18)
+      real(kind=8) :: TimeNow, v_lon, v_lat, v_elevation, width_km, WriteTimes(24)
       integer      :: i,j,iargc,iday,imonth,iostatus,iwind,iWindFormat,iyear
       integer      :: ii,iii
       integer      :: k,nargs,nWindFiles
@@ -50,7 +50,7 @@
       character(len=5)  :: dum_str
       character(len=80) :: infile, outfile
       character(len=30) :: volcano_name
-      character(len=100):: inputlines(228)
+      character(len=133):: inputlines(310)
 
       write(6,*) 'starting makeAsh3dinput2'
 
@@ -79,7 +79,7 @@
       iostatus=0
       i=1
       do while (iostatus.ge.0)
-         read(10,'(a100)',IOSTAT=iostatus) inputlines(i)
+         read(10,'(a133)',IOSTAT=iostatus) inputlines(i)
          i=i+1
       end do
       ilines=i-2
@@ -154,9 +154,12 @@
          if (TimeNow.lt.10.0) then
             write(TimeNow_char,1) TimeNow
 1           format('_00',f4.2)
-          else
+          else if (TimeNow.lt.100.0) then
             write(TimeNow_char,2) TimeNow
 2           format('_0',f5.2)
+          else
+            write(TimeNow_char,22) TimeNow
+22          format('_',f6.2)
          end if
          CloudLoadFile = 'CloudLoad' // TimeNow_char // 'hrs.dat'
          write(6,*) 'opening ', CloudLoadFile
@@ -466,7 +469,7 @@
       'yes     #Write out 3-D ash concentration at specified times?                       ',/, &
       'netcdf  #format of ash concentration files   ("ascii", "binary", or "netcdf")  ',/, &
       i2,'      #nWriteTimes  ',/, &
-      18f6.2)
+      24f7.2)
 
 
       end program makeAsh3dinput2_ac

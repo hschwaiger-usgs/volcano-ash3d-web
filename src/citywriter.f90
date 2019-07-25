@@ -5,13 +5,17 @@
 
       implicit none
       integer            :: iostatus = 1
-      integer            :: i, iargc, nargs, ncities, nmax
+      integer            :: i, iargc, nargs, ncities, nmax, nread
+      integer            :: resolution                              !# of cells in x and y
       !integer            :: CityRank
       character(len=26)  :: CityName, CityName_out(20)
       character(len=133) :: inputline
       character(len=9)   :: lonLL_char, lonUR_char, latLL_char, latUR_char
-      !character(len=1)   :: answer
-      real(kind=8)       :: CityLat, CityLat_out(20), CityLon, CityLon_out(20), latLL, latUR, lonLL, lonUR
+      character(len=1)   :: answer
+      real(kind=8)       :: CityLat, CityLat_out(20), CityLon, CityLon_out(20)
+      real(kind=8)       :: latLL, latUR, lonLL, lonUR, dlat, dlon, cell_width, cell_height
+      real(kind=8)       :: minspace_x, minspace_y
+      logical            :: IsOkay                 !true if city is not near any others
 
       !write(6,*) 'starting citywriter'
 
@@ -19,6 +23,7 @@
       CityLon_out  = 0.0_8
       CityLat_out  = 0.0_8
       nmax         = 20           !maximum number of cities plotted
+      resolution   = 100          !number of cells in width & height
 
       !read input arguments
       nargs=iargc()
@@ -40,11 +45,19 @@
                stop 1
             end if
 
+
            !make sure everything between -180 and 180 degrees.
            if (lonLL.gt.180.) lonLL=lonLL-360.
            if (lonUR.gt.180.) lonUR=lonUR-360.
            !if the model domain wraps across the prime meridian add 360 to longitude
            if (lonLL.gt.lonUR)        lonUR = lonUR + 360.0
+
+           dlat = latUR-latLL
+           dlon = lonUR-lonLL
+           cell_width = dlon/resolution
+           cell_height = dlat/resolution
+           minspace_x  = 3.0*cell_width
+           minspace_y  = 3.0*cell_height
 
 !           write(6,1) lonLL, lonUR, latLL, latUR
 !1          format('lonLL=',f9.4,', lonUR=',f9.4,', latLL=',f8.4,', latUR=',f8.4)
@@ -60,6 +73,7 @@
            stop 1
       end if
 
+      nread   = 0
       ncities = 0
 
 !      write(6,*) 'reading from world_cities.txt'
@@ -68,29 +82,41 @@
       read(12,*)                                     !skip the first line
       do while ((ncities.lt.nmax).and.(iostatus.ge.0))
          read(12,'(a133)',IOSTAT=iostatus) inputline
-         !read(inputline,*)  CityLon, CityLat
-         !read(inputline,2)  CityName
-!2         format(32x,a20)
           read(inputline,2) CityLon, CityLat, CityName
-          !write(6,*) 'CityLon=',CityLon,', CityLat=',CityLat,', CityName=',CityName
-          !write(6,*) 'continue?'
-          !read(5,'(a1)') answer
-          !if (answer.eq.'n') stop 1
 2        format(f16.4,f15.4,a26)
          if ((CityLon.gt.lonLL).and.(CityLon.lt.lonUR).and. &
              (CityLat.gt.latLL).and.(CityLat.lt.latUR)) then
-               ncities = ncities+1
-               CityName_out(ncities) = CityName
-               CityLon_out(ncities)  = CityLon
-               CityLat_out(ncities)  = CityLat
+               !Make sure this city is not near any others
+               IsOkay=.true.
+!               write(6,4) 
+!4              format('                      City       lon       lat')
+!               write(6,5) CityName, CityLon, CityLat
+!5              format(a26,2f10.4)
+               call space_checker(CityLon_out,CityLat_out,CityName_out,ncities, & 
+                                  CityLon,CityLat, &
+                                  minspace_x,minspace_y,IsOkay)
+               if (IsOkay) then
+                  ncities = ncities+1
+                  CityName_out(ncities) = CityName
+                  CityLon_out(ncities)  = CityLon
+                  CityLat_out(ncities)  = CityLat
+               end if
             !if the model domain crosses over the prime meridian
             else if ((CityLon+360..gt.lonLL).and.(CityLon+360..lt.lonUR).and. &
                      (CityLat.gt.latLL).and.(CityLat.lt.latUR)) then
-               ncities = ncities+1
-               CityName_out(ncities) = CityName
-               CityLon_out(ncities)  = CityLon
-               CityLat_out(ncities)  = CityLat
+               !Make sure this city is not near any others
+               IsOkay=.true.
+               call space_checker(CityLon_out,CityLat_out,CityName_out,ncities, & 
+                                  CityLon,CityLat, &
+                                  minspace_x,minspace_y,IsOkay)
+               if (IsOkay) then
+                  ncities = ncities+1
+                  CityName_out(ncities) = CityName
+                  CityLon_out(ncities)  = CityLon
+                  CityLat_out(ncities)  = CityLat
+               end if
          end if
+         nread=nread+1
       end do
 
 !      write(6,*) 'writing to cities.xy'
@@ -111,3 +137,32 @@
 
       end program citywriter
          
+!***************************************************************************************
+
+      subroutine space_checker(CityLon_out,CityLat_out,CityName_out,ncities, & 
+                                  CityLon,CityLat, &
+                                  minspace_x,minspace_y,IsOkay)
+      implicit none
+      integer            :: icity, ncities
+      real(kind=8)       :: CityLat, CityLat_out(20), CityLon, CityLon_out(20)
+      character(len=26)  :: CityName_out(20)
+      character(len=1)   :: answer
+      real(kind=8)       :: minspace_x, minspace_y
+      logical            :: IsOkay                 !true if city is not near any others
+
+!      write(6,*) 'compare with:'
+      do icity=1,ncities
+!          write(6,6) CityName_out(icity), CityLon_out(icity), CityLat_out(icity)
+!6         format(a26,2f10.4)
+          if ((abs(CityLon_out(icity)-CityLon).lt.minspace_x).and. &
+              (abs(CityLat_out(icity)-CityLat).lt.minspace_y)) then
+!              write(6,*) 'too close'
+              IsOkay=.false.
+              exit
+          end if
+      end do
+      !write(6,*) 'continue?'
+      !read(5,'(a1)') answer
+      !if (answer.eq.'n') stop
+      return
+      end subroutine

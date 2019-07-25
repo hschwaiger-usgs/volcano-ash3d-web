@@ -10,7 +10,7 @@
        character(len=90)   :: inputline_short
        character(len=122) :: inputline_new
        character(len=122) :: inputlines(3000)
-       character(len=5)  :: hoursminutes
+       character(len=6)  :: hoursminutes
        real              :: arrival_time(3000), duration(3000)
        integer           :: i, n_airports
        character(len=1)  :: morethan(3000)
@@ -67,7 +67,7 @@
            end do
        end if
 
-!300    write(11,8)
+       write(11,8)
        close(10)
        close(11)
 
@@ -81,8 +81,8 @@
 2      format(a164)
 3      format(a57,a64)
 !3      format(a57,a65)
-4      format(a57,a22,4x,a5,3x,a1,a5,a24)
-5      format(121x,f9.2,3x,a1,f5.2)
+4      format(a57,a22,3x,a6,2x,a1,a6,a24)
+5      format(121x,f9.2,2x,a1,f6.2)
 6      format(6x,'No airports affected by ash',87x,'|')
 7      format(a122)
 8      format('-----------------------------------------------------------------------------', &
@@ -150,17 +150,17 @@
        implicit none
        real              :: hours, minutes
        integer           :: int_minutes, int_hours
-       character(len=5)  :: hoursminutes
+       character(len=6)  :: hoursminutes
        !character(len=1)  :: answer
 
        if (hours.eq.-9999.0) then
-             hoursminutes = '--:--'
+             hoursminutes = '---:--'
          else
             int_hours = int(hours)
             minutes = (hours-int(hours))*60.0
             int_minutes = int(minutes)
             write(hoursminutes,1) int_hours, int_minutes
-1           format(i2.2,':',i2.2)
+1           format(i3.3,':',i2.2)
        end if
 
        return

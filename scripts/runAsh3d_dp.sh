@@ -111,11 +111,7 @@ if [ "$ADVANCED_RUN" != "advanced2" ]; then
     echo "copying airports file, cities file, and readme file"
     cp ${ASH3DSHARE}/GlobalAirports_ewert.txt .
     cp ${ASH3DSHARE}/readme.pdf .
-    cp ${ASH3DSHARE_PP}/USGS_warning3.png .
     ln -s ${ASH3DSHARE_PP}/world_cities.txt .
-    cp ${ASH3DSHARE_PP}/GE_legend_dep_nws.png .
-    cp ${ASH3DSHARE_PP}/deposit_thickness_hsv.png .
-    cp ${ASH3DSHARE_PP}/deposit_arrival_time.png .
     rc=$((rc + $?))
     echo "rc=$rc"
 
@@ -167,7 +163,7 @@ if [ "$ADVANCED_RUN" != "advanced2" ]; then
     fi
 
     echo "zipping up kml files"
-    zip Deposit_prelim.kmz Deposit.kml deposit_thickness_hsv.png
+    zip Deposit_prelim.kmz Deposit.kml             #deposit_thickness_hsv.png
 
     if [ "$CLEANFILES" == "T" ]; then
         echo "removing kml files"
@@ -229,13 +225,13 @@ if test -r depTS_0001.gnu; then
 fi
 
 echo "zipping up kml files"
-zip ash_arrivaltimes_airports.kmz     AshArrivalTimes.kml     USGS_warning3.png depTS*png
+zip ash_arrivaltimes_airports.kmz     AshArrivalTimes.kml     depTS*png
 rc=$((rc + $?))
-zip deposit_thickness_mm.kmz          Deposit.kml             USGS_warning3.png deposit_thickness_hsv.png
+zip deposit_thickness_mm.kmz          Deposit.kml         
 rc=$((rc + $?))
-zip deposit_thickness_inches.kmz      Deposit_NWS.kml         USGS_warning3.png GE_legend_dep_nws.png
+zip deposit_thickness_inches.kmz      Deposit_NWS.kml      
 rc=$((rc + $?))
-zip ashfall_arrivaltimes_hours.kmz    DepositArrivalTime.kml  USGS_warning3.png deposit_arrival_time.png
+zip ashfall_arrivaltimes_hours.kmz    DepositArrivalTime.kml
 rc=$((rc + $?))
 echo "rc=$rc"
 if [[ "$rc" -gt 0 ]] ; then
@@ -278,7 +274,6 @@ fi
 if [ "$CLEANFILES" == "T" ]; then
     echo "removing extraneous files"
     rm -f *.kml
-    rm GE_legend_dep_nws.png deposit_thickness_hsv.png USGS_warning3.png
     rc=$((rc+$?))
     echo "rc=$rc"
     if [[ "$rc" -gt 0 ]] ; then
@@ -343,7 +338,6 @@ rc=$((rc + $?))
 
 echo "removing extraneous files"
 rm -f world_cities.txt depTS* GlobalAirports_ewert.txt cities.xy
-rm -f deposit_arrival_time.png deposit_thickness.png USGS_warning3.png
 rc=$((rc+$?))
 echo "rc=$rc"
 

@@ -206,8 +206,11 @@ do
     elif [ $DLON_INT -le 20 ] ; then
       BASE="-Ba5/a5"                  # label every 5 degress lat/lon
       DETAIL="-Dh"                        # high resolution coastlines (-Dc=crude)
-    else
+    elif [ $DLON_INT -le 40 ] ; then
       BASE="-Ba10/a10"                    #label every 10 degrees lat/lon
+      DETAIL="-Dl"                        # low resolution coastlines (-Dc=crude)
+    else
+      BASE="-Ba20/a20"                    #label every 10 degrees lat/lon
       DETAIL="-Dl"                        # low resolution coastlines (-Dc=crude)
    fi
    PROJ="-JM${VCLON}/${VCLAT}/20"

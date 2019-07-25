@@ -34,10 +34,10 @@
       real(kind=8) :: lonLL_new, latLL_new, width_new, width_new2
       real(kind=8) :: aspect_ratio, latUR_new, lonUR_new, resolution
       integer      :: ifirst, ilast, ilines, i_volcano_old, jfirst, jlast, j_volcano_old
-      integer      :: nWriteTimes
+      !integer      :: nWriteTimes
       real(kind=8) :: Duration, e_volume, height_km, lat_mean, pHeight
       real(kind=8) :: SimTime, StartTime
-      real(kind=8) :: v_lon, v_lat, v_elevation, width_km, WriteTimes(18)
+      real(kind=8) :: v_lon, v_lat, v_elevation, width_km, WriteInterval
       integer      :: i,iargc,iday,imonth,iostatus,iwind,iWindFormat,iyear,j
       integer      :: ii,iii
       integer      :: nargs,nWindFiles
@@ -50,7 +50,7 @@
       character(len=5)  :: dum_str
       character(len=80) :: infile, outfile
       character(len=30) :: volcano_name
-      character(len=100):: inputlines(250)
+      character(len=100):: inputlines(290)
 
       write(6,*) 'starting makeAsh3dinput2_dp'
 
@@ -91,8 +91,8 @@
       read(inputlines(93),*) iwind, iWindFormat
       read(inputlines(95),*) SimTime
       read(inputlines(97),*) nWindFiles
-      read(inputlines(127),*) nWriteTimes
-      read(inputlines(128),*) (WriteTimes(i), i=1,nWriteTimes)
+      !read(inputlines(127),*) nWriteTimes
+      read(inputlines(128),*) WriteInterval
 
       !write(6,*) 'volcano name=',volcano_name
       !write(6,*) 'lonLL_old=',lonLL_old, ', latLL_old=',latLL_old
@@ -268,8 +268,10 @@
                    iwind, iWindFormat, &
                    SimTime, &
                    nWindFiles, &
-                   nWriteTimes, &
-                   (WriteTimes(i), i=1,nWriteTimes)
+                   WriteInterval
+
+                   !nWriteTimes, &
+                   !(WriteTimes(i), i=1,nWriteTimes)
       do i=129,ilines
          write(12,4) inputlines(i)
 4        format(a100)
@@ -410,7 +412,7 @@
       'no      #Write KML file of cloud arrival times?  ',/, &
       'yes     #Write out 3-D ash concentration at specified times?                       ',/, &
       'netcdf  #format of ash concentration files   ("ascii", "binary", or "netcdf")  ',/, &
-      i2,'      #nWriteTimes  ',/, &
-      18f6.2)
+      '-1      #nWriteTimes  ',/, &
+      f6.2)
 
       end program makeAsh3dinput2_dp

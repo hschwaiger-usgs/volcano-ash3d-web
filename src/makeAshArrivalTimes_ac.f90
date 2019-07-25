@@ -13,7 +13,7 @@
 
        character(len=99) :: inputline
        character(len=99) :: inputlines(3000)
-       character(len=5)  :: hoursminutes
+       character(len=6)  :: hoursminutes
        character(len=1)  :: morethan(3000)
        real              :: arrival_time(3000), duration(3000)
        integer           :: i, n_airports
@@ -42,11 +42,11 @@
        do while (inputline(1:5).ne.'-----')
            if (inputline(80:87).eq.'       ') go to 14
            read(inputline,2) arrival_time(i), morethan(i), duration(i)
-2          format(79x,f7.2,3x,a1,f5.2)
+2          format(79x,f7.2,3x,a1,f6.2)
            if (abs(arrival_time(i)+9999).gt.1.e-05) then
               write(inputlines(i),13) inputline(1:79), hoursminutes(arrival_time(i)), &
                                       morethan(i),  hoursminutes(duration(i))
-13            format(a79,2x,a5,3x,a1,a5,'   |')
+13            format(a79,1x,a6,2x,a1,a6,'   |')
               i = i+1
            end if
 14         read(10,1) inputline
@@ -136,17 +136,17 @@
        implicit none
        real              :: hours, minutes
        integer           :: int_minutes, int_hours
-       character(len=5)  :: hoursminutes
+       character(len=6)  :: hoursminutes
        !character(len=1)  :: answer
 
        if (hours.eq.-9999.0) then
-             hoursminutes = '--:--'
+             hoursminutes = '---:--'
          else
             int_hours = int(hours)
             minutes = (hours-int(hours))*60.0
             int_minutes = int(minutes)
             write(hoursminutes,1) int_hours, int_minutes
-1           format(i2.2,':',i2.2)
+1           format(i3.3,':',i2.2)
        end if
 
        return

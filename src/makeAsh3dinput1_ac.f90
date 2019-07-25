@@ -64,7 +64,7 @@
 !     set default values
       iwind=4
       iwindformat=20
-      nWindFiles=34
+      nWindFiles=67
       runtype='now'
       min_vol = 0.0001                                         !minimum erupted volume (km3 DRE)
       min_duration = 0.1                                       !minimum eruption duration (hrs)
@@ -244,12 +244,14 @@
 
       if (SimTime.le.8.) then                    !calculate time interval between write times
          WriteInterval = 0.5
-       else if (SimTime.le.16.) then
+       else if (SimTime.le.12.) then
          WriteInterval = 1.0
-       else if (SimTime.le.48.) then
-         WriteInterval = 3.0
+       else if (SimTime.le.36.) then
+         WriteInterval = 2.0
+       else if (SimTime.le.72.) then
+         WriteInterval = 4.0
        else
-         WriteInterval = 6.0
+         WriteInterval = 8.0
       end if
                                                  !calculate write times and nWriteTimes
       WriteTimes(1) = (WriteInterval+aint(StartTime/WriteInterval)*WriteInterval)-StartTime
@@ -438,7 +440,7 @@
       'yes     #Write out 3-D ash concentration at specified times?                       ',/, &
       'netcdf  #format of ash concentration files   ("ascii", "binary", or "netcdf")  ',/, &
       i2,'      #nWriteTimes  ',/, &
-      18f6.2)
+      24f7.2)
 6     format( &
       '******************************************************************************* ',/, &
       '#WIND INPUT FILES ',/, &
@@ -448,8 +450,8 @@
       '# If we are reading gridded data there should be iWinNum wind files, each having ',/, &
       '# the format volcano_name_yyyymmddhh_FHhh.win ',/, &
       '******************* BLOCK 5 ***************************************************')
-2     format(a27,i2.2,'.nc')                          !for forecast winds       Wind_nc/gfs/latest/latest.f**.nc
-3     format(a39,i2.2,'.nc')                          !for archived gfs winds   Wind_nc/gfs/gfs.2012052300/2012052300.f**.nc
+2     format(a27,i3.3,'.nc')                          !for forecast winds       Wind_nc/gfs/latest/latest.f**.nc
+3     format(a39,i3.3,'.nc')                          !for archived gfs winds   Wind_nc/gfs/gfs.2012052300/2012052300.f**.nc
 4     format(a12)                                      !for NCEP reanalyis winds Wind_nc/NCEP
 5     format( &
       '*******************************************************************************',/, & 

@@ -35,9 +35,9 @@
       real(kind=8)     :: hours_since_1900, min_vol, min_duration,  pHeight
       real(kind=8)     :: SimTime, StartTime
       real(kind=8)     :: v_lon, v_lat, v_elevation, width
-      real(kind=8)     :: windhour, WriteInterval, WriteTimes(20)
+      real(kind=8)     :: windhour, WriteInterval
       integer          :: i,iargc,iday,imonth,iyear,iwind,iwindformat,nargs,nWindFiles
-      integer          :: nWriteTimes,windyear,windmonth,windday
+      integer          :: windyear,windmonth,windday
       !character(len=1) :: answer
       character(len=80) :: linebuffer, infile, outfile
       character(len=30) :: volcano_name
@@ -62,7 +62,7 @@
       min_vol = 0.0001                                          !minimum erupted volume allowed
       min_duration = 0.1                                        !minimum eruption duration
       iwindformat=20
-      nWindFiles=34
+      nWindFiles=67
       runtype='now'
 
 !     get current date & time
@@ -127,11 +127,11 @@
       if (iyear.ne.0) then
          Hours1900Erupt = hours_since_1900(iyear,imonth,iday,StartTime)
          Hours1900Wind  = hours_since_1900(windyear,windmonth,windday,windhour)
-         if ((Hours1900Erupt+SimTime).gt.(Hours1900Wind+99.)) then             !if the time is in the future
+         if ((Hours1900Erupt+SimTime).gt.(Hours1900Wind+198.)) then             !if the time is in the future
               write(6,*) 'Error.  You entered an eruption start time'
               write(6,*) 'that extends beyond the last currently available'
               write(6,*) 'wind file.  the last currently available wind file'
-              write(6,*) 'extends to 99 hours beyond ',last_downloaded
+              write(6,*) 'extends to 198 hours beyond ',last_downloaded
               write(6,*) 'Please adjust your start time or'
               write(6,*) 'simulation time.'
               stop 1
@@ -208,24 +208,28 @@
             dz = (pHeight-(v_elevation/1000.))/5.0
       end if
 
+      !These probably arent necessary for deposit runs
+      !if (SimTime.le.8.) then                    !calculate time interval between write times
+      !   WriteInterval = 0.5
+      ! else if (SimTime.le.12.) then
+      !   WriteInterval = 1.0
+      ! else if (SimTime.le.36.) then
+      !   WriteInterval = 2.0
+      ! else if (SimTime.le.72.) then
+      !   WriteInterval = 4.0
+      ! else
+      !   WriteInterval = 8.0
+      !end if
 
-      if (SimTime.le.8.) then                    !calculate time interval between write times
-         WriteInterval = 0.5
-       else if (SimTime.le.16.) then
-         WriteInterval = 1.0
-       else if (SimTime.le.48.) then
-         WriteInterval = 3.0
-       else
-         WriteInterval = 6.0
-      end if
+      WriteInterval = 3.0
                                                  !calculate write times and nWriteTimes
-      WriteTimes(1) = (WriteInterval+aint(StartTime/WriteInterval)*WriteInterval)-StartTime
-      i=1
-      do while (WriteTimes(i).lt.SimTime)
-         WriteTimes(i+1) = WriteTimes(i)+WriteInterval
-         i=i+1
-      enddo
-      nWriteTimes=i-1
+      !WriteTimes(1) = (WriteInterval+aint(StartTime/WriteInterval)*WriteInterval)-StartTime
+      !i=1
+      !do while (WriteTimes(i).lt.SimTime)
+      !   WriteTimes(i+1) = WriteTimes(i)+WriteInterval
+      !   i=i+1
+      !enddo
+      !nWriteTimes=i-1
 
       if ((latLL-dy).le.-89.5) then                !Make sure the south model boundary doesn't cross the S. pole
           latLL  = -89.5+dy
@@ -259,8 +263,11 @@
                    iwind, iWindformat, &
                    SimTime, &
                    nWindfiles, &
-                   nWriteTimes, &
-                   (WriteTimes(i), i=1,nWriteTimes)
+                   WriteInterval
+
+                   !nWindfiles, &
+                   !nWriteTimes, &
+                   !(WriteTimes(i), i=1,nWriteTimes)
       write(11,6)
       if (runtype.eq.'now') then
           do i=1,nWindfiles
@@ -404,8 +411,8 @@
       'no      #Write KML file of cloud arrival times?  ',/, &
       'no      #Write out 3-D ash concentration at specified times?                       ',/, &
       'netcdf  #format of ash concentration files   ("ascii", "binary", or "netcdf")  ',/, &
-      i2,'      #nWriteTimes  ',/, &
-      18f6.2)
+      '-1      #nWriteTimes  ',/, &
+      f6.2)
 6     format( &
       '******************************************************************************* ',/, &
       '#WIND INPUT FILES ',/, &
@@ -415,8 +422,8 @@
       '# If we are reading gridded data there should be iWinNum wind files, each having ',/, &
       '# the format volcano_name_yyyymmddhh_FHhh.win ',/, &
       '******************* BLOCK 5 ***************************************************')
-2     format(a27,i2.2,'.nc')                          !for forecast winds       Wind_nc/gfs/latest/latest.f**.nc
-3     format(a39,i2.2,'.nc')                          !for archived gfs winds   Wind_nc/gfs/gfs.2012052300/2012052300.f**.nc
+2     format(a27,i3.3,'.nc')                          !for forecast winds       Wind_nc/gfs/latest/latest.f**.nc
+3     format(a39,i3.3,'.nc')                          !for archived gfs winds   Wind_nc/gfs/gfs.2012052300/2012052300.f**.nc
 4     format(a12)                                      !for NCEP reanalyis winds Wind_nc/NCEP
 5     format( &
       '*******************************************************************************',/, & 

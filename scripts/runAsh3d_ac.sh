@@ -114,12 +114,7 @@ if [ "$ADVANCED_RUN" != "advanced2" ]; then
     echo "copying airports file, cities file, and readme file"
     cp ${ASH3DSHARE}/GlobalAirports_ewert.txt .
     cp ${ASH3DSHARE}/readme.pdf .
-    cp ${ASH3DSHARE_PP}/USGS_warning3.png .
     ln -s ${ASH3DSHARE_PP}/world_cities.txt .
-    cp ${ASH3DSHARE_PP}/concentration_legend.png .
-    cp ${ASH3DSHARE_PP}/CloudHeight_hsv.png .
-    cp ${ASH3DSHARE_PP}/CloudLoad_hsv.png .
-    cp ${ASH3DSHARE_PP}/cloud_arrival_time.png .
     cp ${ASH3DSHARE_PP}/VAAC* .
     rc=$((rc + $?))
     echo "rc=$rc"
@@ -172,7 +167,7 @@ if [ "$ADVANCED_RUN" != "advanced2" ]; then
     fi
 
     echo "zipping up kml files"
-    zip CloudLoad_prelim.kmz CloudLoad.kml CloudLoad_hsv.png USGS_warning3.png
+    zip CloudLoad_prelim.kmz CloudLoad.kml
 
     if [ "$CLEANFILES" == "T" ]; then
         echo "removing kml files"
@@ -238,15 +233,15 @@ if [[ "$rc" -gt 0 ]] ; then
 fi
 
 echo "zipping up kml files"
-zip cloud_arrivaltimes_airports.kmz AshArrivalTimes.kml    USGS_warning3.png depTS*png
+zip cloud_arrivaltimes_airports.kmz AshArrivalTimes.kml
 rc=$((rc + $?))
-zip cloud_arrivaltimes_hours.kmz    CloudArrivalTime.kml   USGS_warning3.png cloud_arrival_time.png
+zip cloud_arrivaltimes_hours.kmz    CloudArrivalTime.kml
 rc=$((rc + $?))
-zip CloudConcentration.kmz          CloudConcentration.kml USGS_warning3.png concentration_legend.png
+zip CloudConcentration.kmz          CloudConcentration.kml
 rc=$((rc + $?))
-zip CloudHeight.kmz                 CloudHeight.kml        USGS_warning3.png CloudHeight_hsv.png
+zip CloudHeight.kmz                 CloudHeight.kml
 rc=$((rc + $?))
-zip CloudLoad.kmz                   CloudLoad.kml          USGS_warning3.png CloudLoad_hsv.png
+zip CloudLoad.kmz                   CloudLoad.kml
 rc=$((rc + $?))
 echo "rc=$rc"
 if [[ "$rc" -gt 0 ]] ; then
@@ -376,13 +371,8 @@ fi
 rc=$((rc + $?))
 
 echo "removing extraneous files"
-echo "rm -f tmp1.txt tmp2.txt"
-echo "rm -f *.cpt caption.txt fort.18 current_time.txt dep_thick.txt  Temp.epsi cities.xy"
-echo "rm -f USGS_warning3.png concentration_legend.png CloudHeight_hsv.png CloudLoad_hsv.png cloud_arrival_time.png"
-echo "rm -f world_cities.txt test.txt"
 rm -f tmp1.txt tmp2.txt
 rm -f *.cpt caption.txt fort.18 current_time.txt dep_thick.txt  Temp.epsi cities.xy
-rm -f USGS_warning3.png concentration_legend.png CloudHeight_hsv.png CloudLoad_hsv.png cloud_arrival_time.png
 rm -f world_cities.txt test.txt
 
 if [[ $rc -ne 0 ]]; then
