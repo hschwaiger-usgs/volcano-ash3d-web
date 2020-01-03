@@ -2552,3 +2552,7 @@ POINT_X         POINT_Y        CITY_NAME                 FIPS_CNTRYCNTRY_NAME   
         166.9167        -0.5167Yaren                     NR        Nauru                         -999         7Less than 50,000
         173.2480       -41.2970Nelson                    NZ        New Zealand                   -999         7Less than 50,000
        -166.5332        53.8844Dutch Harbor              US        United States                 -999         7Less than 50,000
+        -71.6020       -15.6388Chivay                    PE        Peru                          -999         7Less than 50,000
+        -71.6992       -15.6628Achoma                    PE        Peru                          -999         7Less than 50,000
+        -71.8390       -15.6158Pinchollo                 PE        Peru                          -999         7Less than 50,000
+        -71.5972       -15.8468Japutana                  PE        Peru                          -999         7Less than 50,000
