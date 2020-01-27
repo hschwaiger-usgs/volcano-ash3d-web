@@ -327,13 +327,20 @@ echo "rc=$rc"
 #mv ${INFILE_MAIN}2 ${INFILE_MAIN}
 unix2dos ${INFILE_MAIN}
 
-zip $ZIPNAME.zip deposit_thickness_inches.gif deposit_thickness_mm.gif \
-                 deposit_thickness_mm.txt \
-                 ashfall_arrivaltimes_airports.txt ${INFILE_MAIN} \
-                 ash_arrivaltimes_airports.kmz deposit_thickness_mm.kmz \
-                 deposit_thickness_inches.kmz \
-                 ashfall_arrivaltimes_hours.kmz readme.pdf \
-                 dp_shp.zip dp_mm_shp.zip ash3d_runlog.txt
+zip $ZIPNAME.zip ash3d_input.txt ash3d_runlog.txt \
+                 ash_arrivaltimes_airports.kmz ash_arrivaltimes_airports.txt \
+                 ash_arrivaltimes_hours.kmz \
+                 deposit_thickness_inches.gif deposit_thickness_inches.kmz \
+                 deposit_thickness_mm.gif deposit_thickness_mm.kmz \
+                 dp_shp.zip dp_mm_shp.zip ${INFILE_MAIN}
+
+#zip $ZIPNAME.zip deposit_thickness_inches.gif deposit_thickness_mm.gif \
+#                 deposit_thickness_mm.txt \
+#                 ashfall_arrivaltimes_airports.txt ${INFILE_MAIN} \
+#                 ash_arrivaltimes_airports.kmz deposit_thickness_mm.kmz \
+#                 deposit_thickness_inches.kmz \
+#                 ashfall_arrivaltimes_hours.kmz readme.pdf \
+#                 dp_shp.zip dp_mm_shp.zip ash3d_runlog.txt
 rc=$((rc + $?))
 
 echo "removing extraneous files"

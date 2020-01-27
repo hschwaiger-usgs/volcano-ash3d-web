@@ -362,9 +362,15 @@ echo "flipping and renaming Ash3d.lst"
 unix2dos Ash3d.lst
 mv Ash3d.lst ash3d_runlog.txt
 
-zip $ZIPNAME.zip *UTC*.gif cloud_animation.gif cloud_arrivaltimes_airports.txt ${INFILE_MAIN} \
-    cloud_arrivaltimes_airports.kmz cloud_arrivaltimes_hours.kmz CloudConcentration.kmz CloudHeight.kmz \
-    CloudLoad.kmz readme.pdf *rajector*gif ash3d_runlog.txt
+zip $ZIPNAME.zip *UTC*.gif \
+                 ash3d_input.txt ash3d_runlog.txt \
+                 cloud_animation.gif \
+                 cloud_arrivaltimes_airports.kmz cloud_arrivaltimes_airports.txt \
+                 CloudConcentration.kmz CloudHeight.kmz CloudLoad.kmz
+
+#zip $ZIPNAME.zip *UTC*.gif cloud_animation.gif cloud_arrivaltimes_airports.txt ${INFILE_MAIN} \
+#    cloud_arrivaltimes_airports.kmz cloud_arrivaltimes_hours.kmz CloudConcentration.kmz CloudHeight.kmz \
+#    CloudLoad.kmz readme.pdf *rajector*gif ash3d_runlog.txt
 if test -r ftraj*.dat; then
    zip -a $ZIPNAME.zip traj*.dat
 fi
