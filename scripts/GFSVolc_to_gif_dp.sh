@@ -245,6 +245,21 @@ else
     ${GMTpre[GMTv]} grdcontour dep_tot_out.grd   $AREA $PROJ $BASE -Cdp_25.lev  -A- -W3,255/0/255 -Dcontourfile_25_0_i.xyz
     ${GMTpre[GMTv]} grdcontour dep_tot_out.grd   $AREA $PROJ $BASE -Cdp_100.lev -A- -W3,0/51/51   -Dcontourfile_100_0_i.xyz
 
+    # GMT v5 adds a header line to these files.  First double-check that the header is present, then remove it.
+    testchar=`head -1 contourfile_1_0_i.xyz | cut -c1`
+    if [ $testchar -eq '>' ] ; then
+      tail -n +2 contourfile_0.1_0_i.xyz > temp.xyz
+      mv temp.xyz contourfile_0.1_0_i.xyz
+      tail -n +2 contourfile_0.8_0_i.xyz > temp.xyz
+      mv temp.xyz contourfile_0.8_0_i.xyz
+      tail -n +2 contourfile_6.0_0_i.xyz > temp.xyz
+      mv temp.xyz contourfile_6.0_0_i.xyz
+      tail -n +2 contourfile_25_0_i.xyz  > temp.xyz
+      mv temp.xyz contourfile_25_0_i.xyz
+      tail -n +2 contourfile_100_0_i.xyz > temp.xyz
+      mv temp.xyz contourfile_100_0_i.xyz
+    fi
+
     ${GMTpre[GMTv]} grdcontour dep_tot_out.grd   $AREA $PROJ $BASE -Cdp_0.1.lev -A- -W3,255/0/0     -O -K >> temp.ps
     ${GMTpre[GMTv]} grdcontour dep_tot_out.grd   $AREA $PROJ $BASE -Cdp_0.8.lev -A- -W3,0/0/255     -O -K >> temp.ps
     ${GMTpre[GMTv]} grdcontour dep_tot_out.grd   $AREA $PROJ $BASE -Cdp_6.lev   -A- -W3,0/183/255   -O -K >> temp.ps
@@ -338,11 +353,12 @@ if [ "$CLEANFILES" == "T" ]; then
 fi
 
 #Make shapefile
-#echo "Generating shapefile"
-#python ${ASH3DSCRIPTDIR}/xyz2shp.py
-#if [ "$CLEANFILES" == "T" ]; then
-#    rm contour*.xyz volc.txt var.txt
-#fi
+echo "Generating shapefile"
+rm -f dp.shp dp.prj dp.shx dp.dbf dp_shp.zip
+python ${ASH3DSCRIPTDIR}/xyz2shp.py
+if [ "$CLEANFILES" == "T" ]; then
+    rm contour*.xyz volc.txt var.txt
+fi
 
 width=`identify deposit.gif | cut -f3 -d' ' | cut -f1 -d'x'`
 height=`identify deposit.gif | cut -f3 -d' ' | cut -f2 -d'x'`

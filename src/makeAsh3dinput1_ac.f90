@@ -318,7 +318,7 @@
       '# Webapp gen date time: 2012/03/05 09:56:29',/, &
       '# ',/, &
       '#The following is an input file to the model Ash3d, v.1.0 ',/, &
-      '#Created by L.G. Mastin and R. P. Denlinger, U.S. Geological Survey, 2009. ',/, &
+      '#Created by L.G. Mastin, R.P. Denlinger, and H.F. Schwaiger U.S. Geological Survey, 2009. ',/, &
       '# ',/, &
       '#GENERAL SOURCE PARAMETERS. DO NOT DELETE ANY LINES ',/, &
       '#  The first line of this block identifies the projection used and the form of ',/, &
