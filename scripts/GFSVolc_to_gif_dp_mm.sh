@@ -256,7 +256,7 @@ else
 
     # GMT v5 adds a header line to these files.  First double-check that the header is present, then remove it.
     testchar=`head -1 contourfile_0.1_0_i.xyz | cut -c1`
-    if [ $testchar -eq '>' ] ; then
+    if [ $testchar = '>' ] ; then
       tail -n +2 contourfile_0.1_0_i.xyz > temp.xyz
       mv temp.xyz contourfile_0.1_0_i.xyz
       tail -n +2 contourfile_0.3_0_i.xyz > temp.xyz
