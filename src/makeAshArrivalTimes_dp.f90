@@ -82,7 +82,7 @@
 3      format(a57,a64)
 !3      format(a57,a65)
 4      format(a57,a22,3x,a6,2x,a1,a6,a24)
-5      format(121x,f9.2,2x,a1,f6.2)
+5      format(121x,f9.2,3x,a1,f5.2)
 6      format(6x,'No airports affected by ash',87x,'|')
 7      format(a122)
 8      format('-----------------------------------------------------------------------------', &
