@@ -59,10 +59,6 @@ INSTALLDIR=/opt/USGS/Ash3d
 #       -     : same as VERB=1
 VERB = 1
 
-# MEMORY
-# If you need pointer arrays instead of allocatable arrays, set this to 'T'
-USEPOINTERS = F
-
 ###############################################################################
 
 ###############################################################################
@@ -89,14 +85,10 @@ ifeq ($(VERB), 3)
     VERBFPPFLAG = -DVERBOSE_L3
 endif
 
-ifeq ($(USEPOINTERS), T)
- memFPPFLAG = -DUSEPOINTERS
-endif
-
 # location of MetReader, HoursSince and projection
-USGSLIBDIR = -L$(USGSROOT)/lib
-USGSLIB = -lhourssince -lprojection
-USGSINC = -I$(USGSROOT)/include
+#USGSLIBDIR = -L$(USGSROOT)/lib
+#USGSLIB = -lhourssince -lprojection
+#USGSINC = -I$(USGSROOT)/include
 
 ###############################################################################
 ##########  GNU Fortran Compiler  #############################################
@@ -108,7 +100,8 @@ ifeq ($(SYSTEM), gfortran)
     COMPINC = -I$(FCHOME)/include -I$(FCHOME)/lib64/gfortran/modules
     COMPLIBS = -L$(FCHOME)/lib -L$(FCHOME)/lib64
 
-    LIBS = $(COMPLIBS) $(USGSLIBDIR) $(USGSINC) $(COMPINC) -llapack -lblas $(USGSLIB) $(DATALIBS)
+    #LIBS = $(COMPLIBS) $(USGSLIBDIR) $(USGSINC) $(COMPINC) -llapack -lblas $(USGSLIB) $(DATALIBS)
+    LIBS = $(COMPLIBS)
 
 # Debugging flags
 ifeq ($(RUN), DEBUG)
@@ -245,8 +238,6 @@ makeAshArrivalTimes_ac: makeAshArrivalTimes_ac.f90
 	$(FC) $(FFLAGS) $(EXFLAGS) makeAshArrivalTimes_ac.f90 -o makeAshArrivalTimes_ac $(LIBS)
 makeAshArrivalTimes_dp: makeAshArrivalTimes_dp.f90
 	$(FC) $(FFLAGS) $(EXFLAGS) makeAshArrivalTimes_dp.f90 -o makeAshArrivalTimes_dp $(LIBS)
-#makegfsncml: makegfsncml.f90
-#	$(FC) $(FFLAGS) $(EXFLAGS) makegfsncml.f90 -o makegfsncml $(LIBS)
 
 clean:
 	rm -rf ../bin/legend* ../bin/makeAsh*
@@ -262,4 +253,40 @@ install:
 	install -m 644 ../share/post_proc/*png             $(INSTALLDIR)/share/post_proc/
 	install -m 644 ../share/post_proc/*xy              $(INSTALLDIR)/share/post_proc/
 	install -m 644 ../share/post_proc/world_cities.txt $(INSTALLDIR)/share/post_proc/
+
+uninstall:
+	rm -f $(INSTALLDIR)/bin/citywriter
+	rm -f $(INSTALLDIR)/bin/convert_to_decimal
+	rm -f $(INSTALLDIR)/bin/legend_placer_ac
+	rm -f $(INSTALLDIR)/bin/legend_placer_ac_traj
+	rm -f $(INSTALLDIR)/bin/legend_placer_dp
+	rm -f $(INSTALLDIR)/bin/legend_placer_dp_mm
+	rm -f $(INSTALLDIR)/bin/makeAsh3dinput1_ac
+	rm -f $(INSTALLDIR)/bin/makeAsh3dinput1_dp
+	rm -f $(INSTALLDIR)/bin/makeAsh3dinput2_ac
+	rm -f $(INSTALLDIR)/bin/makeAsh3dinput2_dp
+	rm -f $(INSTALLDIR)/bin/makeAshArrivalTimes_ac
+	rm -f $(INSTALLDIR)/bin/makeAshArrivalTimes_dp
+	rm -f $(INSTALLDIR)/bin/scripts/GFSVolc_to_gif_ac_hysplit.sh
+	rm -f $(INSTALLDIR)/bin/scripts/GFSVolc_to_gif_ac_puff.sh
+	rm -f $(INSTALLDIR)/bin/scripts/GFSVolc_to_gif_ac_traj.sh
+	rm -f $(INSTALLDIR)/bin/scripts/GFSVolc_to_gif_dp_mm.sh
+	rm -f $(INSTALLDIR)/bin/scripts/GFSVolc_to_gif_dp.sh
+	rm -f $(INSTALLDIR)/bin/scripts/GFSVolc_to_gif_tvar.sh
+	rm -f $(INSTALLDIR)/bin/scripts/gmt_test.sh
+	rm -f $(INSTALLDIR)/bin/scripts/killrun.sh
+	rm -f $(INSTALLDIR)/bin/scripts/runAsh3d_ac.sh
+	rm -f $(INSTALLDIR)/bin/scripts/runAsh3d_dp.sh
+	rm -f $(INSTALLDIR)/bin/scripts/runAsh3d.sh
+	rm -f $(INSTALLDIR)/bin/scripts/runGFS_puff.sh
+	rm -f $(INSTALLDIR)/bin/scripts/runGFS_traj.sh
+	rm -f $(INSTALLDIR)/bin/scripts/xyz2shp.py
+	rmdir $(INSTALLDIR)/bin/scripts/
+	rm -f $(INSTALLDIR)/share/post_proc/*png
+	rm -f $(INSTALLDIR)/share/post_proc/VAAC*.xy
+	rm -f $(INSTALLDIR)/share/post_proc/Ash3d*cpt
+	rm -f $(INSTALLDIR)/share/post_proc/world_cities.txt
+	rm -f $(INSTALLDIR)/share/readme.pdf
+	
+
 
