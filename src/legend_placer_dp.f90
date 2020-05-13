@@ -4,6 +4,9 @@
 !     GFSVolc_to_gif_dp.sh and GFSVolc_to_gif_dp_mm.sh
 !     This is essentially very similar to legend_placer_ac, but this program
 !     also takes into consideration the location of the deposit
+!     This program requires the file map_range.txt to exist as generated
+!     from the above script with this command:
+!       echo "$LLLON $URLON $LLLAT $URLAT $VCLON $VCLAT" > map_range.txt
 
       implicit none
 
@@ -40,21 +43,22 @@
       logical  :: legend2_alt2_overlaps_volcano
       character(len=80) :: inputline
       character(len=1)  :: test_char
+      logical           :: IsThere
 
       !set constants
-      pi             = 3.14159
+      pi             = 3.14159_8
 
       !set dimensions of map and legends.  All dimensions are in pixels unless specified
-      map_width       = 20.*72./2.54       !width of map, pixels
-      legend1_width   = 219.0              !width of legend containin ESP's
-      legend1_height  = 96.0
-      legend2_width   = 125.0              !width of legend_dep_nws.gif
-      legend2_height  = 222.0
-      xleft_map       = 31.0               !x offset of left side of map
-      xright_map      = 631.0-598.0        !x offset of right side of map from right side of image
-      ybottom_map     = 545.0-462.0        !y offset of base of map from base of image
-      ytop_map        = 22.0               !y offset of top of map from top of image
-      caveats_height  = 91.0
+      map_width       = 20.0_8*72.0_8/2.54_8 !width of map, pixels
+      legend1_width   = 219.0_8              !width of legend containin ESP's
+      legend1_height  = 96.0_8
+      legend2_width   = 125.0_8              !width of legend_dep_nws.gif
+      legend2_height  = 222.0_8
+      xleft_map       = 31.0_8               !x offset of left side of map
+      xright_map      = 631.0_8-598.0_8      !x offset of right side of map from right side of image
+      ybottom_map     = 545.0_8-462.0_8      !y offset of base of map from base of image
+      ytop_map        = 22.0_8               !y offset of top of map from top of image
+      caveats_height  = 91.0_8
 
       !set overlap booleans
       legend1_overlaps      = .false.       !=.true. if legend1 covers contours
@@ -70,30 +74,35 @@
       wrap_lon              = .false.       !=.true. if longitude wraps across the antimeridian
 
       !open map_range.txt and read range of latitute, longitude
+      inquire( file='map_range.txt', exist=IsThere )
+      if(.not.IsThere)then
+        write(6,*)'ERROR: legend_placer_ac cannot find map_range.txt'
+        stop 1
+      endif
       open(unit=10,file='map_range.txt')
       read(10,*) lonmin, lonmax, latmin, latmax, vclon, vclat
       close(10)
-      lonmin_rad = lonmin*pi/180.
-      lonmax_rad = lonmax*pi/180.
-      latmin_rad = latmin*pi/180.
-      latmax_rad = latmax*pi/180.
+      lonmin_rad = lonmin*pi/180.0_8
+      lonmax_rad = lonmax*pi/180.0_8
+      latmin_rad = latmin*pi/180.0_8
+      latmax_rad = latmax*pi/180.0_8
       dlon       = lonmax-lonmin
-      if (dlon.lt.0.) then
-             dlon     = dlon+360.
-             wrap_lon = .true.
-      end if
+      if (dlon.lt.0.0_8) then
+        dlon     = dlon+360.0_8
+        wrap_lon = .true.
+      endif
       dlat       = latmax-latmin
 
       !adjust offsets depending on latitude (some labels are wider than others)
-      if (latmin.lt.-10.0) then
-           xleft_map=40.0
-           xright_map = 41.0
-      end if
+      if (latmin.lt.-10.0_8) then
+        xleft_map  = 40.0_8
+        xright_map = 41.0_8
+      endif
 
       !calculate map scale, km per cm at the latitude of the volcano
-      map_height = ((map_width*180.)/(pi*dlon)) * &
-                     log(tan(pi/4.+latmax_rad/2.)/ &
-                         tan(pi/4.+latmin_rad/2.))
+      map_height = ((map_width*180.0_8)/(pi*dlon)) * &
+                     log(tan(pi/4.0_8+latmax_rad/2.0_8)/ &
+                         tan(pi/4.0_8+latmin_rad/2.0_8))
       write(6,6) int(map_width), int(map_height), &
                  int(map_width+xleft_map+xright_map), int(map_height+ytop_map+ybottom_map)
 6     format('    Estimated map and figure dimensions (pixels)',/, &
@@ -120,9 +129,9 @@
 
       !calculate upper left, lower right corners of ESP legend
       !NOTE: THESE COORDINATES ARE IN LATITUDE/LONGITUDE
-      legend1x_UL = lonmin+0.02*dlon                                            !find UL in lat, lon
-      legend1y_UL = latmin+0.98*dlat
-      xUL         = xleft_map+dlon*(0.02+legend1_width/map_width)                 !convert to x, y
+      legend1x_UL = lonmin+0.02_8*dlon                                            !find UL in lat, lon
+      legend1y_UL = latmin+0.98_8*dlat
+      xUL         = xleft_map+dlon*(0.02_8+legend1_width/map_width)                 !convert to x, y
       yUL         = lat_to_pixels(ytop_map,map_height,latmin,latmax,legend1y_UL)
       xLR         = xUL + legend1_width                                         !find LR in x, y
       yLR         = yUL + legend1_height
@@ -130,31 +139,31 @@
       legend1y_LR = pixels_to_lat(ytop_map,map_height,latmin,latmax,yLR)
 
       !calculate upper right, lower left corners of ESP legend (alternate placement)
-      xLL             = xleft_map+0.98*map_width-legend1_width
+      xLL             = xleft_map+0.98_8*map_width-legend1_width
       legend1x_LL_alt = lonmin+dlon*((xLL-xleft_map)/map_width)
       legend1y_LL_alt = legend1y_LR
       legend1x_UL_alt = legend1x_LL_alt
       legend1y_UL_alt = legend1y_UL
 
       !calculate corners of contour legend
-      yUR         = ytop_map+0.98*map_height - legend2_height
-      legend2x_UR = lonmin+dlon*(0.02+legend2_width/map_width)
+      yUR         = ytop_map+0.98_8*map_height - legend2_height
+      legend2x_UR = lonmin+dlon*(0.02_8+legend2_width/map_width)
       legend2y_UR = pixels_to_lat(ytop_map,map_height,latmin,latmax,yUR)
       legend2x_UL = legend1x_UL
       legend2y_UL = legend2y_UR
 
       !calculate corners of contour legend, alternate position
-      legend2x_UR_alt = lonmin+0.98*dlon                                       !find UR in lat, lon
+      legend2x_UR_alt = lonmin+0.98_8*dlon                                       !find UR in lat, lon
       legend2y_UR_alt = legend1y_UL
-      legend2x_LL_alt = lonmax-dlon*(0.02+legend2_width/map_width)              !find LL in lon
-      yLL             = ytop_map+0.02*map_height+legend2_height
+      legend2x_LL_alt = lonmax-dlon*(0.02_8+legend2_width/map_width)              !find LL in lon
+      yLL             = ytop_map+0.02_8*map_height+legend2_height
       legend2y_LL_alt = pixels_to_lat(ytop_map,map_height,latmin,latmax,yLL)         !convert yLL to LL in lat
       legend2x_UL_alt = legend2x_LL_alt
       legend2y_UL_alt = legend2y_UR_alt
 
       !Corners of the contour legends, alternate position #2
       legend2x_UL_alt2 = legend2x_LL_alt                                        !find UL in lat, lon
-      legend2y_UL_alt2 = legend1y_LL_alt-0.02*dlat
+      legend2y_UL_alt2 = legend1y_LL_alt-0.02_8*dlat
       legend2x_LL_alt2 = legend2x_LL_alt                                        !find LL in lon
       yLL = lat_to_pixels(ytop_map,map_height,latmin,latmax,legend2y_UL_alt2) &      !find LL in y
              + legend2_height
@@ -170,37 +179,30 @@
       write(6,*) 'trying to open contourfile_0.1_0_i.xyz'
       open(unit=12,file='contourfile_0.1_0_i.xyz',status='old',err=200)  !file name if it's a closed contour
       write(6,*) '   opening contourfile_0.1_0_i.xyz'
-      go to 240
+      goto 240
 200   write(6,*) 'Couldnt find   contourfile_0.1_0_i.xyz'
       write(6,*) 'trying to open contourfile_0.1_0.xyz'
       open(unit=12,file='contourfile_0.1_0.xyz',status='old',err=250)    !file name if it's not
       write(6,*) '   opening contourfile_0.1_0.xyz'
-!      write(6,1)                                 !write table header
-!1     format('       lon       lat        L1    L1_alt        L2    L2_alt   L2_alt2')
 240   do while (Iostatus.ge.0)
-         !Read in latitude & longitude
-         read(12,'(a80)',IOSTAT=Iostatus) inputline
-         read(inputline,'(a1)') test_char
-         IF(test_char.eq.'>')THEN
-           read(12,'(a80)',IOSTAT=Iostatus) inputline
-         ENDIF
-         read(inputline,*) lon_now, lat_now
-         !Adjust longitude if the region crosses the antimeridian
-         !if ((wrap_lon.eqv..true.).and.(lon_now.lt.0.)) lon_now=lon_now+360.
-         if ((lonmax.gt.180.).and.(lon_now.lt.0.)) lon_now=lon_now+360.
-         !See whether any of the legend positions overlap these points
-         if  ((lon_now<legend1x_LR)     .and.(lat_now>legend1y_LR))      legend1_overlaps     =.true.
-         if  ((lon_now>legend1x_LL_alt) .and.(lat_now>legend1y_LL_alt))  legend1_alt_overlaps =.true.
-         if  ((lon_now<legend2x_UR)     .and.(lat_now<legend2y_UR))      legend2_overlaps     =.true.
-         if  ((lon_now>legend2x_LL_alt) .and.(lat_now>legend2y_LL_alt))  legend2_alt_overlaps =.true.
-         if (((lon_now>legend2x_UL_alt2).and.(lat_now<legend2y_UL_alt2)).and. &
-             ((lon_now>legend2x_LL_alt2).and.(lat_now>legend2y_LL_alt2)))legend2_alt2_overlaps=.true.
-
-         !write out results
-         !write(6,2) lon_now, lat_now, legend1_overlaps, legend1_alt_overlaps, legend2_overlaps, &
-         !                                               legend2_alt_overlaps, legend2_alt2_overlaps
-!2        format(2f10.3,5L10)
-      end do
+        !Read in latitude & longitude
+        read(12,'(a80)',IOSTAT=Iostatus) inputline
+        read(inputline,'(a1)') test_char
+        if(test_char.eq.'>')then
+          read(12,'(a80)',IOSTAT=Iostatus) inputline
+        endif
+        read(inputline,*) lon_now, lat_now
+        !Adjust longitude if the region crosses the antimeridian
+        !if ((wrap_lon.eqv..true.).and.(lon_now.lt.0.)) lon_now=lon_now+360.
+        if ((lonmax.gt.180.0_8).and.(lon_now.lt.0.0_8)) lon_now=lon_now+360.0_8
+        !See whether any of the legend positions overlap these points
+        if  ((lon_now<legend1x_LR)     .and.(lat_now>legend1y_LR))      legend1_overlaps     =.true.
+        if  ((lon_now>legend1x_LL_alt) .and.(lat_now>legend1y_LL_alt))  legend1_alt_overlaps =.true.
+        if  ((lon_now<legend2x_UR)     .and.(lat_now<legend2y_UR))      legend2_overlaps     =.true.
+        if  ((lon_now>legend2x_LL_alt) .and.(lat_now>legend2y_LL_alt))  legend2_alt_overlaps =.true.
+        if (((lon_now>legend2x_UL_alt2).and.(lat_now<legend2y_UL_alt2)).and. &
+            ((lon_now>legend2x_LL_alt2).and.(lat_now>legend2y_LL_alt2)))legend2_alt2_overlaps=.true.
+      enddo
       close(12)
 
       !See if there are other files of isolated contours
@@ -209,27 +211,24 @@
       open(unit=13,file='contourfile_0.1_1_i.xyz',status='old',err=350)
       write(6,*) '   found contourfile_0.1_1_i.xyz'
       do while (Iostatus.ge.0)
-         !Read in latitude & longitude
-         read(13,'(a80)',IOSTAT=Iostatus) inputline
-         read(inputline,'(a1)') test_char
-         IF(test_char.eq.'>')THEN
-           read(13,'(a80)',IOSTAT=Iostatus) inputline
-         ENDIF
-         read(inputline,*) lon_now, lat_now
-         !Adjust for regions that cross the antimeridian
-         !if ((wrap_lon.eqv..true.).and.(lon_now.lt.0.)) lon_now=lon_now+360.
-         if ((lonmax.gt.180.).and.(lon_now.lt.0.)) lon_now=lon_now+360.
-         !See whether any of the legend positions overlap these points
-         if  ((lon_now<legend1x_LR)     .and.(lat_now>legend1y_LR))      legend1_overlaps     =.true.
-         if  ((lon_now>legend1x_LL_alt) .and.(lat_now>legend1y_LL_alt))  legend1_alt_overlaps =.true.
-         if  ((lon_now<legend2x_UR)     .and.(lat_now<legend2y_UR))      legend2_overlaps     =.true.
-         if  ((lon_now>legend2x_LL_alt) .and.(lat_now>legend2y_LL_alt))  legend2_alt_overlaps =.true.
-         if (((lon_now>legend2x_UL_alt2).and.(lat_now<legend2y_UL_alt2)).and. &
-             ((lon_now>legend2x_LL_alt2).and.(lat_now>legend2y_LL_alt2)))legend2_alt2_overlaps=.true.
-         !write out results
-         !write(6,2) lon_now, lat_now, legend1_overlaps, legend1_alt_overlaps, legend2_overlaps, &
-         !                                               legend2_alt_overlaps, legend2_alt2_overlaps
-      end do
+        !Read in latitude & longitude
+        read(13,'(a80)',IOSTAT=Iostatus) inputline
+        read(inputline,'(a1)') test_char
+        if(test_char.eq.'>')then
+          read(13,'(a80)',IOSTAT=Iostatus) inputline
+        endif
+        read(inputline,*) lon_now, lat_now
+        !Adjust for regions that cross the antimeridian
+        !if ((wrap_lon.eqv..true.).and.(lon_now.lt.0.)) lon_now=lon_now+360.
+        if ((lonmax.gt.180.0_8).and.(lon_now.lt.0.0_8)) lon_now=lon_now+360.0_8
+        !See whether any of the legend positions overlap these points
+        if  ((lon_now<legend1x_LR)     .and.(lat_now>legend1y_LR))      legend1_overlaps     =.true.
+        if  ((lon_now>legend1x_LL_alt) .and.(lat_now>legend1y_LL_alt))  legend1_alt_overlaps =.true.
+        if  ((lon_now<legend2x_UR)     .and.(lat_now<legend2y_UR))      legend2_overlaps     =.true.
+        if  ((lon_now>legend2x_LL_alt) .and.(lat_now>legend2y_LL_alt))  legend2_alt_overlaps =.true.
+        if (((lon_now>legend2x_UL_alt2).and.(lat_now<legend2y_UL_alt2)).and. &
+            ((lon_now>legend2x_LL_alt2).and.(lat_now>legend2y_LL_alt2)))legend2_alt2_overlaps=.true.
+      enddo
       close(13)
 
       Iostatus = 1
@@ -237,27 +236,24 @@
       open(unit=14,file='contourfile_0.1_2_i.xyz',status='old',err=350)
       write(6,*) '   found contourfile_0.1_2_i.xyz'
       do while (Iostatus.ge.0)
-         !Read in latitude & longitude
-         read(14,'(a80)',IOSTAT=Iostatus) inputline
-         read(inputline,'(a1)') test_char
-         IF(test_char.eq.'>')THEN
-           read(14,'(a80)',IOSTAT=Iostatus) inputline
-         ENDIF
-         read(inputline,*) lon_now, lat_now
-         !Adjust for regions that cross the antimeridian
-         !if ((wrap_lon.eqv..true.).and.(lon_now.lt.0.)) lon_now=lon_now+360.
-         if ((lonmax.gt.180.).and.(lon_now.lt.0.)) lon_now=lon_now+360.
-         !See whether any of the legend positions overlap these points
-         if  ((lon_now<legend1x_LR)     .and.(lat_now>legend1y_LR))      legend1_overlaps     =.true.
-         if  ((lon_now>legend1x_LL_alt) .and.(lat_now>legend1y_LL_alt))  legend1_alt_overlaps =.true.
-         if  ((lon_now<legend2x_UR)     .and.(lat_now<legend2y_UR))      legend2_overlaps     =.true.
-         if  ((lon_now>legend2x_LL_alt) .and.(lat_now>legend2y_LL_alt))  legend2_alt_overlaps =.true.
-         if (((lon_now>legend2x_UL_alt2).and.(lat_now<legend2y_UL_alt2)).and. &
-             ((lon_now>legend2x_LL_alt2).and.(lat_now>legend2y_LL_alt2)))legend2_alt2_overlaps=.true.
-         !write out results
-         !write(6,2) lon_now, lat_now, legend1_overlaps, legend1_alt_overlaps, legend2_overlaps, &
-         !                                               legend2_alt_overlaps, legend2_alt2_overlaps
-      end do
+        !Read in latitude & longitude
+        read(14,'(a80)',IOSTAT=Iostatus) inputline
+        read(inputline,'(a1)') test_char
+        if(test_char.eq.'>')then
+          read(14,'(a80)',IOSTAT=Iostatus) inputline
+        endif
+        read(inputline,*) lon_now, lat_now
+        !Adjust for regions that cross the antimeridian
+        !if ((wrap_lon.eqv..true.).and.(lon_now.lt.0.)) lon_now=lon_now+360.
+        if ((lonmax.gt.180.0_8).and.(lon_now.lt.0.0_8)) lon_now=lon_now+360.0_8
+        !See whether any of the legend positions overlap these points
+        if  ((lon_now<legend1x_LR)     .and.(lat_now>legend1y_LR))      legend1_overlaps     =.true.
+        if  ((lon_now>legend1x_LL_alt) .and.(lat_now>legend1y_LL_alt))  legend1_alt_overlaps =.true.
+        if  ((lon_now<legend2x_UR)     .and.(lat_now<legend2y_UR))      legend2_overlaps     =.true.
+        if  ((lon_now>legend2x_LL_alt) .and.(lat_now>legend2y_LL_alt))  legend2_alt_overlaps =.true.
+        if (((lon_now>legend2x_UL_alt2).and.(lat_now<legend2y_UL_alt2)).and. &
+            ((lon_now>legend2x_LL_alt2).and.(lat_now>legend2y_LL_alt2)))legend2_alt2_overlaps=.true.
+      enddo
       close(14)
 
 350   continue
@@ -289,29 +285,29 @@
       legend2y_position = legend2y_UL
 
       if (legend1_overlaps) then
-         if (legend2_overlaps) then
-            if (legend1_alt_overlaps_volcano.eqv..false.) then    !Move legend1 only if it doesn't cover volcano
-               legend1x_position = legend1x_UL_alt
-               legend1y_position = legend1y_UL_alt
-            end if
-            if (legend2_alt2_overlaps_volcano.eqv..false.) then    !Move legend2 only if it doesn't cover volcano
-               legend2x_position = legend2x_UL_alt2
-               legend2y_position = legend2y_UL_alt2
-            end if
-          else
-            if (legend1_alt_overlaps_volcano.eqv..false.) then    !Move legend1 only if it doesn't cover volcano
-               legend1x_position = legend1x_UL_alt
-               legend1y_position = legend1y_UL_alt
-            end if
-         end if
-       else
-         if (legend2_overlaps) then
-            if (legend2_alt_overlaps_volcano.eqv..false.) then    !Move legend2 only if it doesn't cover volcano
-               legend2x_position = legend2x_UL_alt
-               legend2y_position = legend2y_UL_alt
-            end if
-         end if
-      end if
+        if (legend2_overlaps) then
+          if (legend1_alt_overlaps_volcano.eqv..false.) then    !Move legend1 only if it doesn't cover volcano
+            legend1x_position = legend1x_UL_alt
+            legend1y_position = legend1y_UL_alt
+          endif
+          if (legend2_alt2_overlaps_volcano.eqv..false.) then    !Move legend2 only if it doesn't cover volcano
+            legend2x_position = legend2x_UL_alt2
+            legend2y_position = legend2y_UL_alt2
+          endif
+        else
+          if (legend1_alt_overlaps_volcano.eqv..false.) then    !Move legend1 only if it doesn't cover volcano
+            legend1x_position = legend1x_UL_alt
+            legend1y_position = legend1y_UL_alt
+          endif
+        endif
+      else
+        if (legend2_overlaps) then
+          if (legend2_alt_overlaps_volcano.eqv..false.) then    !Move legend2 only if it doesn't cover volcano
+            legend2x_position = legend2x_UL_alt
+            legend2y_position = legend2y_UL_alt
+          endif
+        endif
+      endif
 
       !convert legend2 position from lat/lon to pixels
       legend2x_pixels = floor(xleft_map+map_width*(legend2x_position-lonmin)/dlon)
@@ -357,20 +353,23 @@
       real(kind=8) :: lat_to_pixels, latmax_rad, latmin_rad, latnow_rad
       real(kind=8) :: pi, y
 
-      pi = 3.14159
+      pi = 3.14159_8
 
-      latmin_rad = latmin*pi/180.
-      latmax_rad = latmax*pi/180.
-      latnow_rad = latnow*pi/180.
+      latmin_rad = latmin*pi/180.0_8
+      latmax_rad = latmax*pi/180.0_8
+      latnow_rad = latnow*pi/180.0_8
 
-      y =  ytop + map_height * (1.0 - log(tan(pi/4.+latnow_rad/2.)/tan(pi/4.+latmin_rad/2.)) / &
-                                log(tan(pi/4.+latmax_rad/2.)/tan(pi/4.+latmin_rad/2.)))
+      y =  ytop + map_height * (1.0_8 - &
+            log(tan(pi/4.0_8+latnow_rad/2.0_8)  / &
+                tan(pi/4.0_8+latmin_rad/2.0_8)) / &
+            log(tan(pi/4.0_8+latmax_rad/2.0_8)  / &
+                tan(pi/4.0_8+latmin_rad/2.0_8)))
 
       lat_to_pixels = y
 
       return
 
-      end function
+      end function lat_to_pixels
 
 !******************************************************************************
 
@@ -389,20 +388,20 @@
       real(kind=8) :: term1, term2, term3
       real(kind=8) :: pi
 
-      pi = 3.14159
+      pi = 3.14159_8
 
-      latmin_rad = latmin*pi/180.
-      latmax_rad = latmax*pi/180.
+      latmin_rad = latmin*pi/180.0_8
+      latmax_rad = latmax*pi/180.0_8
       ycoord     = (ytop+map_height) - ynow         !convert to y value above base of map
 
-      term1    = tan(pi/4.+latmin_rad/2.)
-      term2    = tan(pi/4.+latmax_rad/2.)
+      term1    = tan(pi/4.0_8+latmin_rad/2.0_8)
+      term2    = tan(pi/4.0_8+latmax_rad/2.0_8)
       term3    = exp((ycoord/map_height)*log(term2/term1))
 
-      latnow_rad = 2.*(atan(term1*term3) - pi/4.)
+      latnow_rad = 2.0_8*(atan(term1*term3) - pi/4.0_8)
 
-      pixels_to_lat = 180.*latnow_rad/pi
+      pixels_to_lat = 180.0_8*latnow_rad/pi
 
       return
 
-      end function
+      end function pixels_to_lat

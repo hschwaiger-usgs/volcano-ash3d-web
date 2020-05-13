@@ -34,6 +34,7 @@ GMTpre=("-" "-" "-" "-" " "   "gmt ")
 GMTelp=("-" "-" "-" "-" "ELLIPSOID" "PROJ_ELLIPSOID")
 GMTnan=("-" "-" "-" "-" "-Ts" "-Q")
 GMTrgr=("-" "-" "-" "-" "grdreformat" "grdconvert")
+echo "GMT version = ${GMTv}"
 
 USGSROOT="/opt/USGS"
 ASH3DROOT="${USGSROOT}/Ash3d"
@@ -204,7 +205,7 @@ AREA="-R$lonmin/$lonmax/$latmin/$latmax"
 #AREA="-Rdep_tot_out.grd"            #sets the map boundaries based on the file dep_tot_out.grd
 #BASE="-Ba2/a1"                      #"a1/a1" means annotations every 1 degree. "g1/g1"=gridlines every 1 degree
 PROJ="-JM${VCLON}/${VCLAT}/20"      # Mercator projection, with origina at lat & lon of volcano, 20 cm width
-DETAIL="-Dh"                        # low resolution coastlines (-Dc=crude, -Di=intermediate, -Dl=low)
+DETAIL="-Dl"                        # low resolution coastlines (-Dc=crude, -Di=intermediate, -Dl=low)
 COAST="-G220/220/220 -W"            # RGB values for land areas (220/220/220=light gray)
 BOUNDARIES="-Na"                    # -N=draw political boundaries, a=all national, Am. state & marine b.
 RIVERS="-I1/1p,blue -I2/0.25p,blue" # Perm. large rivers used 1p blue line, other large rivers 0.25p blue line
@@ -231,7 +232,7 @@ ${GMTpre[GMTv]} pscoast $AREA $PROJ $BASE $DETAIL $COAST $BOUNDARIES $RIVERS -K 
 #       files by running the above pscoast command with -Vd.  Then you can link the gshhg files to the correct
 #       location.  e.g.
 #         mkdir /usr/share/gmt/coast
-#         ln -s /usr/share/gshhg-gmt-nc4/*nc /usr/share/gmt/coast
+#         ln -s /usr/share/gshhg-gmt-nc4/*nc /usr/share/gmt/coast/
 
 if [ $GMTv -eq 4 ] ; then
     # GMT v4 writes contours with -D[basename] and writes files with [basename][lev][segment]_[e,i].xyz; with e,i for interior or exterior

@@ -9,6 +9,8 @@ try:
     from osgeo import ogr
 except ImportError:
     import ogr
+    # if this fails, then install gdal-python
+    # yum install gdal-python
 try:
     from osgeo import osr
 except ImportError:

@@ -19,11 +19,14 @@
 #      technical support to users of this software.
 
 echo "------------------------------------------------------------"
-echo "running runAsh3d_dp.sh"
+echo "running runAsh3d_dp.sh with parameters:"
+echo "  run directory  = $1"
+echo "  zip file name  = $2"
+echo "  Dashboard case = $3"
+echo "  Advances run   = $4"
 echo `date`
 echo "------------------------------------------------------------"
 CLEANFILES="T"
-
 t0=`date -u`                                     # record start time
 rc=0                                             # error message accumulator
 
@@ -313,10 +316,10 @@ ${ASH3DSCRIPTDIR}/GFSVolc_to_gif_dp_mm.sh
 rc=$((rc+$?))
 echo "rc=$rc"
 
-echo "copying deposit.gif to deposit_thickness_inches.gif"
-cp deposit.gif deposit_thickness_inches.gif
-rc=$((rc+$?))
-echo "rc=$rc"
+#echo "copying deposit.gif to deposit_thickness_inches.gif"
+#cp deposit.gif deposit_thickness_inches.gif
+#rc=$((rc+$?))
+#echo "rc=$rc"
 echo "copying AshArrivalTimes.txt to ashfall_arrivaltimes_airports.txt"
 cp AshArrivalTimes.txt ashfall_arrivaltimes_airports.txt
 rc=$((rc+$?))

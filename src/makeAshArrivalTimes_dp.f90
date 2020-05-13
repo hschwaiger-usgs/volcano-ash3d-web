@@ -15,10 +15,17 @@
        integer           :: i, n_airports
        character(len=1)  :: morethan(3000)
        !character(len=1)  :: answer
+       logical           :: IsThere
 
        n_airports = 0
 
        write(6,*) 'running MakeAshArrivalTimes_dp'
+       inquire( file='AshArrivalTimes.txt', exist=IsThere )
+       if(.not.IsThere)then
+         write(6,*)"ERROR: Could not find file AshArrivalTimes.txt"
+         write(6,*)"       Please copy file to cwd"
+         stop 1
+       endif
 
        open(unit=10,file='AshArrivalTimes.txt',status='old',err=2000)
        open(unit=11,file='AshArrivalTimes_dp.txt')

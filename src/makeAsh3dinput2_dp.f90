@@ -38,9 +38,10 @@
       real(kind=8) :: Duration, e_volume, height_km, lat_mean, pHeight
       real(kind=8) :: SimTime, StartTime
       real(kind=8) :: v_lon, v_lat, v_elevation, width_km, WriteInterval
-      integer      :: i,iargc,iday,imonth,iostatus,iwind,iWindFormat,iyear,j
+      integer      :: i,iday,imonth,iostatus,iwind,iWindFormat,iyear,j
       integer      :: ii,iii
       integer      :: nargs,nWindFiles
+      integer      :: status
       integer      :: nrows,remainder
       !character(len=1) :: answer
       !character(len=7) :: TimeNow_char
@@ -51,26 +52,36 @@
       character(len=80) :: infile, outfile
       character(len=30) :: volcano_name
       character(len=100):: inputlines(290)
+      logical           :: IsThere
 
       write(6,*) 'starting makeAsh3dinput2_dp'
 
       !set constants
-      resolution = 75.     !model resolution in x and y
-      aspect_ratio = 1.3   !map aspect ratio
+      resolution = 75.0_8     !model resolution in x and y
+      aspect_ratio = 1.3_8   !map aspect ratio
 
 !     TEST READ COMMAND LINE ARGUMENTS
-      nargs = iargc()
+      !nargs = iargc()
+      nargs = command_argument_count()
       if (nargs.eq.2) then
-           call getarg(1,infile)
-           call getarg(2,outfile)
-           write(6,*) 'input file=',infile,', output file=',outfile
-         else
-           write(6,*) 'error: this program requires two input arguments:'
-           write(6,*) 'an input file and an output file.'
-           write(6,*) 'You have specified ',nargs, ' input arguments.'
-           write(6,*) 'program stopped'
-           stop 1
+        !call getarg(1,infile)
+        !call getarg(2,outfile)
+        call get_command_argument(1, infile, status)
+        call get_command_argument(2, outfile, status)
+        write(6,*) 'input file=',infile,', output file=',outfile
+      else
+        write(6,*) 'error: this program requires two input arguments:'
+        write(6,*) 'an input file and an output file.'
+        write(6,*) 'You have specified ',nargs, ' input arguments.'
+        write(6,*) 'program stopped'
+        stop 1
       end if
+      inquire( file=infile, exist=IsThere )
+      if(.not.IsThere)then
+        write(6,*)"ERROR: Could not find file :",infile
+        write(6,*)"       Please copy file to cwd"
+        stop 1
+      endif
       open(unit=10,file=infile)         !simplified input file
 
       iostatus=0
@@ -109,7 +120,7 @@
       !calculate i_volcano, j_volcano
       latUR_old     = latLL_old+height_old
       lonUR_old     = lonLL_old+width_old
-      if (v_lon.lt.lonLL_old) v_lon=v_lon+360.
+      if (v_lon.lt.lonLL_old) v_lon=v_lon+360.0_8
       i_volcano_old = int((v_lon-lonLL_old)/dx_old)+1       !i node of volcano
       j_volcano_old = int((v_lat-latLL_old)/dy_old)+1       !j node of volcano
 
@@ -155,7 +166,7 @@
 
       do i=1,ilast                                !find ifirst
         do j=1,jlast
-          if (deposit(i,j).ge.0.01) then
+          if (deposit(i,j).ge.0.01_8) then
              ifirst = i
              go to 100
           end if
@@ -164,7 +175,7 @@
 100   continue
       do i=ilast,1,-1                             !find ilast
         do j=1,jlast
-           if (deposit(i,j).ge.0.01) then
+           if (deposit(i,j).ge.0.01_8) then
               ilast = i
               go to 200
            end if
@@ -173,7 +184,7 @@
 200   continue
       do j=1,jlast                                !find jfirst
         do i=1,ilast
-           if (deposit(i,j).ge.0.01) then
+           if (deposit(i,j).ge.0.01_8) then
               jfirst = j
               go to 300
            end if
@@ -182,7 +193,7 @@
 300   continue
       do j=jlast,1,-1                             !find jlast
         do i=1,ilast
-           if (deposit(i,j).ge.0.01) then
+           if (deposit(i,j).ge.0.01_8) then
               jlast = j
               go to 400
            end if
@@ -217,31 +228,31 @@
 
       !Adjust model boundaries to maintain the specified aspect ratio
       !  Initialize dy_new to 0.0
-      dy_new = 0.0
-      lat_mean = latLL_new + height_new/2.
-      height_km=height_new*109.
-      width_km =width_new*109.*cos(3.14*lat_mean/180.)
+      dy_new = 0.0_8
+      lat_mean = latLL_new + height_new/2.0_8
+      height_km=height_new*109.0_8
+      width_km =width_new*109.0_8*cos(3.14_8*lat_mean/180.0_8)
       if (width_km.gt.(aspect_ratio*height_km)) then
          write(6,*) 'adjusting height to maintain aspect ratio'
-         height_new2 = width_km/(aspect_ratio*109.)
-         latLL_new  = latLL_new - (height_new2-height_new)/2.
+         height_new2 = width_km/(aspect_ratio*109.0_8)
+         latLL_new  = latLL_new - (height_new2-height_new)/2.0_8
          height_new = height_new2
          latUR_new  = latLL_new+height_new
-         if ((latUR_new+dy_new).gt.89.5) then  !make sure top of model boundary doesn't cross the N pole
+         if ((latUR_new+dy_new).gt.89.5_8) then  !make sure top of model boundary doesn't cross the N pole
              write(6,*) 'adjusting N model boundary so that it doesnt cross the north pole'
-             latUR_new = 89.5-dy_new
+             latUR_new = 89.5_8 - dy_new
              height_new = latUR_new-latLL_new
          end if
-         if ((latLL_new-dy_new).lt.-89.5) then
+         if ((latLL_new-dy_new).lt.-89.5_8) then
              write(6,*) 'adjusting S model boundary so that it doesnt cross the south pole'
-             latLL_new = -89.5+dy_new
+             latLL_new = -89.5_8 + dy_new
              height_new = latUR_new-latLL_new
          end if
          write(6,*) 'height_new=', height_new
        else
          write(6,*) 'adjusting width to maintain aspect ratio'
-         width_new2 = aspect_ratio*height_km/(109.*cos(3.14*lat_mean/180.))
-         lonLL_new  = lonLL_new - (width_new2-width_new)/2.
+         width_new2 = aspect_ratio*height_km/(109.0_8*cos(3.14_8*lat_mean/180.0_8))
+         lonLL_new  = lonLL_new - (width_new2-width_new)/2.0_8
          width_new  = width_new2
          write(6,*) 'width_new=', width_new
       end if

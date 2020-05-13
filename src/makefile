@@ -47,7 +47,6 @@ RUN = DEBUG
 
 # This is the location of the USGS libraries and include files
 USGSROOT=/opt/USGS
-
 INSTALLDIR=/opt/USGS/Ash3d
 
 #  VERB specifies the verbosity level for debugging purposes
@@ -59,6 +58,12 @@ INSTALLDIR=/opt/USGS/Ash3d
 #       -     : same as VERB=1
 VERB = 1
 
+# DATA FORMATS
+#  For each data format you want to include in the library, set the corresponding
+#  variable below to 'T'.  Set to 'F' any you do not want compiled or any unavailable
+USENETCDF = T
+USEGRIB   = T
+#
 ###############################################################################
 
 ###############################################################################
@@ -86,9 +91,23 @@ ifeq ($(VERB), 3)
 endif
 
 # location of MetReader, HoursSince and projection
-#USGSLIBDIR = -L$(USGSROOT)/lib
-#USGSLIB = -lhourssince -lprojection
-#USGSINC = -I$(USGSROOT)/include
+USGSLIBDIR = -L$(USGSROOT)/lib
+USGSLIB = -lMetReader -lhourssince -lprojection
+USGSINC = -I$(USGSROOT)/include
+
+DATAFPPFLAGS =
+ifeq ($(USENETCDF), T)
+ ncFPPFLAG = -DUSENETCDF
+ ncLIBS = -lnetcdf -lnetcdff
+endif
+ifeq ($(USEGRIB), T)
+ grbFPPFLAG = -DUSEGRIB
+ # These are the libraries for grib_api
+ #grbLIBS = -lgrib_api_f90 -lgrib_api
+ # These are the libraries for ecCodes
+ grbLIBS = -leccodes -leccodes_f90
+endif
+DATALIBS = $(ncLIBS) $(grbLIBS)
 
 ###############################################################################
 ##########  GNU Fortran Compiler  #############################################
@@ -100,8 +119,7 @@ ifeq ($(SYSTEM), gfortran)
     COMPINC = -I$(FCHOME)/include -I$(FCHOME)/lib64/gfortran/modules
     COMPLIBS = -L$(FCHOME)/lib -L$(FCHOME)/lib64
 
-    #LIBS = $(COMPLIBS) $(USGSLIBDIR) $(USGSINC) $(COMPINC) -llapack -lblas $(USGSLIB) $(DATALIBS)
-    LIBS = $(COMPLIBS)
+    LIBS = $(COMPLIBS) $(USGSLIBDIR) $(USGSINC) $(COMPINC) $(USGSLIB) $(DATALIBS)
 
 # Debugging flags
 ifeq ($(RUN), DEBUG)
@@ -183,7 +201,8 @@ UTIL_SRC=makeAsh3dinput1_ac.f90     \
          legend_placer_dp_mm.f90    \
          legend_placer_ac_traj.f90  \
          convert_to_decimal.f90     \
-         citywriter.f90
+         citywriter.f90             \
+         ncGFS4_2_pf.F90
 UTIL_OBJS=makeAsh3dinput1_ac       \
           makeAsh3dinput1_dp       \
           makeAsh3dinput2_ac       \
@@ -195,7 +214,8 @@ UTIL_OBJS=makeAsh3dinput1_ac       \
           legend_placer_dp_mm      \
           legend_placer_ac_traj    \
           convert_to_decimal       \
-          citywriter
+          citywriter               \
+          ncGFS4_2_pf
 
 all: $(UTIL_OBJS)
 	mkdir -p ../bin
@@ -211,9 +231,10 @@ all: $(UTIL_OBJS)
 	mv legend_placer_ac_traj   ../bin/
 	mv convert_to_decimal      ../bin/
 	mv citywriter              ../bin/
+	mv ncGFS4_2_pf             ../bin/
 
-#ncGFS4_2_pf: ncGFS4_2_pf.F90
-#	$(FC) $(FFLAGS) $(EXFLAGS) ncGFS4_2_pf.F90 -o ncGFS4_2_pf $(LIBS)
+ncGFS4_2_pf: ncGFS4_2_pf.F90
+	$(FC) $(FFLAGS) $(EXFLAGS) ncGFS4_2_pf.F90 -o ncGFS4_2_pf $(LIBS)
 citywriter: citywriter.f90
 	$(FC) $(FFLAGS) $(EXFLAGS) citywriter.f90 -o citywriter $(LIBS)
 convert_to_decimal: convert_to_decimal.f90

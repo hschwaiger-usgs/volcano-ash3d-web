@@ -26,6 +26,7 @@ echo `date`
 echo "------------------------------------------------------------"
 CLEANFILES="T"
 RUNDATE=`date -u "+%D %T"`
+
 # We need to know if we must prefix all gmt commands with 'gmt', as required by version 5
 GMTv=5
 type gmt >/dev/null 2>&1 || { echo >&2 "Command 'gmt' not found.  Assuming GMTv4."; GMTv=4;}
@@ -33,6 +34,7 @@ GMTpre=("-" "-" "-" "-" " "   "gmt ")
 GMTelp=("-" "-" "-" "-" "ELLIPSOID" "PROJ_ELLIPSOID")
 GMTnan=("-" "-" "-" "-" "-Ts" "-Q")
 GMTrgr=("-" "-" "-" "-" "grdreformat" "grdconvert")
+echo "GMT version = ${GMTv}"
 
 USGSROOT="/opt/USGS"
 ASH3DROOT="${USGSROOT}/Ash3d"
@@ -168,6 +170,8 @@ echo "25.0   255   0 255" >  dp_25.lev    #deposit (2.5cm)
 echo "100.     0  51  51" > dp_100.lev    #deposit (10cm)
 
 
+
+
 #get latitude & longitude range
 lonmin=$LLLON
 latmin=$LLLAT
@@ -201,7 +205,7 @@ AREA="-R$lonmin/$lonmax/$latmin/$latmax"
 #AREA="-Rdep_tot_out.grd"            #sets the map boundaries based on the file dep_tot_out.grd
 #BASE="-Ba2/a1"                      #"a1/a1" means annotations every 1 degree. "g1/g1"=gridlines every 1 degree
 PROJ="-JM${VCLON}/${VCLAT}/20"      # Mercator projection, with origina at lat & lon of volcano, 20 cm width
-DETAIL="-Dh"                        # low resolution coastlines (-Dc=crude, -Di=intermediate, -Dl=low)
+DETAIL="-Dl"                        # low resolution coastlines (-Dc=crude, -Di=intermediate, -Dl=low)
 COAST="-G220/220/220 -W"            # RGB values for land areas (220/220/220=light gray)
 BOUNDARIES="-Na"                    # -N=draw political boundaries, a=all national, Am. state & marine b.
 RIVERS="-I1/1p,blue -I2/0.25p,blue" # Perm. large rivers used 1p blue line, other large rivers 0.25p blue line
@@ -246,7 +250,7 @@ else
     ${GMTpre[GMTv]} grdcontour dep_tot_out.grd   $AREA $PROJ $BASE -Cdp_100.lev -A- -W3,0/51/51   -Dcontourfile_100_0_i.xyz
 
     # GMT v5 adds a header line to these files.  First double-check that the header is present, then remove it.
-    testchar=`head -1 contourfile_1_0_i.xyz | cut -c1`
+    testchar=`head -1 contourfile_0.1_0_i.xyz | cut -c1`
     if [ $testchar = '>' ] ; then
       tail -n +2 contourfile_0.1_0_i.xyz > temp.xyz
       mv temp.xyz contourfile_0.1_0_i.xyz
@@ -333,18 +337,18 @@ height=`identify temp.gif | cut -f3 -d' ' | cut -f2 -d'x'`
 vidx_UL=$(($width*72/100))
 vidy_UL=$(($height*85/100))
 
-convert temp.gif deposit.gif
+convert temp.gif deposit_thickness_inches.gif
 if test -r official.txt; then
-    convert -append -background white deposit.gif \
-              ${ASH3DSHARE_PP}/caveats_official.png deposit.gif
+    convert -append -background white deposit_thickness_inches.gif \
+              ${ASH3DSHARE_PP}/caveats_official.png deposit_thickness_inches.gif
 else
-    convert -append -background white deposit.gif \
-              ${ASH3DSHARE_PP}/caveats_notofficial.png deposit.gif
+    convert -append -background white deposit_thickness_inches.gif \
+              ${ASH3DSHARE_PP}/caveats_notofficial.png deposit_thickness_inches.gif
 fi
 composite -geometry +${vidx_UL}+${vidy_UL} ${ASH3DSHARE_PP}/USGSvid.png \
-      deposit.gif  deposit.gif
+      deposit_thickness_inches.gif  deposit_thickness_inches.gif
 composite -geometry +${legendx_UL}+${legendy_UL} ${ASH3DSHARE_PP}/legend_dep_nws.png \
-      deposit.gif  deposit.gif
+      deposit_thickness_inches.gif  deposit_thickness_inches.gif
 
 if [ "$CLEANFILES" == "T" ]; then
    # Clean up more temporary files
@@ -360,8 +364,8 @@ if [ "$CLEANFILES" == "T" ]; then
     rm contour*.xyz volc.txt var.txt
 fi
 
-width=`identify deposit.gif | cut -f3 -d' ' | cut -f1 -d'x'`
-height=`identify deposit.gif | cut -f3 -d' ' | cut -f2 -d'x'`
+width=`identify deposit_thickness_inches.gif | cut -f3 -d' ' | cut -f1 -d'x'`
+height=`identify deposit_thickness_inches.gif | cut -f3 -d' ' | cut -f2 -d'x'`
 echo "Figure width=$width, height=$height"
 echo "Eruption start time: $year $month $day $hour"
 echo "plume height (km) =$EPlH"

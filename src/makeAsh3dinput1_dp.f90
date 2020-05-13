@@ -36,7 +36,8 @@
       real(kind=8)     :: SimTime, StartTime
       real(kind=8)     :: v_lon, v_lat, v_elevation, width
       real(kind=8)     :: windhour, WriteInterval
-      integer          :: i,iargc,iday,imonth,iyear,iwind,iwindformat,nargs,nWindFiles
+      integer          :: i,iday,imonth,iyear,iwind,iwindformat,nargs,nWindFiles
+      integer          :: status
       integer          :: windyear,windmonth,windday
       !character(len=1) :: answer
       character(len=80) :: linebuffer, infile, outfile
@@ -50,17 +51,18 @@
       integer           :: values(8),iyearnow,imonthnow,idaynow,ihournow,iminutesnow  !time values
       integer           :: timediff         !time difference (local-UTC, minutes)
       logical           :: VolumeInput
+      logical           :: IsThere
 
       write(6,*) 'starting makeAsh3dinput1_dp'
 
 !     set constants
-      aspect_ratio    = 1.5                                    !map aspect ratio (km/km)
+      aspect_ratio    = 1.5_8                                    !map aspect ratio (km/km)
       VolumeInput     = .false.                                !=.true. if erupted volume is given as input
 
 !     set default values
       iwind=4
-      min_vol = 0.0001                                          !minimum erupted volume allowed
-      min_duration = 0.1                                        !minimum eruption duration
+      min_vol = 0.0001_8                                          !minimum erupted volume allowed
+      min_duration = 0.1_8                                        !minimum eruption duration
       iwindformat=20
       nWindFiles=67
       runtype='now'
@@ -73,14 +75,16 @@
       idaynow=values(3)
       timediff=values(4)
       ihournow=values(5)
-      HourNow = ihournow - float(timediff)/60.
+      HourNow = ihournow - float(timediff)/60.0_8
       iminutesnow=values(6)
       Hours1900Now = hours_since_1900(iyearnow,imonthnow,idaynow,HourNow)
       write(6,1001) iyearnow,imonthnow,idaynow,ihournow,iminutesnow
-1001  format('current date: ',i4,'.',i2.2,'.',i2,' ',i2,':',i2.2,' local time')
+1001  format('current date: ',i4,'.',i2.2,'.',i2,' ',i2,':',i2.2,&
+             ' local time')
 
 !     TEST READ COMMAND LINE ARGUMENTS
-      nargs = iargc()
+      !nargs = iargc()
+      nargs = command_argument_count()
       if (nargs.ne.3) then
            write(6,*) 'Error. Three input arguments required'
            write(6,*) 'an input file, an output file, and the date &'
@@ -89,25 +93,40 @@
            write(6,*) 'program stopped'
            stop 1
       end if
-      call getarg(1,infile)
-      call getarg(2,outfile)
-      call getarg(3,last_downloaded)
+      !call getarg(1,infile)
+      !call getarg(2,outfile)
+      !call getarg(3,last_downloaded)
+      call get_command_argument(1, infile, status)
+      call get_command_argument(2, outfile, status)
+      call get_command_argument(3, last_downloaded, status)
       read(last_downloaded,1041) windyear, windmonth, windday, windhour
 1041  format(i4,i2,i2,f2.0)
       write(6,*) 'infile=', infile
       write(6,*) 'outfile=',outfile
       write(6,*) 'date and time of last windfile=',last_downloaded
+      inquire( file=infile, exist=IsThere )
+      if(.not.IsThere)then
+        write(6,*)"ERROR: Could not find file :",infile
+        write(6,*)"       Please copy file to cwd"
+        stop 1
+      endif
       open(unit=10,file=infile)         !simplified input file
+      ! This file should have the following format:
+      !  Line 1 : Volcano name
+      !  Line 2 : Longitude, Latitude
+      !  Line 3 : Elevation (m)
+      !  Line 4 : Plume height (km), duration (hrs), sim. time (hrs), optional volume (km3)
+      !  Line 5 : YYYY MM DD HH.HH Start time (hours relative to start of current windfile)
       read(10,'(a30)') volcano_name
       read(10,*) v_lon, v_lat
       read(10,*) v_elevation
       read(10,'(a80)') linebuffer
-          !See if we can read three variables (pheight, Duration, e_volume)
+          !See if we can read three variables (plume height, Duration, e_volume)
           read(linebuffer,*,err=100) pHeight, Duration, e_volume
           !If so, then VolumeInput=.true, and we need to do some error checking
           VolumeInput=.true.
           write(6,*) 'Erupted volume specified as input:', e_volume, ' km3 DRE'
-          if ((e_volume.lt.1.e-04).or.(e_volume.gt.50.)) then
+          if ((e_volume.lt.1.e-04_8).or.(e_volume.gt.50.0_8)) then
              write(6,*) 'Error: Specified eruptive volume must be between 0.0001 and 50 km3.'
              write(6,*) 'Program stopped.'
              stop 1
@@ -117,9 +136,9 @@
 100       read(linebuffer,*) pHeight, Duration
 120   read(10,*) iyear, imonth, iday, StartTime
 
-      SimTime = Duration + 24.
+      SimTime = Duration + 24.0_8
 
-      if ((StartTime.lt.0.).or.((iyear.ne.0).and.(StartTime.gt.24.))) then
+      if ((StartTime.lt.0.0_8).or.((iyear.ne.0).and.(StartTime.gt.24.0_8))) then
          write(6,*) 'Error: Start hour must be between zero and 24.  You entered ',StartTime
          stop 1
       end if
@@ -190,22 +209,22 @@
 
       !calculate eruptive volume, model domain, resolution
       if (VolumeInput.eqv..false.) then      !erupted volume (km3)
-          e_volume=((pHeight-v_elevation/1000.)/2.)** (1./0.241)*3600.*Duration/1.0e09
+          e_volume=((pHeight-v_elevation/1000.0_8)/2.0_8)** (1.0_8/0.241_8)*3600.0_8*Duration/1.0e09_8
           if (e_volume.lt.min_vol) e_volume = min_vol
           write(6,*) 'Erupted volume calculated as:',e_volume
       end if
-      height  = 2.*(1800.+450.*log10(e_volume))/109.
-      height  = max(height,1.00)                                     !make sure height>200km
-      width   = 1.3*height/cos(3.14*v_lat/180.)
-      latLL   = v_lat-height/2.
-      lonLL   = v_lon-width/2.
+      height  = 2.0_8*(1800.0_8+450.0_8*log10(e_volume))/109.0_8
+      height  = max(height,1.0_8)                                     !make sure height>200km
+      width   = 1.3_8*height/cos(3.14_8*v_lat/180._8)
+      latLL   = v_lat-height/2.0_8
+      lonLL   = v_lon-width/2.0_8
       latUR   = latLL+height
       lonUR   = lonLL+width
-      dx      = width/20.1
-      dy      = height/20.1
-      dz      = pHeight/10.
-      if (((pHeight-(v_elevation/1000.))/dz).lt.5.0) then       !Added to ensure enough nodes for low plumes
-            dz = (pHeight-(v_elevation/1000.))/5.0
+      dx      = width/20.1_8
+      dy      = height/20.1_8
+      dz      = pHeight/10.0_8
+      if (((pHeight-(v_elevation/1000.0_8))/dz).lt.5.0_8) then       !Added to ensure enough nodes for low plumes
+            dz = (pHeight-(v_elevation/1000.0_8))/5.0_8
       end if
 
       !These probably arent necessary for deposit runs
@@ -221,7 +240,7 @@
       !   WriteInterval = 8.0
       !end if
 
-      WriteInterval = 3.0
+      WriteInterval = 3.0_8
                                                  !calculate write times and nWriteTimes
       !WriteTimes(1) = (WriteInterval+aint(StartTime/WriteInterval)*WriteInterval)-StartTime
       !i=1
@@ -231,18 +250,18 @@
       !enddo
       !nWriteTimes=i-1
 
-      if ((latLL-dy).le.-89.5) then                !Make sure the south model boundary doesn't cross the S. pole
-          latLL  = -89.5+dy
+      if ((latLL-dy).le.-89.5_8) then                !Make sure the south model boundary doesn't cross the S. pole
+          latLL  = -89.5_8+dy
           height = latUR-latLL
-          dy     = height/20.1
+          dy     = height/20.1_8
       end if
-      if ((latUR+dy).ge.89.5) then                 !Same for the north model boundary
-          latUR  = 89.5-dy
+      if ((latUR+dy).ge.89.5_8) then                 !Same for the north model boundary
+          latUR  = 89.5_8-dy
           height = latUR - latLL
-          dy     = height/20.1
+          dy     = height/20.1_8
       end if
-      if (lonLL.lt.-180.)     lonLL=lonLL+360.
-      if (width.gt.360.)      width=355.
+      if (lonLL.lt.-180.0_8)     lonLL=lonLL+360.0_8
+      if (width.gt.360.0_8)      width=355.0_8
 
       write(6,*) 'Duration=', Duration, ', pHeight=', pHeight
       write(6,*) 'Simulation time (hrs)=', SimTime

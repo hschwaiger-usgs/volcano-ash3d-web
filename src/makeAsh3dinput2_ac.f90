@@ -38,9 +38,11 @@
       real(kind=8) :: Duration, e_volume, FineAshFraction, height_km, lat_mean, pHeight
       real(kind=8) :: SimTime, StartTime
       real(kind=8) :: TimeNow, v_lon, v_lat, v_elevation, width_km, WriteTimes(24)
-      integer      :: i,j,iargc,iday,imonth,iostatus,iwind,iWindFormat,iyear
+      integer      :: i,j,iday,imonth,iostatus,iwind,iWindFormat,iyear
       integer      :: ii,iii
-      integer      :: k,nargs,nWindFiles
+      integer      :: k
+      integer      :: nargs,nWindFiles
+      integer      :: status
       !character(len=1) :: answer
       integer      :: nrows,remainder
       character(len=7) :: TimeNow_char
@@ -51,36 +53,47 @@
       character(len=80) :: infile, outfile
       character(len=30) :: volcano_name
       character(len=133):: inputlines(310)
+      logical           :: IsThere
 
       write(6,*) 'starting makeAsh3dinput2'
 
       !set constants
-      resolution = 100.     !model resolution in x and y
-      aspect_ratio = 1.5   !map aspect ratio
-      FineAshFraction = 0.05  !mass fraction of fine ash that goes into the cloud
-      CloudLoad_thresh = 0.03    !threshold for setting model boundary
+      resolution = 100.0_8     !model resolution in x and y
+      aspect_ratio = 1.5_8   !map aspect ratio
+      FineAshFraction = 0.05_8  !mass fraction of fine ash that goes into the cloud
+      CloudLoad_thresh = 0.03_8    !threshold for setting model boundary
       nbuffer          = 2       !number of cells buffer between ifirst and model boundary
 
 !     TEST READ COMMAND LINE ARGUMENTS
-      nargs = iargc()
+      !nargs = iargc()
+      nargs = command_argument_count()
       if (nargs.eq.2) then
-           call getarg(1,infile)
-           call getarg(2,outfile)
-           write(6,*) 'input file=',infile,', output file=',outfile
-         else
-           write(6,*) 'error: this program requires two input arguments:'
-           write(6,*) 'an input file and an output file.'
-           write(6,*) 'You have specified ',nargs, ' input arguments.'
-           write(6,*) 'program stopped'
-           stop 1
+        !call getarg(1,infile)
+        !call getarg(2,outfile)
+        call get_command_argument(1, infile, status)
+        call get_command_argument(2, outfile, status)
+
+        write(6,*) 'input file=',infile,', output file=',outfile
+      else
+        write(6,*) 'error: this program requires two input arguments:'
+        write(6,*) 'an input file and an output file.'
+        write(6,*) 'You have specified ',nargs, ' input arguments.'
+        write(6,*) 'program stopped'
+        stop 1
       end if
+      inquire( file=infile, exist=IsThere )
+      if(.not.IsThere)then
+        write(6,*)"ERROR: Could not find file :",infile
+        write(6,*)"       Please copy file to cwd"
+        stop 1
+      endif
       open(unit=10,file=infile)         !simplified input file
 
       iostatus=0
       i=1
       do while (iostatus.ge.0)
-         read(10,'(a133)',IOSTAT=iostatus) inputlines(i)
-         i=i+1
+        read(10,'(a133)',IOSTAT=iostatus) inputlines(i)
+        i=i+1
       end do
       ilines=i-2
 
@@ -112,7 +125,7 @@
       !calculate i_volcano, j_volcano
       latUR_old     = latLL_old+height_old
       lonUR_old     = lonLL_old+width_old
-      if (v_lon.lt.lonLL_old) v_lon=v_lon+360.
+      if (v_lon.lt.lonLL_old) v_lon=v_lon+360.0_8
       i_volcano_old = int((v_lon-lonLL_old)/dx_old)+1       !i node of volcano
       j_volcano_old = int((v_lat-latLL_old)/dy_old)+1       !j node of volcano
 
@@ -151,10 +164,10 @@
 
       do k=1,nWriteTimes
          TimeNow = WriteTimes(k)
-         if (TimeNow.lt.10.0) then
+         if (TimeNow.lt.10.0_8) then
             write(TimeNow_char,1) TimeNow
 1           format('_00',f4.2)
-          else if (TimeNow.lt.100.0) then
+          else if (TimeNow.lt.100.0_8) then
             write(TimeNow_char,2) TimeNow
 2           format('_0',f5.2)
           else
@@ -206,7 +219,7 @@
       do i=1,ilast                                !find ifirst
         do j=1,jlast
           do k=1,nWriteTimes
-             if (CloudLoad(i,j,k).ge.0.01) then
+             if (CloudLoad(i,j,k).ge.0.01_8) then
                 ifirst = i
                 go to 100
              end if
@@ -275,31 +288,31 @@
       write(6,*)
 
       !Adjust model boundaries to maintain the specified aspect ratio
-      lat_mean = latLL_new + height_new/2.
-      height_km=height_new*109
-      width_km =width_new*109.*cos(3.14*lat_mean/180.)
+      lat_mean = latLL_new + height_new/2.0_8
+      height_km=height_new*109.0_8
+      width_km =width_new*109.0_8*cos(3.14_8*lat_mean/180.0_8)
       if (width_km.gt.(aspect_ratio*height_km)) then
          write(6,*) 'adjusting height to maintain aspect ratio'
-         height_new2 = width_km/(aspect_ratio*109.)
-         latLL_new  = latLL_new - (height_new2-height_new)/2.
+         height_new2 = width_km/(aspect_ratio*109.0_8)
+         latLL_new  = latLL_new - (height_new2-height_new)/2.0_8
          height_new = height_new2
          latUR_new  = latLL_new+height_new
          dy_new = height_new/resolution
-         if ((latUR_new+dy_new).gt.89.5) then  !make sure top of model boundary doesn't cross the N pole
+         if ((latUR_new+dy_new).gt.89.5_8) then  !make sure top of model boundary doesn't cross the N pole
              write(6,*) 'adjusting N model boundary so that it doesnt cross the north pole'
-             latUR_new = 89.5-dy_new
+             latUR_new = 89.5_8-dy_new
              height_new = latUR_new-latLL_new
          end if
-         if ((latLL_new-dy_new).lt.-89.5) then
+         if ((latLL_new-dy_new).lt.-89.5_8) then
              write(6,*) 'adjusting S model boundary so that it doesnt cross the south pole'
-             latLL_new = -89.5+dy_new
+             latLL_new = -89.5_8+dy_new
              height_new = latUR_new-latLL_new
          end if
          write(6,*) 'height_new=', height_new
        else
          write(6,*) 'adjusting width to maintain aspect ratio'
-         width_new2 = aspect_ratio*height_km/(109.*cos(3.14*lat_mean/180.))
-         lonLL_new  = lonLL_new - (width_new2-width_new)/2.
+         width_new2 = aspect_ratio*height_km/(109.0_8*cos(3.14_8*lat_mean/180.0_8))
+         lonLL_new  = lonLL_new - (width_new2-width_new)/2.0_8
          width_new  = width_new2
          write(6,*) 'width_new=', width_new
       end if

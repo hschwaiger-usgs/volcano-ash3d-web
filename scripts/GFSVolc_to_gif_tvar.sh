@@ -21,9 +21,23 @@
 #wh-loopc.sh:           enables while loops?
 
 echo "------------------------------------------------------------"
-echo "running GFSVolc_to_gif_tvar.sh"
+echo "running GFSVolc_to_gif_tvar.sh with parameter:"
+echo "  $1"
+if [ $1 -eq 0 ]; then
+  echo " 0 = depothick"
+fi
+if [ $1 -eq 1 ]; then
+  echo " 1 = ashcon_max"
+fi
+if [ $1 -eq 2 ]; then
+  echo " 2 = cloud_height"
+fi
+if [ $1 -eq 3 ]; then
+  echo " 3 = cloud_load"
+fi
 echo `date`
 echo "------------------------------------------------------------"
+
 CLEANFILES="T"
 RUNDATE=`date -u "+%D %T"`
 

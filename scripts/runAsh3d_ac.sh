@@ -21,7 +21,11 @@
 #      Usage: runAsh3d_ac.sh rundir zipname dash_flag advanced_flag
 
 echo "------------------------------------------------------------"
-echo "running runAsh3d_ac.sh"
+echo "running runAsh3d_ac.sh with parameters:"
+echo "  run directory  = $1"
+echo "  zip file name  = $2"
+echo "  Dashboard case = $3"
+echo "  Advances run   = $4"
 echo `date`
 echo "------------------------------------------------------------"
 CLEANFILES="T"

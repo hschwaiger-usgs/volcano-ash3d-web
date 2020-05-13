@@ -6,7 +6,7 @@
 
        implicit none
 
-       integer           :: iargc, nargs
+       integer           :: nargs
        integer           :: status
        character(len=100):: arg
        integer           :: nerupt
@@ -17,17 +17,26 @@
        character(len=1)  :: morethan(3000)
        real              :: arrival_time(3000), duration(3000)
        integer           :: i, n_airports
+       logical           :: IsThere
 
        write(6,*) 'running MakeAshArrivalTimes_ac'
 
-!     TEST READ COMMAND LINE ARGUMENTS
-      nargs = iargc()
-      if (nargs.eq.0) then
-        nerupt=1
-      elseif (nargs.eq.1) then
-        call get_command_argument(1, arg, status)
-        read(arg,*)nerupt
-      endif
+!      TEST READ COMMAND LINE ARGUMENTS
+       !nargs = iargc()
+       nargs = command_argument_count()
+       if (nargs.eq.0) then
+         nerupt=1
+       elseif (nargs.eq.1) then
+         call get_command_argument(1, arg, status)
+         read(arg,*)nerupt
+       endif
+
+       inquire( file='AshArrivalTimes.txt', exist=IsThere )
+       if(.not.IsThere)then
+         write(6,*)"ERROR: Could not find file AshArrivalTimes.txt"
+         write(6,*)"       Please copy file to cwd"
+         stop 1
+       endif
 
        open(unit=10,file='AshArrivalTimes.txt',status='old',err=2000)
        open(unit=11,file='AshArrivalTimes_ac.txt')
@@ -43,7 +52,7 @@
            if (inputline(80:87).eq.'       ') go to 14
            read(inputline,2) arrival_time(i), morethan(i), duration(i)
 2          format(79x,f7.2,3x,a1,f6.2)
-           if (abs(arrival_time(i)+9999).gt.1.e-05) then
+           if (abs(arrival_time(i)+9999).gt.1.e-05_8) then
               write(inputlines(i),13) inputline(1:79), hoursminutes(arrival_time(i)), &
                                       morethan(i),  hoursminutes(duration(i))
 13            format(a79,1x,a6,2x,a1,a6,'   |')
@@ -143,7 +152,7 @@
              hoursminutes = '---:--'
          else
             int_hours = int(hours)
-            minutes = (hours-int(hours))*60.0
+            minutes = (hours-int(hours))*60.0_8
             int_minutes = int(minutes)
             write(hoursminutes,1) int_hours, int_minutes
 1           format(i3.3,':',i2.2)
