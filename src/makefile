@@ -43,7 +43,7 @@ SYSTEM = gfortran
 #      OMPOPT: includes optimizations flags for fastest runtime and OpenMP directives
 #              To run, enter: env OMP_NUM_THREADS=4 Ash3d input_file.inp
 #    This variable cannot be left blank
-RUN = DEBUG
+RUN = OPT
 
 # This is the location of the USGS libraries and include files
 USGSROOT=/opt/USGS
@@ -274,6 +274,7 @@ install:
 	install -m 644 ../share/post_proc/*png             $(INSTALLDIR)/share/post_proc/
 	install -m 644 ../share/post_proc/*xy              $(INSTALLDIR)/share/post_proc/
 	install -m 644 ../share/post_proc/world_cities.txt $(INSTALLDIR)/share/post_proc/
+	install -m 755 ../bin/ncGFS4_2_pf                  $(USGSROOT)/bin/
 
 uninstall:
 	rm -f $(INSTALLDIR)/bin/citywriter

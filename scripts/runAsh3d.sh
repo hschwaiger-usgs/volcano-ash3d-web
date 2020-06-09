@@ -1,7 +1,6 @@
 #!/bin/bash
 
 rc=0
-
 echo "checking input arguments"
 if [ -z $1 ]
 then
