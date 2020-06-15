@@ -321,7 +321,7 @@ fi
 
 # Recreating the trajectory plot (using previously calculated trajecties), but using
 # the consistant basemap
-if test -r *traj*; then
+if test -r ftraj1.dat; then
   if [ "$USEPODMAN" == "T" ]; then
     podman run -v ${FULLRUNDIR}:/run/user/1004/libpod/tmp:z ash3dpp /opt/USGS/Ash3d/bin/scripts/GFSVolc_to_gif_ac_traj.sh 1
   else
@@ -351,8 +351,10 @@ if [[ $DASHBOARD_RUN == T* ]]
   then
     echo "Now creating gif images of the hysplit run"
     if [ "$USEPODMAN" == "T" ]; then
+      echo "Running podman image of GFSVolc_to_gif_ac_hysplit.sh"
       #podman run -v ${FULLRUNDIR}:/run/user/1004/libpod/tmp:z ash3dpp /opt/USGS/Ash3d/bin/scripts/GFSVolc_to_gif_ac_hysplit.sh
     else
+      echo "Running GFSVolc_to_gif_ac_hysplit.sh"
       #${ASH3DSCRIPTDIR}/GFSVolc_to_gif_ac_hysplit.sh
     fi
 
@@ -399,7 +401,7 @@ zip $ZIPNAME.zip *UTC*.gif \
 #zip $ZIPNAME.zip *UTC*.gif cloud_animation.gif cloud_arrivaltimes_airports.txt ${INFILE_MAIN} \
 #    cloud_arrivaltimes_airports.kmz cloud_arrivaltimes_hours.kmz CloudConcentration.kmz CloudHeight.kmz \
 #    CloudLoad.kmz readme.pdf *rajector*gif ash3d_runlog.txt
-if test -r ftraj*.dat; then
+if test -r ftraj1.dat; then
    zip -a $ZIPNAME.zip traj*.dat
 fi
 rc=$((rc + $?))
