@@ -163,14 +163,16 @@ fi
 
 ###############################################################################
 #create .lev files of contour values
-echo "0.1    128   0 128" > dp_0.1.lev   #deposit (0.1 mm)
-echo "0.3      0   0 255" > dp_0.3.lev   #deposit (0.3 mm)
-echo "1.0      0 128 255" >   dp_1.lev   #deposit (1 mm)
-echo "3.0      0 255 128" >   dp_3.lev   #deposit (3 mm)
-echo "10.0   195 195   0" >  dp_10.lev   #deposit (1 cm)
-echo "30.0   255 128   0" >  dp_30.lev   #deposit (3 cm)
-echo "100.0  255   0   0" > dp_100.lev   #deposit (10cm)
-echo "300.0  128   0   0" > dp_300.lev   #deposit (30cm)
+echo "0.01    214 222 105" > dp_0.01.lev   #deposit (0.01 mm)
+echo "0.03    249 167 113" > dp_0.03.lev   #deposit (0.03 mm)
+echo "0.1    128   0 128"  > dp_0.1.lev    #deposit (0.1 mm)
+echo "0.3      0   0 255"  > dp_0.3.lev    #deposit (0.3 mm)
+echo "1.0      0 128 255"  >   dp_1.lev    #deposit (1 mm)
+echo "3.0      0 255 128"  >   dp_3.lev    #deposit (3 mm)
+echo "10.0   195 195   0"  >  dp_10.lev    #deposit (1 cm)
+echo "30.0   255 128   0"  >  dp_30.lev    #deposit (3 cm)
+echo "100.0  255   0   0"  > dp_100.lev    #deposit (10cm)
+echo "300.0  128   0   0"  > dp_300.lev    #deposit (30cm)
 
 #get latitude & longitude range
 lonmin=$LLLON
@@ -187,25 +189,29 @@ then
    BASE="-Ba0.25/a0.25"                  # label every 5 degress lat/lon
    KMSCALE="30"
    MISCALE="20"
+   DETAIL="-Di"
  elif [ $DLON_INT -le 5 ] ; then
    BASE="-Ba1/a1"                  # label every 5 degress lat/lon
    KMSCALE="50"
    MISCALE="30"
+   DETAIL="-Di"
  elif [ $DLON_INT -le 10 ] ; then
    BASE="-Ba2/a2"                  # label every 5 degress lat/lon
    KMSCALE="100"
    MISCALE="50"
+   DETAIL="-Di"
  else
    BASE="-Ba5/a5"                    #label every 10 degrees lat/lon
    KMSCALE="200"
    MISCALE="100"
+   DETAIL="-Dl"
 fi
 #set mapping parameters
 AREA="-R$lonmin/$lonmax/$latmin/$latmax"
 #AREA="-Rdep_tot_out.grd"            #sets the map boundaries based on the file dep_tot_out.grd
 #BASE="-Ba2/a1"                      #"a1/a1" means annotations every 1 degree. "g1/g1"=gridlines every 1 degree
 PROJ="-JM${VCLON}/${VCLAT}/20"      # Mercator projection, with origina at lat & lon of volcano, 20 cm width
-DETAIL="-Dl"                        # low resolution coastlines (-Dc=crude, -Di=intermediate, -Dl=low)
+#DETAIL="-Dl"                        # low resolution coastlines (-Dc=crude, -Di=intermediate, -Dl=low)
 COAST="-G220/220/220 -W"            # RGB values for land areas (220/220/220=light gray)
 BOUNDARIES="-Na"                    # -N=draw political boundaries, a=all national, Am. state & marine b.
 RIVERS="-I1/1p,blue -I2/0.25p,blue" # Perm. large rivers used 1p blue line, other large rivers 0.25p blue line
@@ -236,28 +242,36 @@ ${GMTpre[GMTv]} pscoast $AREA $PROJ $BASE $DETAIL $COAST $BOUNDARIES $RIVERS -K 
 
 if [ $GMTv -eq 4 ] ; then
     # GMT v4 writes contours with -D[basename] and writes files with [basename][lev][segment]_[e,i].xyz; with e,i for interior or exterior
-    ${GMTpre[GMTv]} grdcontour dep_tot_out.grd   $AREA $PROJ $BASE -Cdp_0.1.lev -D -A- -W6/128/0/128 -Dcontourfile -O -K >> temp.ps
-    ${GMTpre[GMTv]} grdcontour dep_tot_out.grd   $AREA $PROJ $BASE -Cdp_0.3.lev -D -A- -W6/0/0/255     -O -K >> temp.ps
-    ${GMTpre[GMTv]} grdcontour dep_tot_out.grd   $AREA $PROJ $BASE -Cdp_1.lev   -D -A- -W6/0/128/255   -O -K >> temp.ps
-    ${GMTpre[GMTv]} grdcontour dep_tot_out.grd   $AREA $PROJ $BASE -Cdp_3.lev   -D -A- -W6/0/255/128   -O -K >> temp.ps
-    ${GMTpre[GMTv]} grdcontour dep_tot_out.grd   $AREA $PROJ $BASE -Cdp_10.lev  -D -A- -W6/195/195/0   -O -K >> temp.ps
-    ${GMTpre[GMTv]} grdcontour dep_tot_out.grd   $AREA $PROJ $BASE -Cdp_30.lev  -D -A- -W6/255/128/0   -O -K >> temp.ps
-    ${GMTpre[GMTv]} grdcontour dep_tot_out.grd   $AREA $PROJ $BASE -Cdp_100.lev -D -A- -W6/255/0/0     -O -K >> temp.ps
-    ${GMTpre[GMTv]} grdcontour dep_tot_out.grd   $AREA $PROJ $BASE -Cdp_300.lev -D -A- -W6/128/0/0     -O -K >> temp.ps
+    ${GMTpre[GMTv]} grdcontour dep_tot_out.grd   $AREA $PROJ $BASE -Cdp_0.01.lev -D -A- -W6/214/222/105 -Dcontourfile -O -K >> temp.ps
+    ${GMTpre[GMTv]} grdcontour dep_tot_out.grd   $AREA $PROJ $BASE -Cdp_0.03.lev -D -A- -W6/249/167/113 -O -K >> temp.ps
+    ${GMTpre[GMTv]} grdcontour dep_tot_out.grd   $AREA $PROJ $BASE -Cdp_0.1.lev -D -A- -W6/128/0/128    -O -K >> temp.ps
+    ${GMTpre[GMTv]} grdcontour dep_tot_out.grd   $AREA $PROJ $BASE -Cdp_0.3.lev -D -A- -W6/0/0/255      -O -K >> temp.ps
+    ${GMTpre[GMTv]} grdcontour dep_tot_out.grd   $AREA $PROJ $BASE -Cdp_1.lev   -D -A- -W6/0/128/255    -O -K >> temp.ps
+    ${GMTpre[GMTv]} grdcontour dep_tot_out.grd   $AREA $PROJ $BASE -Cdp_3.lev   -D -A- -W6/0/255/128    -O -K >> temp.ps
+    ${GMTpre[GMTv]} grdcontour dep_tot_out.grd   $AREA $PROJ $BASE -Cdp_10.lev  -D -A- -W6/195/195/0    -O -K >> temp.ps
+    ${GMTpre[GMTv]} grdcontour dep_tot_out.grd   $AREA $PROJ $BASE -Cdp_30.lev  -D -A- -W6/255/128/0    -O -K >> temp.ps
+    ${GMTpre[GMTv]} grdcontour dep_tot_out.grd   $AREA $PROJ $BASE -Cdp_100.lev -D -A- -W6/255/0/0      -O -K >> temp.ps
+    ${GMTpre[GMTv]} grdcontour dep_tot_out.grd   $AREA $PROJ $BASE -Cdp_300.lev -D -A- -W6/128/0/0      -O -K >> temp.ps
 else
     # GMT v5 [GMTv]writes contour files as a separate step from drawing and writes all segments to one file
-    ${GMTpre[GMTv]} grdcontour dep_tot_out.grd   $AREA $PROJ $BASE -Cdp_0.1.lev -A- -W3,128/0/128 -Dcontourfile_0.1_0_i.xyz
-    ${GMTpre[GMTv]} grdcontour dep_tot_out.grd   $AREA $PROJ $BASE -Cdp_0.3.lev -A- -W3,0/0/255   -Dcontourfile_0.3_0_i.xyz
-    ${GMTpre[GMTv]} grdcontour dep_tot_out.grd   $AREA $PROJ $BASE -Cdp_1.lev   -A- -W3,0/128/255 -Dcontourfile_1_0_i.xyz
-    ${GMTpre[GMTv]} grdcontour dep_tot_out.grd   $AREA $PROJ $BASE -Cdp_3.lev   -A- -W3,0/255/128 -Dcontourfile_3_0_i.xyz
-    ${GMTpre[GMTv]} grdcontour dep_tot_out.grd   $AREA $PROJ $BASE -Cdp_10.lev  -A- -W3,195/195/0 -Dcontourfile_10_0_i.xyz
-    ${GMTpre[GMTv]} grdcontour dep_tot_out.grd   $AREA $PROJ $BASE -Cdp_30.lev  -A- -W3,255/128/0 -Dcontourfile_30_0_i.xyz
-    ${GMTpre[GMTv]} grdcontour dep_tot_out.grd   $AREA $PROJ $BASE -Cdp_100.lev -A- -W3,255/0/0   -Dcontourfile_100_0_i.xyz
-    ${GMTpre[GMTv]} grdcontour dep_tot_out.grd   $AREA $PROJ $BASE -Cdp_300.lev -A- -W3,128/0/0   -Dcontourfile_3000_0_i.xyz
+    ${GMTpre[GMTv]} grdcontour dep_tot_out.grd   $AREA $PROJ $BASE -Cdp_0.01.lev -A- -W3,214/222/105 -Dcontourfile_0.01_0_i.xyz
+    ${GMTpre[GMTv]} grdcontour dep_tot_out.grd   $AREA $PROJ $BASE -Cdp_0.03.lev -A- -W3,249/167/113 -Dcontourfile_0.03_0_i.xyz
+    ${GMTpre[GMTv]} grdcontour dep_tot_out.grd   $AREA $PROJ $BASE -Cdp_0.1.lev  -A- -W3,128/0/128   -Dcontourfile_0.1_0_i.xyz
+    ${GMTpre[GMTv]} grdcontour dep_tot_out.grd   $AREA $PROJ $BASE -Cdp_0.3.lev  -A- -W3,0/0/255     -Dcontourfile_0.3_0_i.xyz
+    ${GMTpre[GMTv]} grdcontour dep_tot_out.grd   $AREA $PROJ $BASE -Cdp_1.lev    -A- -W3,0/128/255   -Dcontourfile_1_0_i.xyz
+    ${GMTpre[GMTv]} grdcontour dep_tot_out.grd   $AREA $PROJ $BASE -Cdp_3.lev    -A- -W3,0/255/128   -Dcontourfile_3_0_i.xyz
+    ${GMTpre[GMTv]} grdcontour dep_tot_out.grd   $AREA $PROJ $BASE -Cdp_10.lev   -A- -W3,195/195/0   -Dcontourfile_10_0_i.xyz
+    ${GMTpre[GMTv]} grdcontour dep_tot_out.grd   $AREA $PROJ $BASE -Cdp_30.lev   -A- -W3,255/128/0   -Dcontourfile_30_0_i.xyz
+    ${GMTpre[GMTv]} grdcontour dep_tot_out.grd   $AREA $PROJ $BASE -Cdp_100.lev  -A- -W3,255/0/0     -Dcontourfile_100_0_i.xyz
+    ${GMTpre[GMTv]} grdcontour dep_tot_out.grd   $AREA $PROJ $BASE -Cdp_300.lev  -A- -W3,128/0/0     -Dcontourfile_3000_0_i.xyz
 
     # GMT v5 adds a header line to these files.  First double-check that the header is present, then remove it.
     testchar=`head -1 contourfile_0.1_0_i.xyz | cut -c1`
     if [ $testchar = '>' ] ; then
+      tail -n +2 contourfile_0.01_0_i.xyz > temp.xyz
+      mv temp.xyz contourfile_0.01_0_i.xyz
+      tail -n +2 contourfile_0.03_0_i.xyz > temp.xyz
+      mv temp.xyz contourfile_0.03_0_i.xyz
       tail -n +2 contourfile_0.1_0_i.xyz > temp.xyz
       mv temp.xyz contourfile_0.1_0_i.xyz
       tail -n +2 contourfile_0.3_0_i.xyz > temp.xyz
@@ -276,14 +290,16 @@ else
       mv temp.xyz contourfile_3000_0_i.xyz
     fi
 
-    ${GMTpre[GMTv]} grdcontour dep_tot_out.grd   $AREA $PROJ $BASE -Cdp_0.1.lev -A- -W3,128/0/128   -O -K >> temp.ps
-    ${GMTpre[GMTv]} grdcontour dep_tot_out.grd   $AREA $PROJ $BASE -Cdp_0.3.lev -A- -W3,0/0/255     -O -K >> temp.ps
-    ${GMTpre[GMTv]} grdcontour dep_tot_out.grd   $AREA $PROJ $BASE -Cdp_1.lev   -A- -W3,0/128/255   -O -K >> temp.ps
-    ${GMTpre[GMTv]} grdcontour dep_tot_out.grd   $AREA $PROJ $BASE -Cdp_3.lev   -A- -W3,0/255/128   -O -K >> temp.ps
-    ${GMTpre[GMTv]} grdcontour dep_tot_out.grd   $AREA $PROJ $BASE -Cdp_10.lev  -A- -W3,195/195/0   -O -K >> temp.ps
-    ${GMTpre[GMTv]} grdcontour dep_tot_out.grd   $AREA $PROJ $BASE -Cdp_30.lev  -A- -W3,255/128/0   -O -K >> temp.ps
-    ${GMTpre[GMTv]} grdcontour dep_tot_out.grd   $AREA $PROJ $BASE -Cdp_100.lev -A- -W3,255/0/0     -O -K >> temp.ps
-    ${GMTpre[GMTv]} grdcontour dep_tot_out.grd   $AREA $PROJ $BASE -Cdp_300.lev -A- -W3,128/0/0     -O -K >> temp.ps
+    ${GMTpre[GMTv]} grdcontour dep_tot_out.grd   $AREA $PROJ $BASE -Cdp_0.01.lev -A- -W3,214/222/105   -O -K >> temp.ps
+    ${GMTpre[GMTv]} grdcontour dep_tot_out.grd   $AREA $PROJ $BASE -Cdp_0.03.lev -A- -W3,249/167/113   -O -K >> temp.ps
+    ${GMTpre[GMTv]} grdcontour dep_tot_out.grd   $AREA $PROJ $BASE -Cdp_0.1.lev  -A- -W3,128/0/128   -O -K >> temp.ps
+    ${GMTpre[GMTv]} grdcontour dep_tot_out.grd   $AREA $PROJ $BASE -Cdp_0.3.lev  -A- -W3,0/0/255     -O -K >> temp.ps
+    ${GMTpre[GMTv]} grdcontour dep_tot_out.grd   $AREA $PROJ $BASE -Cdp_1.lev    -A- -W3,0/128/255   -O -K >> temp.ps
+    ${GMTpre[GMTv]} grdcontour dep_tot_out.grd   $AREA $PROJ $BASE -Cdp_3.lev    -A- -W3,0/255/128   -O -K >> temp.ps
+    ${GMTpre[GMTv]} grdcontour dep_tot_out.grd   $AREA $PROJ $BASE -Cdp_10.lev   -A- -W3,195/195/0   -O -K >> temp.ps
+    ${GMTpre[GMTv]} grdcontour dep_tot_out.grd   $AREA $PROJ $BASE -Cdp_30.lev   -A- -W3,255/128/0   -O -K >> temp.ps
+    ${GMTpre[GMTv]} grdcontour dep_tot_out.grd   $AREA $PROJ $BASE -Cdp_100.lev  -A- -W3,255/0/0     -O -K >> temp.ps
+    ${GMTpre[GMTv]} grdcontour dep_tot_out.grd   $AREA $PROJ $BASE -Cdp_300.lev  -A- -W3,128/0/0     -O -K >> temp.ps
 fi
 
 echo $VCLON $VCLAT '1.0' | ${GMTpre[GMTv]} psxy $AREA $PROJ -St0.1i -Gblack -Wthinnest -O -K >> temp.ps  #Plot Volcano
@@ -363,7 +379,7 @@ fi
 composite -geometry +${vidx_UL}+${vidy_UL} ${ASH3DSHARE_PP}/USGSvid.png \
       deposit_thickness_mm.gif  deposit_thickness_mm.gif
 composite -geometry +${legendx_UL}+${legendy_UL} ${ASH3DSHARE_PP}/legend_dep.png \
-      deposit_thickness_mm.gif  deposit_thickness_mm.gif
+       deposit_thickness_mm.gif  deposit_thickness_mm.gif
 
 if [ "$CLEANFILES" == "T" ]; then
    # Clean up more temporary files

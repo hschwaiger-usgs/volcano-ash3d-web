@@ -53,7 +53,7 @@
       legend1_width   = 219.0_8              !width of legend containin ESP's
       legend1_height  = 96.0_8
       legend2_width   = 100.0_8              !width of legend_dep_mm.gif
-      legend2_height  = 231.0_8
+      legend2_height  = 241.0_8
       xleft_map       = 31.0_8               !x offset of left side of map
       xright_map      = 631.0_8-598.0_8      !x offset of right side of map from right side of image
       ybottom_map     = 545.0_8-462.0_8      !y offset of base of map from base of image
@@ -176,14 +176,14 @@
       !Open first file
       !there are at least three possible names for this file, so we have
       !to try all of them
-      write(6,*) 'trying to open contourfile_0.1_0_i.xyz'
-      open(unit=12,file='contourfile_0.1_0_i.xyz',status='old',err=200)  !file name if it's a closed contour
-      write(6,*) '   opening contourfile_0.1_0_i.xyz'
+      write(6,*) 'trying to open contourfile_0.01_0_i.xyz'
+      open(unit=12,file='contourfile_0.01_0_i.xyz',status='old',err=200)  !file name if it's a closed contour
+      write(6,*) '   opening contourfile_0.01_0_i.xyz'
       goto 240
-200   write(6,*) 'Couldnt find   contourfile_0.1_0_i.xyz'
-      write(6,*) 'trying to open contourfile_0.1_0.xyz'
-      open(unit=12,file='contourfile_0.1_0.xyz',status='old',err=250)    !file name if it's not
-      write(6,*) '   opening contourfile_0.1_0.xyz'
+200   write(6,*) 'Couldnt find   contourfile_0.01_0_i.xyz'
+      write(6,*) 'trying to open contourfile_0.01_0.xyz'
+      open(unit=12,file='contourfile_0.01_0.xyz',status='old',err=250)    !file name if it's not
+      write(6,*) '   opening contourfile_0.01_0.xyz'
 240   do while (Iostatus.ge.0)
         !Read in latitude & longitude
         read(12,'(a80)',IOSTAT=Iostatus) inputline
@@ -207,9 +207,9 @@
 
       !See if there are other files of isolated contours
       Iostatus = 1
-      write(6,*) '   Looking for contourfile_0.1_1_i.xyz'
-      open(unit=13,file='contourfile_0.1_1_i.xyz',status='old',err=350)
-      write(6,*) '   found contourfile_0.1_1_i.xyz'
+      write(6,*) '   Looking for contourfile_0.01_1_i.xyz'
+      open(unit=13,file='contourfile_0.01_1_i.xyz',status='old',err=350)
+      write(6,*) '   found contourfile_0.01_1_i.xyz'
       do while (Iostatus.ge.0)
         !Read in latitude & longitude
         read(13,'(a80)',IOSTAT=Iostatus) inputline
@@ -232,9 +232,9 @@
       close(13)
 
       Iostatus = 1
-      write(6,*) '   Looking for contourfile_0.1_2_i.xyz'
-      open(unit=14,file='contourfile_0.1_2_i.xyz',status='old',err=350)
-      write(6,*) '   found contourfile_0.1_2_i.xyz'
+      write(6,*) '   Looking for contourfile_0.01_2_i.xyz'
+      open(unit=14,file='contourfile_0.01_2_i.xyz',status='old',err=350)
+      write(6,*) '   found contourfile_0.01_2_i.xyz'
       do while (Iostatus.ge.0)
         !Read in latitude & longitude
         read(14,'(a80)',IOSTAT=Iostatus) inputline
@@ -331,8 +331,8 @@
       !return
       stop 0
 
-      !error trap if there is no contour_0.1_0_i.xyz file
-250   write(6,*) 'error opening contourfile_0.1_0_i.xyz'
+      !error trap if there is no contour_0.01_0_i.xyz file
+250   write(6,*) 'error opening contourfile_0.01_0_i.xyz'
       goto 350
 
       end program legend_placer_dp_mm
