@@ -18,6 +18,8 @@
 #      and its documentation for any purpose.  We assume no responsibility to provide
 #      technical support to users of this software.
 
+#      Usage: runAsh3d_dp.sh rundir zipname dash_flag advanced_flag
+
 echo "------------------------------------------------------------"
 echo "running runAsh3d_dp.sh with parameters:"
 echo "  run directory  = $1"
@@ -27,6 +29,8 @@ echo "  Advances run   = $4"
 echo `date`
 echo "------------------------------------------------------------"
 CLEANFILES="T"
+USEPODMAN="T"
+
 t0=`date -u`                                     # record start time
 rc=0                                             # error message accumulator
 
@@ -57,6 +61,7 @@ echo "checking input argument"
 if [ -z $1 ]
 then
     echo "Error: you must specify an input directory containing the file ash3d_input_dp.inp"
+    echo "Usage: runAsh3d_dp.sh rundir zipname dash_flag advanced_flag"
     exit 1
   else
     RUNDIR=$1
@@ -87,6 +92,7 @@ echo "changing directories to ${RUNDIR}"
 if test -r ${RUNDIR}
 then
     cd $RUNDIR
+    FULLRUNDIR=`pwd`
     echo "DASHBOARD_RUN = $DASHBOARD_RUN $3" > test.txt
   else
     echo "Error: Directory ${RUNDIR} does not exist."
@@ -297,8 +303,12 @@ echo "creating gif image of deposit"
 #    Cloud load is the default, so run that one first
 #      Note:  the animate gif for this variable is copied to "cloud_animation.gif"
 #  HFS: Add functionality of GFSVolc_to_gif_dp.sh to GFSVolc_to_gif_tvar.sh
-echo "Calling ${ASH3DSCRIPTDIR}/GFSVolc_to_gif_dp.sh"
-${ASH3DSCRIPTDIR}/GFSVolc_to_gif_dp.sh
+if [ "$USEPODMAN" == "T" ]; then
+  podman run --rm -v ${FULLRUNDIR}:/run/user/1004/libpod/tmp:z ash3dpp /opt/USGS/Ash3d/bin/scripts/GFSVolc_to_gif_dp.sh
+else
+  echo "Calling ${ASH3DSCRIPTDIR}/GFSVolc_to_gif_dp.sh"
+  ${ASH3DSCRIPTDIR}/GFSVolc_to_gif_dp.sh
+fi
 rc=$((rc+$?))
 echo "rc=$rc"
 
@@ -312,7 +322,11 @@ mv Ash3d.lst ash3d_runlog.txt
 
 
 echo "creating gif image of deposit with mm scale"
-${ASH3DSCRIPTDIR}/GFSVolc_to_gif_dp_mm.sh
+if [ "$USEPODMAN" == "T" ]; then
+  podman run --rm -v ${FULLRUNDIR}:/run/user/1004/libpod/tmp:z ash3dpp /opt/USGS/Ash3d/bin/scripts/GFSVolc_to_gif_dp_mm.sh
+else
+  ${ASH3DSCRIPTDIR}/GFSVolc_to_gif_dp_mm.sh
+fi
 rc=$((rc+$?))
 echo "rc=$rc"
 
@@ -347,7 +361,7 @@ zip $ZIPNAME.zip ash3d_input.txt ash3d_runlog.txt \
 rc=$((rc + $?))
 
 echo "removing extraneous files"
-rm -f world_cities.txt depTS* GlobalAirports_ewert.txt cities.xy
+#rm -f world_cities.txt depTS* GlobalAirports_ewert.txt cities.xy
 rc=$((rc+$?))
 echo "rc=$rc"
 

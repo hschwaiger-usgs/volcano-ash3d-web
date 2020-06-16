@@ -163,7 +163,8 @@ then
 #echo "2.0 255 0 0" > ac_2.0.lev     #concentration and RGB color of 2.0 mg/m3 air concentration
 CPT=Ash3d_cloud_height.cpt
 CPTm=Ash3d_cloud_height_m.cpt
-CPTft=Ash3d_cloud_height_50kft.cpt
+#CPTft=Ash3d_cloud_height_50kft.cpt
+CPTft=/opt/USGS/Ash3d/share/post_proc/Ash3d_cloud_height_50kft.cpt
 
 #t=$((tmax-1))
 #for (( t=0;t<=tmax-1;t++))
@@ -212,7 +213,7 @@ do
    ##################
    # Plot puff particles for this time step
    awk '{print $1, $2, $3}' puff.dat | ${GMTpre[GMTv]} psxy $AREA $PROJ -Sc0.03i -C$CPTft -O -K >> temp.ps
-/
+
    #Plot Volcano
    echo $VCLON $VCLAT '1.0' | ${GMTpre[GMTv]} psxy $AREA $PROJ -St0.1i -Gblack -Wthinnest -O -K >> temp.ps
 
@@ -296,7 +297,7 @@ EOF
        convert -append -background white output3_t${time}.gif ${ASH3DSHARE_PP}/caveats_notofficial_UAF_puff.png \
                    output3_t${time}.gif
    fi
-   composite -geometry +${vidx_UL}+${vidy_UL} ${ASH3DSHARE_PP}/USGSvid.gif output3_t${time}.gif \
+   composite -geometry +${vidx_UL}+${vidy_UL} ${ASH3DSHARE_PP}/USGSvid.png output3_t${time}.gif \
              output3_t${time}.gif
    t=`expr $t + 1`
 done
@@ -317,8 +318,8 @@ while [ "$t" -le $(($tmax-1)) ]
 do
     time=`echo "${t0} + ${t} * ${time_interval}" | bc -l`
     hours_now=`echo "$hours_real + $time" | bc -l`
-    hours_since=`${ASH3DBINDIR}/HoursSince1900 $year $month $day $hours_now`
-    filename=`${ASH3DBINDIR}/yyyymmddhh_since_1900 $hours_since`
+    hours_since=`${USGSROOT}/bin/HoursSince1900 $year $month $day $hours_now`
+    filename=`${USGSROOT}/bin/yyyymmddhh_since_1900 $hours_since`
     echo "moving file output_t${time}.gif to ${filename}.gif"
     mv output3_t${time}.gif ${filename}_puff.gif
     if [ $time_interval = "1" ]; then
