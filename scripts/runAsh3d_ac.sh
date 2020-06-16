@@ -209,7 +209,7 @@ if test -r ${USGSROOT}/bin/MetTraj_F; then
   echo "Calling runGFS_traj.sh"
   ${ASH3DSCRIPTDIR}/runGFS_traj.sh
   if [ "$USEPODMAN" == "T" ]; then
-    podman run -v ${FULLRUNDIR}:/run/user/1004/libpod/tmp:z ash3dpp /opt/USGS/Ash3d/bin/scripts/GFSVolc_to_gif_ac_traj.sh 0
+    podman  run --rm -v ${FULLRUNDIR}:/run/user/1004/libpod/tmp:z ash3dpp /opt/USGS/Ash3d/bin/scripts/GFSVolc_to_gif_ac_traj.sh 0
   else
     ${ASH3DSCRIPTDIR}/GFSVolc_to_gif_ac_traj.sh 0
   fi
@@ -313,7 +313,7 @@ echo "creating gif images of ash cloud"
 #    Cloud load is the default, so run that one first
 #      Note:  the animate gif for this variable is copied to "cloud_animation.gif"
 if [ "$USEPODMAN" == "T" ]; then
-  podman run -v ${FULLRUNDIR}:/run/user/1004/libpod/tmp:z ash3dpp /opt/USGS/Ash3d/bin/scripts/GFSVolc_to_gif_tvar.sh 3
+  podman run --rm -v ${FULLRUNDIR}:/run/user/1004/libpod/tmp:z ash3dpp /opt/USGS/Ash3d/bin/scripts/GFSVolc_to_gif_tvar.sh 3
 else
   echo "Calling ${ASH3DSCRIPTDIR}/GFSVolc_to_gif_tvar.sh 3"
   ${ASH3DSCRIPTDIR}/GFSVolc_to_gif_tvar.sh 3
@@ -323,7 +323,7 @@ fi
 # the consistant basemap
 if test -r ftraj1.dat; then
   if [ "$USEPODMAN" == "T" ]; then
-    podman run -v ${FULLRUNDIR}:/run/user/1004/libpod/tmp:z ash3dpp /opt/USGS/Ash3d/bin/scripts/GFSVolc_to_gif_ac_traj.sh 1
+    podman run --rm -v ${FULLRUNDIR}:/run/user/1004/libpod/tmp:z ash3dpp /opt/USGS/Ash3d/bin/scripts/GFSVolc_to_gif_ac_traj.sh 1
   else
     ${ASH3DSCRIPTDIR}/GFSVolc_to_gif_ac_traj.sh 1
   fi
@@ -335,7 +335,7 @@ if [[ $DASHBOARD_RUN == T* ]]
   then
     #    Now run it for cloud_height
     if [ "$USEPODMAN" == "T" ]; then
-      podman run -v ${FULLRUNDIR}:/run/user/1004/libpod/tmp:z ash3dpp /opt/USGS/Ash3d/bin/scripts/GFSVolc_to_gif_tvar.sh 2
+      podman run --rm -v ${FULLRUNDIR}:/run/user/1004/libpod/tmp:z ash3dpp /opt/USGS/Ash3d/bin/scripts/GFSVolc_to_gif_tvar.sh 2
     else
       echo "Calling GFSVolc_to_gif_tvar.sh 2"
       ${ASH3DSCRIPTDIR}/GFSVolc_to_gif_tvar.sh 2
@@ -350,20 +350,20 @@ echo "  ended run at: " `date` >> Ash3d.lst
 if [[ $DASHBOARD_RUN == T* ]]
   then
     echo "Now creating gif images of the hysplit run"
-    #if [ "$USEPODMAN" == "T" ]; then
-    #  echo "Running podman image of GFSVolc_to_gif_ac_hysplit.sh"
-    #  #podman run -v ${FULLRUNDIR}:/run/user/1004/libpod/tmp:z ash3dpp /opt/USGS/Ash3d/bin/scripts/GFSVolc_to_gif_ac_hysplit.sh
-    #else
-    #  echo "Running GFSVolc_to_gif_ac_hysplit.sh"
-    #  #${ASH3DSCRIPTDIR}/GFSVolc_to_gif_ac_hysplit.sh
-    #fi
+    if [ "$USEPODMAN" == "T" ]; then
+      echo "Running podman image of GFSVolc_to_gif_ac_hysplit.sh"
+      #podman run --rm -v ${FULLRUNDIR}:/run/user/1004/libpod/tmp:z ash3dpp /opt/USGS/Ash3d/bin/scripts/GFSVolc_to_gif_ac_hysplit.sh
+    else
+      echo "Running GFSVolc_to_gif_ac_hysplit.sh"
+      #${ASH3DSCRIPTDIR}/GFSVolc_to_gif_ac_hysplit.sh
+    fi
 
     # HFS: add check here to verify GFS is being used, that
     #      puff is installed and puff windfiles are available
     # Run the puff model with the parameters in the simple input file
     if [ "$USEPODMAN" == "T" ]; then
-      podman run -v /data/WindFiles:/home/ash3d/www/html/puff/data:z -v /home/ash3d/Ash3d/test/test_cloud:/run/user/1004/libpod/tmp:z puffapp /opt/USGS/Ash3d/bin/scripts/runGFS_puff.sh
-      podman run -v ${FULLRUNDIR}:/run/user/1004/libpod/tmp:z ash3dpp /opt/USGS/Ash3d/bin/scripts/GFSVolc_to_gif_ac_puff.sh
+      podman run --rm -v /data/WindFiles:/home/ash3d/www/html/puff/data:z -v /home/ash3d/Ash3d/test/test_cloud:/run/user/1004/libpod/tmp:z puffapp /opt/USGS/Ash3d/bin/scripts/runGFS_puff.sh
+      podman run --rm -v ${FULLRUNDIR}:/run/user/1004/libpod/tmp:z ash3dpp /opt/USGS/Ash3d/bin/scripts/GFSVolc_to_gif_ac_puff.sh
     else
       echo "Calling runGFS_puff.sh"
       ${ASH3DSCRIPTDIR}/runGFS_puff.sh

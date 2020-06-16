@@ -304,7 +304,7 @@ echo "creating gif image of deposit"
 #      Note:  the animate gif for this variable is copied to "cloud_animation.gif"
 #  HFS: Add functionality of GFSVolc_to_gif_dp.sh to GFSVolc_to_gif_tvar.sh
 if [ "$USEPODMAN" == "T" ]; then
-  podman run -v ${FULLRUNDIR}:/run/user/1004/libpod/tmp:z ash3dpp /opt/USGS/Ash3d/bin/scripts/GFSVolc_to_gif_dp.sh
+  podman run --rm -v ${FULLRUNDIR}:/run/user/1004/libpod/tmp:z ash3dpp /opt/USGS/Ash3d/bin/scripts/GFSVolc_to_gif_dp.sh
 else
   echo "Calling ${ASH3DSCRIPTDIR}/GFSVolc_to_gif_dp.sh"
   ${ASH3DSCRIPTDIR}/GFSVolc_to_gif_dp.sh
@@ -323,7 +323,7 @@ mv Ash3d.lst ash3d_runlog.txt
 
 echo "creating gif image of deposit with mm scale"
 if [ "$USEPODMAN" == "T" ]; then
-  podman run -v ${FULLRUNDIR}:/run/user/1004/libpod/tmp:z ash3dpp /opt/USGS/Ash3d/bin/scripts/GFSVolc_to_gif_dp_mm.sh
+  podman run --rm -v ${FULLRUNDIR}:/run/user/1004/libpod/tmp:z ash3dpp /opt/USGS/Ash3d/bin/scripts/GFSVolc_to_gif_dp_mm.sh
 else
   ${ASH3DSCRIPTDIR}/GFSVolc_to_gif_dp_mm.sh
 fi
