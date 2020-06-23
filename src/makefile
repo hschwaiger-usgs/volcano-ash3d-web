@@ -265,9 +265,33 @@ clean:
 
 install:
 	install -d $(INSTALLDIR)/bin/scripts/              $(INSTALLDIR)/share/post_proc
-	install -m 755 ../bin/*                            $(INSTALLDIR)/bin
-	install -m 755 ../scripts/*.sh                     $(INSTALLDIR)/bin/scripts/
-	install -m 755 ../scripts/xyz2shp.py               $(INSTALLDIR)/bin/scripts/
+	install -m 755 ../bin/citywriter                       $(INSTALLDIR)/bin/
+	install -m 755 ../bin/convert_to_decimal               $(INSTALLDIR)/bin/
+	install -m 755 ../bin/legend_placer_ac                 $(INSTALLDIR)/bin/
+	install -m 755 ../bin/legend_placer_ac_traj            $(INSTALLDIR)/bin/
+	install -m 755 ../bin/legend_placer_dp                 $(INSTALLDIR)/bin/
+	install -m 755 ../bin/legend_placer_dp_mm              $(INSTALLDIR)/bin/
+	install -m 755 ../bin/makeAsh3dinput1_ac               $(INSTALLDIR)/bin/
+	install -m 755 ../bin/makeAsh3dinput1_dp               $(INSTALLDIR)/bin/
+	install -m 755 ../bin/makeAsh3dinput2_ac               $(INSTALLDIR)/bin/
+	install -m 755 ../bin/makeAsh3dinput2_dp               $(INSTALLDIR)/bin/
+	install -m 755 ../bin/makeAshArrivalTimes_ac           $(INSTALLDIR)/bin/
+	install -m 755 ../bin/makeAshArrivalTimes_dp           $(INSTALLDIR)/bin/
+	install -m 755 ../bin/ncGFS4_2_pf                      $(INSTALLDIR)/bin/
+	install -m 755 ../scripts/GFSVolc_to_gif_ac_hysplit.sh $(INSTALLDIR)/bin/scripts/
+	install -m 755 ../scripts/GFSVolc_to_gif_ac_puff.sh    $(INSTALLDIR)/bin/scripts/
+	install -m 755 ../scripts/GFSVolc_to_gif_ac_traj.sh    $(INSTALLDIR)/bin/scripts/
+	install -m 755 ../scripts/GFSVolc_to_gif_dp_mm.sh      $(INSTALLDIR)/bin/scripts/
+	install -m 755 ../scripts/GFSVolc_to_gif_dp.sh         $(INSTALLDIR)/bin/scripts/
+	install -m 755 ../scripts/GFSVolc_to_gif_tvar.sh       $(INSTALLDIR)/bin/scripts/
+	install -m 755 ../scripts/gmt_test.sh                  $(INSTALLDIR)/bin/scripts/
+	install -m 755 ../scripts/killrun.sh                   $(INSTALLDIR)/bin/scripts/
+	install -m 755 ../scripts/runAsh3d_ac.sh               $(INSTALLDIR)/bin/scripts/
+	install -m 755 ../scripts/runAsh3d_dp.sh               $(INSTALLDIR)/bin/scripts/
+	install -m 755 ../scripts/runAsh3d.sh                  $(INSTALLDIR)/bin/scripts/
+	install -m 755 ../scripts/runGFS_puff.sh               $(INSTALLDIR)/bin/scripts/
+	install -m 755 ../scripts/runGFS_traj.sh               $(INSTALLDIR)/bin/scripts/
+	install -m 755 ../scripts/xyz2shp.py                   $(INSTALLDIR)/bin/scripts/
 	install -m 644 ../share/GlobalAirports_ewert.txt   $(INSTALLDIR)/share/
 	install -m 644 ../share/readme.pdf                 $(INSTALLDIR)/share/
 	install -m 644 ../share/post_proc/*cpt             $(INSTALLDIR)/share/post_proc/
