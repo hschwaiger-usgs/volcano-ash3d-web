@@ -198,8 +198,8 @@ echo "gsbins="$gsbins
 #export PATH=/usr/local/bin:/home/ash3d/GMT/GMT4.5.9/bin:$PATH
 #export MANPATH=/usr/local/man:/home/ash3d/GMT/GMT4.5.9/man:$MANPATH
 
-if test "$gsbins" -eq 1
-  then
+#if test "$gsbins" -eq 1
+#  then
     echo "creating gif images of ash cloud"
     # Generate gifs for the transient variables
     #  0 = depothick
@@ -214,7 +214,7 @@ if test "$gsbins" -eq 1
       echo "Calling ${ASH3DSCRIPTDIR}/GFSVolc_to_gif_tvar.sh 3"
       ${ASH3DSCRIPTDIR}/GFSVolc_to_gif_tvar.sh 3
     fi
-  else
+#  else
     echo "creating gif images of deposit"
     if [ "$USEPODMAN" == "T" ]; then
       podman run --rm -v ${FULLRUNDIR}:/run/user/1004/libpod/tmp:z ash3dpp /opt/USGS/Ash3d/bin/scripts/GFSVolc_to_gif_dp.sh
@@ -222,7 +222,7 @@ if test "$gsbins" -eq 1
       echo "Calling ${ASH3DSCRIPTDIR}/GFSVolc_to_gif_dp.sh"
       ${ASH3DSCRIPTDIR}/GFSVolc_to_gif_dp.sh
     fi
-fi
+#fi
 
 #
 # Delete extra files
