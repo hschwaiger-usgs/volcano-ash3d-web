@@ -67,11 +67,9 @@ echo "Running Forward Trajectory model"
 # 30000 ft (9.1440 km) Magenta   (255/0/255)
 # 40000 ft (12.192 km) Yellow    (255/255/0)
 # 50000 ft (15.240 km) Blue-grey (51/153/204)
-echo "${USGSROOT}/bin/MetTraj $LON $LAT ${YEAR} ${MONTH} ${DAY} ${FHOURS} 24 7 1.52 3.05 4.57 6.10 9.14 12.20 15.24"
+echo "${USGSROOT}/bin/MetTraj_F $LON $LAT ${YEAR} ${MONTH} ${DAY} ${FHOURS} 24 7 1.52 3.05 4.57 6.10 9.14 12.20 15.24"
 ${USGSROOT}/bin/MetTraj_F $LON $LAT ${YEAR} ${MONTH} ${DAY} ${FHOURS} 24 7 1.52 3.05 4.57 6.10 9.14 12.20 15.24
-
-        rc=$((rc + $?))
-
+rc=$((rc + $?))
 
 echo "++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
 echo "finished runGFS_traj.sh"
