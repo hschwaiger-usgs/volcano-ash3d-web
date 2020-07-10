@@ -52,7 +52,7 @@ if [ "$CLEANFILES" == "T" ]; then
 fi
 infile="3d_tephra_fall.nc"
 
-volc=`ncdump -h ${infile} | grep b1l1 | cut -d\" -f2 | cut -c1-30`
+volc=`ncdump -h ${infile} | grep b1l1 | cut -d\" -f2 | cut -c1-30 | cut -d# -f1`
 date=`ncdump -h ${infile} | grep Date | cut -d\" -f2 | cut -c 1-10`
 echo $volc > volc.txt
 rm -f var.txt

@@ -101,7 +101,8 @@ fi
 
 #******************************************************************************
 #GET VARIABLES FROM 3D_tephra-fall.nc
-volc=`ncdump -h ${infile} | grep b1l1 | cut -d\" -f2 | cut -c1-30 | cut -d' ' -f1`
+volc=`ncdump -h ${infile} | grep b1l1 | cut -d\" -f2 | cut -c1-30 | cut -d# -f1`
+#volc=`ncdump -h ${infile} | grep b1l1 | cut -d\" -f2 | cut -c1-30 | cut -d' ' -f1`
 for (( iv=1;iv<35;iv++))
 do
   echo "Looking for ${volc} in ${volcname[iv]}"

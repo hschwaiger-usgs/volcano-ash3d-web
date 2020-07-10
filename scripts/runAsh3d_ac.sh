@@ -25,18 +25,21 @@ echo "running runAsh3d_ac.sh with parameters:"
 echo "  run directory  = $1"
 echo "  zip file name  = $2"
 echo "  Dashboard case = $3"
-echo "  Advances run   = $4"
+echo "  Advanced run   = $4"
 echo `date`
 echo "------------------------------------------------------------"
 CLEANFILES="T"
-USEPODMAN="T"
+USECONTAINER="T"
+CONTAINEREXE="podman"
 
 t0=`date -u`                                     # record start time
 rc=0                                             # error message accumulator
 
 HOST=`hostname | cut -c1-9`
 echo "HOST=$HOST"
-
+if [ "$USECONTAINER" == "T" ]; then
+  echo "Post processing scripts with be run with containers via ${CONTAINEREXE}"
+fi
 USGSROOT="/opt/USGS"
 ASH3DROOT="${USGSROOT}/Ash3d"
 WINDROOT="/data/WindFiles"
@@ -58,8 +61,7 @@ INFILE_PRELIM="ash3d_input_prelim.inp"             #input file used for prelimin
 INFILE_MAIN="ash3d_input.txt"                 #input file used for main Ash3d run
 
 echo "checking input argument"
-if [ -z $1 ]
-then
+if [ -z $1 ] ; then
     echo "Error: you must specify an input directory containing the file ash3d_input_ac.inp"
     echo "Usage: runAsh3d_ac.sh rundir zipname dash_flag advanced_flag"
     exit 1
@@ -68,13 +70,12 @@ then
     echo "run directory is $1"
 fi
 
-if [ -z $2 ]
-then
-	echo "Error: you must specify a zip file name"
-	exit 1
-else
-        #ZIPNAME=`echo $2 | tr '/' '-'`        #if there are slashes in the name, replace them with dashes
-        ZIPNAME=$2
+if [ -z $2 ] ; then
+    echo "Error: you must specify a zip file name"
+    exit 1
+  else
+    #ZIPNAME=`echo $2 | tr '/' '-'`        #if there are slashes in the name, replace them with dashes
+    ZIPNAME=$2
 fi
 
 DASHBOARD_RUN=$3
@@ -89,8 +90,7 @@ if [ "$ADVANCED_RUN" = "advanced1" ]; then
 fi
 
 echo "changing directories to ${RUNDIR}"
-if test -r ${RUNDIR}
-then
+if test -r ${RUNDIR} ; then
     cd $RUNDIR
     FULLRUNDIR=`pwd`
     echo "DASHBOARD_RUN = $DASHBOARD_RUN $3" > test.txt
@@ -100,7 +100,7 @@ then
 fi
 
 if [[ $? -ne 0 ]]; then
-           rc=$((rc + 1))
+    rc=$((rc + 1))
 fi
 
 #if it's an advanced tab run and argument 4 is set to "advanced2",
@@ -114,7 +114,10 @@ if [ "$ADVANCED_RUN" != "advanced2" ]; then
         rm -f *.gif *.kmz *.zip ${INFILE_PRELIM} ${INFILE_MAIN} *.txt cities.xy *.dat *.pdf 3d_tephra_fall.nc
         rm -f *.lst Wind_nc *.xyz *.png depTS_*.gnu dp.*
         rc=$((rc + $?))
-        echo "rc=$rc"
+        if [[ "$rc" -gt 0 ]] ; then
+            echo "Error removing old files: rc=$rc"
+            exit 1
+        fi
     fi
 
     echo "copying airports file, cities file, and readme file"
@@ -123,34 +126,37 @@ if [ "$ADVANCED_RUN" != "advanced2" ]; then
     ln -s ${ASH3DSHARE_PP}/world_cities.txt .
     cp ${ASH3DSHARE_PP}/VAAC* .
     rc=$((rc + $?))
-    echo "rc=$rc"
+    if [[ "$rc" -gt 0 ]] ; then
+        echo "Error copying files: rc=$rc"
+        exit 1
+    fi
 
     echo "creating soft links to wind files"
-    rm Wind_nc
+    rm -f Wind_nc
     ln -s  ${WINDROOT} Wind_nc
     rc=$((rc + $?))
-    echo "rc=$rc"
+    if [[ "$rc" -gt 0 ]] ; then
+        echo "Error linking ${WINDROOT}: rc=$rc"
+        exit 1
+    fi
 
     echo "running ash3dinput1_ac ${INFILE_SIMPLE} ${INFILE_PRELIM}"
-    if test -r ${ASH3DBINDIR}/makeAsh3dinput1_ac
-    then
+    if test -r ${ASH3DBINDIR}/makeAsh3dinput1_ac ; then
         ${ASH3DBINDIR}/makeAsh3dinput1_ac ${INFILE_SIMPLE} ${INFILE_PRELIM} \
                                           ${LAST_DOWNLOADED}
-    else
+      else
         echo "Error: ${ASH3DBINDIR}/makeAsh3dinput1_ac doesn't exist"
         exit 1
     fi
     rc=$((rc + $?))
-    echo "rc=$rc"
     if [[ "$rc" -gt 0 ]] ; then
-        echo "rc=$rc"
+        echo "Error running makeAsh3dinput1_ac: rc=$rc"
         exit 1
     fi
 
-    if test -r ${INFILE_PRELIM}
-    then
+    if test -r ${INFILE_PRELIM} ; then
         echo "${INFILE_PRELIM} created okay"
-    else
+      else
         echo "Error: ${INFILE_PRELIM} not created"
         exit 1
     fi
@@ -168,11 +174,11 @@ if [ "$ADVANCED_RUN" != "advanced2" ]; then
     echo "-------------------------------------------------------------------------------"
     rc=$((rc + $?))
     if [[ "$rc" -gt 0 ]] ; then
-        echo "rc=$rc"
+        echo "Error running Preliminary Ash3d run: rc=$rc"
         exit 1
     fi
 
-    echo "zipping up kml files"
+    echo "zipping up kml files for preliminary Ash3d run"
     zip CloudLoad_prelim.kmz CloudLoad.kml
 
     if [ "$CLEANFILES" == "T" ]; then
@@ -181,18 +187,21 @@ if [ "$ADVANCED_RUN" != "advanced2" ]; then
     fi
 
     echo "making ${INFILE_MAIN}"
-    if test -r ${ASH3DBINDIR}/makeAsh3dinput2_ac
-    then
+    if test -r ${ASH3DBINDIR}/makeAsh3dinput2_ac ; then
         ${ASH3DBINDIR}/makeAsh3dinput2_ac ${INFILE_PRELIM} ${INFILE_MAIN}
-    else
+      else
         echo "Error: ${ASH3DBINDIR}/makeAsh3dinput2_ac does not exist"
         exit 1
     fi
+    rc=$((rc + $?))
+    if [[ "$rc" -gt 0 ]] ; then
+        echo "Error running makeAsh3dinput2_ac: rc=$rc"
+        exit 1
+    fi
 
-    if test -r ${INFILE_MAIN}
-    then
+    if test -r ${INFILE_MAIN} ; then
         echo "${INFILE_MAIN} created okay"
-    else
+      else
         echo "Error: ${INFILE_MAIN} not created"
         exit 1
     fi
@@ -206,16 +215,35 @@ fi
 
 # Run the trajectory model with the parameters in the simple input file
 if test -r ${USGSROOT}/bin/MetTraj_F; then
-  echo "Calling runGFS_traj.sh"
-  ${ASH3DSCRIPTDIR}/runGFS_traj.sh
-  if [ "$USEPODMAN" == "T" ]; then
-    podman  run --rm -v ${FULLRUNDIR}:/run/user/1004/libpod/tmp:z ash3dpp /opt/USGS/Ash3d/bin/scripts/GFSVolc_to_gif_ac_traj.sh 0
+    echo "Calling runGFS_traj.sh"
+    ${ASH3DSCRIPTDIR}/runGFS_traj.sh
+    rc=$((rc + $?))
+    if [[ "$rc" -gt 0 ]] ; then
+        echo "Error running runGFS_traj.sh: rc=$rc"
+        exit 1
+    fi
+    if [ "$USECONTAINER" == "T" ]; then
+        echo "  Running ${CONTAINEREXE} script (GFSVolc_to_gif_ac_traj.sh) to process traj results."
+        ${CONTAINEREXE} run --rm -v ${FULLRUNDIR}:/run/user/1004/libpod/tmp:z \
+                        ash3dpp /opt/USGS/Ash3d/bin/scripts/GFSVolc_to_gif_ac_traj.sh 0
+        rc=$((rc + $?))
+        if [[ "$rc" -gt 0 ]] ; then
+            echo "Error running ${CONTAINEREXE} ash3dpp GFSVolc_to_gif_ac_traj.sh: rc=$rc"
+            exit 1
+        fi
+      else
+        echo "  Running installed script (GFSVolc_to_gif_ac_traj.sh) to process traj results."
+        ${ASH3DSCRIPTDIR}/GFSVolc_to_gif_ac_traj.sh 0
+        rc=$((rc + $?))
+        if [[ "$rc" -gt 0 ]] ; then
+            echo "Error running GFSVolc_to_gif_ac_traj.sh: rc=$rc"
+            exit 1
+        fi
+    fi
   else
-    ${ASH3DSCRIPTDIR}/GFSVolc_to_gif_ac_traj.sh 0
-  fi
-else
-   echo "${USGSROOT}/bin/MetTraj_F does not exist.  Skipping trajectory runs."
+     echo "${USGSROOT}/bin/MetTraj_F does not exist.  Skipping trajectory runs."
 fi
+
 if [ "$ADVANCED_RUN" = "advanced1" ]; then
     echo "Created input file for advanced tab.  Stopping"
     exit 1
@@ -233,15 +261,12 @@ echo "----------                Completed  Main Ash3d run                  -----
 echo "-------------------------------------------------------------------------------"
 echo "-------------------------------------------------------------------------------"
 rc=$((rc + $?))
-echo "rc=$rc"
-
-rc=$((rc + $?))
 if [[ "$rc" -gt 0 ]] ; then
-    echo "Error: rc=$rc"
+    echo "Error running main Ash3d run: rc=$rc"
     exit 1
 fi
 
-echo "zipping up kml files"
+echo "zipping up kml files for main Ash3d run"
 zip cloud_arrivaltimes_airports.kmz AshArrivalTimes.kml
 rc=$((rc + $?))
 zip cloud_arrivaltimes_hours.kmz    CloudArrivalTime.kml
@@ -252,31 +277,31 @@ zip CloudHeight.kmz                 CloudHeight.kml
 rc=$((rc + $?))
 zip CloudLoad.kmz                   CloudLoad.kml
 rc=$((rc + $?))
-echo "rc=$rc"
 if [[ "$rc" -gt 0 ]] ; then
-    echo "Error: rc=$rc"
+    echo "Error zipping files: rc=$rc"
     exit 1
 fi
 
 echo "running makeAshArrivalTimes_ac"
 ${ASH3DBINDIR}/makeAshArrivalTimes_ac
 rc=$((rc+$?))
-echo "rc=$rc"
+if [[ "$rc" -gt 0 ]] ; then
+    echo "Error running makeAshArrivalTimes_ac: rc=$rc"
+    exit 1
+fi
 
 echo "moving AshArrivalTimes.txt to AshArrivalTimes_old.txt"
 mv AshArrivalTimes.txt AshArrivalTimes_old.txt
 rc=$((rc+$?))
-echo "rc=$rc"
 if [[ "$rc" -gt 0 ]] ; then
-    echo "Error: rc=$rc"
+    echo "Error renaming AshArrivalTimes.txt: rc=$rc"
     exit 1
 fi
 echo "overwriting AshArrivalTimes.txt"
 mv AshArrivalTimes_ac.txt AshArrivalTimes.txt
 rc=$((rc+$?))
-echo "rc=$rc"
 if [[ "$rc" -gt 0 ]] ; then
-    echo "Error: rc=$rc"
+    echo "Error renaming AshArrivalTimes_ac.txt: rc=$rc"
     exit 1
 fi
 
@@ -286,7 +311,7 @@ fi
 unix2dos AshArrivalTimes.txt
 rc=$((rc+$?))
 if [[ "$rc" -gt 0 ]] ; then
-    echo "Error: rc=$rc"
+    echo "Error running unix2dos AshArrivalTimes.txt: rc=$rc"
     exit 1
 fi
 
@@ -294,16 +319,17 @@ if [ "$CLEANFILES" == "T" ]; then
     echo "removing extraneous files"
     rm -f *.kml
     rc=$((rc+$?))
-    echo "rc=$rc"
     if [[ "$rc" -gt 0 ]] ; then
-        echo "Error: rc=$rc"
+        echo "Error removing kml files: rc=$rc"
         exit 1
     fi
 fi
+# Get time of completed Ash3d calculations
+t1=`date -u`
 
-echo "started run at:  $t0" >> Ash3d.lst
-echo "  ended run at: " `date` >> Ash3d.lst
-
+echo "*******************************************************************************"
+echo "POST-PROCESSING"
+echo "*******************************************************************************"
 echo "creating gif images of ash cloud"
 # Generate gifs for the transient variables
 #  0 = depothick
@@ -312,63 +338,123 @@ echo "creating gif images of ash cloud"
 #  3 = cloud_load
 #    Cloud load is the default, so run that one first
 #      Note:  the animate gif for this variable is copied to "cloud_animation.gif"
-if [ "$USEPODMAN" == "T" ]; then
-  podman run --rm -v ${FULLRUNDIR}:/run/user/1004/libpod/tmp:z ash3dpp /opt/USGS/Ash3d/bin/scripts/GFSVolc_to_gif_tvar.sh 3
-else
-  echo "Calling ${ASH3DSCRIPTDIR}/GFSVolc_to_gif_tvar.sh 3"
-  ${ASH3DSCRIPTDIR}/GFSVolc_to_gif_tvar.sh 3
+if [ "$USECONTAINER" == "T" ]; then
+    ${CONTAINEREXE} run --rm -v ${FULLRUNDIR}:/run/user/1004/libpod/tmp:z \
+                    ash3dpp /opt/USGS/Ash3d/bin/scripts/GFSVolc_to_gif_tvar.sh 3
+    rc=$((rc + $?))
+    if [[ "$rc" -gt 0 ]] ; then
+        echo "Error running ${CONTAINEREXE} ash3dpp GFSVolc_to_gif_ac_traj.sh 3: rc=$rc"
+        exit 1
+    fi
+  else
+    echo "Calling ${ASH3DSCRIPTDIR}/GFSVolc_to_gif_tvar.sh 3"
+    ${ASH3DSCRIPTDIR}/GFSVolc_to_gif_tvar.sh 3
+    rc=$((rc + $?))
+    if [[ "$rc" -gt 0 ]] ; then
+        echo "Error running GFSVolc_to_gif_ac_traj.sh 3: rc=$rc"
+        exit 1
+    fi
 fi
 
 # Recreating the trajectory plot (using previously calculated trajecties), but using
 # the consistant basemap
 if test -r ftraj1.dat; then
-  if [ "$USEPODMAN" == "T" ]; then
-    podman run --rm -v ${FULLRUNDIR}:/run/user/1004/libpod/tmp:z ash3dpp /opt/USGS/Ash3d/bin/scripts/GFSVolc_to_gif_ac_traj.sh 1
+    if [ "$USECONTAINER" == "T" ]; then
+        ${CONTAINEREXE} run --rm -v ${FULLRUNDIR}:/run/user/1004/libpod/tmp:z \
+                        ash3dpp /opt/USGS/Ash3d/bin/scripts/GFSVolc_to_gif_ac_traj.sh 1
+        rc=$((rc + $?))
+        if [[ "$rc" -gt 0 ]] ; then
+            echo "Error running ${CONTAINEREXE} ash3dpp GFSVolc_to_gif_ac_traj.sh 1: rc=$rc"
+            exit 1
+        fi
+      else
+      ${ASH3DSCRIPTDIR}/GFSVolc_to_gif_ac_traj.sh 1
+        rc=$((rc + $?))
+        if [[ "$rc" -gt 0 ]] ; then
+            echo "Error running GFSVolc_to_gif_ac_traj.sh 1: rc=$rc"
+            exit 1
+        fi
+    fi
   else
-    ${ASH3DSCRIPTDIR}/GFSVolc_to_gif_ac_traj.sh 1
-  fi
-else
-   echo "skipping trajectory plots: no traj files exist in this directory."
+    echo "skipping trajectory plots: no traj files exist in this directory."
 fi
 
-if [[ $DASHBOARD_RUN == T* ]]
-  then
+if [[ $DASHBOARD_RUN == T* ]] ; then
+    echo "Since we are exporting to the AVO dashboard, post-process for cloud_height"
     #    Now run it for cloud_height
-    if [ "$USEPODMAN" == "T" ]; then
-      podman run --rm -v ${FULLRUNDIR}:/run/user/1004/libpod/tmp:z ash3dpp /opt/USGS/Ash3d/bin/scripts/GFSVolc_to_gif_tvar.sh 2
-    else
-      echo "Calling GFSVolc_to_gif_tvar.sh 2"
-      ${ASH3DSCRIPTDIR}/GFSVolc_to_gif_tvar.sh 2
+    if [ "$USECONTAINER" == "T" ]; then
+        ${CONTAINEREXE} run --rm -v ${FULLRUNDIR}:/run/user/1004/libpod/tmp:z \
+                        ash3dpp /opt/USGS/Ash3d/bin/scripts/GFSVolc_to_gif_tvar.sh 2
+        rc=$((rc + $?))
+        if [[ "$rc" -gt 0 ]] ; then
+            echo "Error running ${CONTAINEREXE} ash3dpp GFSVolc_to_gif_ac_traj.sh 2: rc=$rc"
+            exit 1
+        fi
+      else
+        echo "Calling GFSVolc_to_gif_tvar.sh 2"
+        ${ASH3DSCRIPTDIR}/GFSVolc_to_gif_tvar.sh 2
+        rc=$((rc + $?))
+        if [[ "$rc" -gt 0 ]] ; then
+            echo "Error running GFSVolc_to_gif_ac_traj.sh 2: rc=$rc"
+            exit 1
+        fi
     fi
 fi
-rc=$((rc+$?))
-echo "rc=$rc"
 
-echo "started run at:  $t0" >> Ash3d.lst
-echo "  ended run at: " `date` >> Ash3d.lst
-
-if [[ $DASHBOARD_RUN == T* ]]
-  then
+if [[ $DASHBOARD_RUN == T* ]] ; then
     echo "Now creating gif images of the hysplit run"
-    if [ "$USEPODMAN" == "T" ]; then
-      echo "Running podman image of GFSVolc_to_gif_ac_hysplit.sh"
-      #podman run --rm -v ${FULLRUNDIR}:/run/user/1004/libpod/tmp:z ash3dpp /opt/USGS/Ash3d/bin/scripts/GFSVolc_to_gif_ac_hysplit.sh
-    else
-      echo "Running GFSVolc_to_gif_ac_hysplit.sh"
-      #${ASH3DSCRIPTDIR}/GFSVolc_to_gif_ac_hysplit.sh
+    if [ "$USECONTAINER" == "T" ]; then
+        echo "Running ${CONTAINEREXE} image of GFSVolc_to_gif_ac_hysplit.sh"
+        #${CONTAINEREXE} run --rm -v ${FULLRUNDIR}:/run/user/1004/libpod/tmp:z \
+        #                ash3dpp /opt/USGS/Ash3d/bin/scripts/GFSVolc_to_gif_ac_hysplit.sh
+        #rc=$((rc + $?))
+        #if [[ "$rc" -gt 0 ]] ; then
+        #    echo "Error running ${CONTAINEREXE} ash3dpp GFSVolc_to_gif_ac_hysplit.sh: rc=$rc"
+        #    exit 1
+        #fi
+      else
+        echo "Running GFSVolc_to_gif_ac_hysplit.sh"
+        #${ASH3DSCRIPTDIR}/GFSVolc_to_gif_ac_hysplit.sh
+        #rc=$((rc + $?))
+        #if [[ "$rc" -gt 0 ]] ; then
+        #    echo "Error running GFSVolc_to_gif_ac_hysplit.sh: rc=$rc"
+        #    exit 1
+        #fi
     fi
 
     # HFS: add check here to verify GFS is being used, that
     #      puff is installed and puff windfiles are available
     # Run the puff model with the parameters in the simple input file
-    if [ "$USEPODMAN" == "T" ]; then
-      podman run --rm -v /data/WindFiles:/home/ash3d/www/html/puff/data:z -v /home/ash3d/Ash3d/test/test_cloud:/run/user/1004/libpod/tmp:z puffapp /opt/USGS/Ash3d/bin/scripts/runGFS_puff.sh
-      podman run --rm -v ${FULLRUNDIR}:/run/user/1004/libpod/tmp:z ash3dpp /opt/USGS/Ash3d/bin/scripts/GFSVolc_to_gif_ac_puff.sh
-    else
-      echo "Calling runGFS_puff.sh"
-      ${ASH3DSCRIPTDIR}/runGFS_puff.sh
-      echo "Now creating gif images of puff run"
-      ${ASH3DSCRIPTDIR}/GFSVolc_to_gif_ac_puff.sh
+    if [ "$USECONTAINER" == "T" ]; then
+        ${CONTAINEREXE} run --rm -v /data/WindFiles:/home/ash3d/www/html/puff/data:z \
+                                 -v /home/ash3d/Ash3d/test/test_cloud:/run/user/1004/libpod/tmp:z \
+                        puffapp /opt/USGS/Ash3d/bin/scripts/runGFS_puff.sh
+        rc=$((rc + $?))
+        if [[ "$rc" -gt 0 ]] ; then
+            echo "Error running ${CONTAINEREXE} puffapp runGFS_puff.sh: rc=$rc"
+            exit 1
+        fi
+        ${CONTAINEREXE} run --rm -v ${FULLRUNDIR}:/run/user/1004/libpod/tmp:z \
+                        ash3dpp /opt/USGS/Ash3d/bin/scripts/GFSVolc_to_gif_ac_puff.sh
+        rc=$((rc + $?))
+        if [[ "$rc" -gt 0 ]] ; then
+            echo "Error running ${CONTAINEREXE} ash3dpp GFSVolc_to_gif_ac_puff.sh: rc=$rc"
+            exit 1
+        fi
+      else
+        echo "Calling runGFS_puff.sh"
+        ${ASH3DSCRIPTDIR}/runGFS_puff.sh
+        if [[ "$rc" -gt 0 ]] ; then
+            echo "Error running runGFS_puff.sh: rc=$rc"
+            exit 1
+        fi
+        echo "Now creating gif images of puff run"
+        ${ASH3DSCRIPTDIR}/GFSVolc_to_gif_ac_puff.sh
+        rc=$((rc + $?))
+        if [[ "$rc" -gt 0 ]] ; then
+            echo "Error running GFSVolc_to_gif_ac_puff.sh: rc=$rc"
+            exit 1
+        fi
     fi
 fi
 
@@ -382,14 +468,26 @@ fi
 echo "copying AshArrivalTimes.txt to cloud_arrivaltimes_airports.txt"
 cp AshArrivalTimes.txt cloud_arrivaltimes_airports.txt
 rc=$((rc+$?))
-echo "rc=$rc"
+if [[ "$rc" -gt 0 ]] ; then
+    echo "Error copying AshArrivalTimes.txt: rc=$rc"
+    exit 1
+fi
 
 #sed 's/$/\r/' ${INFILE_MAIN} > ${INFILE_MAIN}2
 #mv ${INFILE_MAIN}2 ${INFILE_MAIN}
 unix2dos -m ${INFILE_MAIN}
-
+rc=$((rc+$?))
+if [[ "$rc" -gt 0 ]] ; then
+    echo "Error running unix2dos -m ${INFILE_MAIN}: rc=$rc"
+    exit 1
+fi
 echo "flipping and renaming Ash3d.lst"
 unix2dos Ash3d.lst
+rc=$((rc+$?))
+if [[ "$rc" -gt 0 ]] ; then
+    echo "Error running unix2dos Ash3d.lst: rc=$rc"
+    exit 1
+fi
 mv Ash3d.lst ash3d_runlog.txt
 
 zip $ZIPNAME.zip *UTC*.gif \
@@ -397,14 +495,24 @@ zip $ZIPNAME.zip *UTC*.gif \
                  cloud_animation.gif \
                  cloud_arrivaltimes_airports.kmz cloud_arrivaltimes_airports.txt \
                  CloudConcentration.kmz CloudHeight.kmz CloudLoad.kmz
+rc=$((rc+$?))
+if [[ "$rc" -gt 0 ]] ; then
+    echo "Error creating final zip file: rc=$rc"
+    exit 1
+fi
 
 #zip $ZIPNAME.zip *UTC*.gif cloud_animation.gif cloud_arrivaltimes_airports.txt ${INFILE_MAIN} \
 #    cloud_arrivaltimes_airports.kmz cloud_arrivaltimes_hours.kmz CloudConcentration.kmz CloudHeight.kmz \
 #    CloudLoad.kmz readme.pdf *rajector*gif ash3d_runlog.txt
 if test -r ftraj1.dat; then
-   zip add $ZIPNAME.zip traj*.dat
+    #zip -a $ZIPNAME.zip traj*.dat
+    zip $ZIPNAME.zip traj*.dat
 fi
 rc=$((rc + $?))
+if [[ "$rc" -gt 0 ]] ; then
+    echo "Error adding trajectory files to zip file: rc=$rc"
+    exit 1
+fi
 
 echo "removing extraneous files"
 rm -f tmp1.txt tmp2.txt
@@ -412,14 +520,15 @@ rm -f *.cpt caption.txt fort.18 current_time.txt dep_thick.txt  Temp.epsi cities
 #rm -f world_cities.txt test.txt
 
 if [[ $rc -ne 0 ]]; then
-	echo "$rc errors detected."
-else
-	echo "successful completion"
+    echo "$rc errors detected."
+  else
+    echo "successful completion"
 fi
 
-t1=`date -u`
-echo "started run at:  $t0"
-echo "  ended run at:  $t1"
+t2=`date -u`
+echo "started run at          :  $t0"
+echo "calculations ended at   :  $t1"
+echo "post-processing ended at:  $t2"
 echo "all done with run $4"
 
 exit $rc

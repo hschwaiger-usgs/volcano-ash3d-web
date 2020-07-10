@@ -29,7 +29,8 @@ echo "  Advances run   = $4"
 echo `date`
 echo "------------------------------------------------------------"
 CLEANFILES="T"
-USEPODMAN="T"
+USECONTAINER="T"
+CONTAINEREXE="podman"
 
 t0=`date -u`                                     # record start time
 rc=0                                             # error message accumulator
@@ -303,8 +304,8 @@ echo "creating gif image of deposit"
 #    Cloud load is the default, so run that one first
 #      Note:  the animate gif for this variable is copied to "cloud_animation.gif"
 #  HFS: Add functionality of GFSVolc_to_gif_dp.sh to GFSVolc_to_gif_tvar.sh
-if [ "$USEPODMAN" == "T" ]; then
-  podman run --rm -v ${FULLRUNDIR}:/run/user/1004/libpod/tmp:z ash3dpp /opt/USGS/Ash3d/bin/scripts/GFSVolc_to_gif_dp.sh
+if [ "$USECONTAINER" == "T" ]; then
+  ${CONTAINEREXE} run --rm -v ${FULLRUNDIR}:/run/user/1004/libpod/tmp:z ash3dpp /opt/USGS/Ash3d/bin/scripts/GFSVolc_to_gif_dp.sh
 else
   echo "Calling ${ASH3DSCRIPTDIR}/GFSVolc_to_gif_dp.sh"
   ${ASH3DSCRIPTDIR}/GFSVolc_to_gif_dp.sh
@@ -322,8 +323,8 @@ mv Ash3d.lst ash3d_runlog.txt
 
 
 echo "creating gif image of deposit with mm scale"
-if [ "$USEPODMAN" == "T" ]; then
-  podman run --rm -v ${FULLRUNDIR}:/run/user/1004/libpod/tmp:z ash3dpp /opt/USGS/Ash3d/bin/scripts/GFSVolc_to_gif_dp_mm.sh
+if [ "$USECONTAINER" == "T" ]; then
+  ${CONTAINEREXE} run --rm -v ${FULLRUNDIR}:/run/user/1004/libpod/tmp:z ash3dpp /opt/USGS/Ash3d/bin/scripts/GFSVolc_to_gif_dp_mm.sh
 else
   ${ASH3DSCRIPTDIR}/GFSVolc_to_gif_dp_mm.sh
 fi

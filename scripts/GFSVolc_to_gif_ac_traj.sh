@@ -24,6 +24,7 @@ echo "------------------------------------------------------------"
 echo "running GFSVolc_to_gif_ac_traj.sh"
 echo `date`
 echo "------------------------------------------------------------"
+rc=0                                             # error message accumulator
 CLEANFILES="T"
 
 # We need to know if we must prefix all gmt commands with 'gmt', as required by version 5
@@ -43,7 +44,13 @@ ASH3DBINDIR="${ASH3DROOT}/bin"
 ASH3DSCRIPTDIR="${ASH3DROOT}/bin/scripts"
 ASH3DSHARE="$ASH3DROOT/share"
 ASH3DSHARE_PP="${ASH3DSHARE}/post_proc"
-cp ${ASH3DSHARE_PP}/world_cities.txt .
+
+if test -r world_cities.txt
+  then
+    echo "Found file world_cities.txt"
+  else
+    ln -s ${ASH3DSHARE_PP}/world_cities.txt .
+fi
 
 export PATH=/usr/local/bin:$PATH
 infile="3d_tephra_fall.nc"
@@ -52,19 +59,20 @@ infile="3d_tephra_fall.nc"
 #MAKE SURE 3D_tephra_fall.nc EXISTS
 if test -r ${infile}
 then
-	echo "reading from ${infile} file"
-else
-	echo "error: no ${infile} file. Exiting"
-	exit 1
+    echo "reading from ${infile} file"
+  else
+    echo "error: no ${infile} file. Exiting"
+    rc=$((rc + $?))
+    exit $rc
 fi
 
 #******************************************************************************
 #GET VARIABLES FROM 3D_tephra-fall.nc
-volc=`ncdump -h ${infile} | grep b1l1 | cut -d\" -f2 | cut -c1-30`
+volc=`ncdump -h ${infile} | grep b1l1 | cut -d\" -f2 | cut -c1-30 | cut -d# -f1`
 rc=$((rc + $?))
 if [[ "$rc" -gt 0 ]] ; then
-	echo "ncdump command failed.  Exiting script"
-	exit 1
+    echo "ncdump command failed.  Exiting script"
+    exit $rc
 fi
 date=`ncdump -h ${infile} | grep Date | cut -d\" -f2 | cut -c 1-10`
 
@@ -90,7 +98,6 @@ if [ $1 -eq 0 ]; then
   DLAT=`echo "$URLAT-$LLLAT" | bc -l`
   # Now we need to adjust the limits so that the map has the approximately correct aspect ratio
   dum=`echo "$DLAT * 2.0" | bc -l`
-  echo "dum = $dum"
   test1=`echo "$DLON < $dum" | bc -l`
   echo "test1 = $test1"
   #if (( $DLON < $dum )); then
@@ -218,11 +225,12 @@ echo "Finished plotting trajectory data"
 
 #Add cities
 ${ASH3DBINDIR}/citywriter ${LLLON} ${URLON} ${LLLAT} ${URLAT}
-if test -r cities.xy
-then
+if test -r cities.xy ; then
     ${GMTpre[GMTv]} psxy cities.xy $AREA $PROJ -Sc0.05i -Gblack -Wthinnest -V -O -K >> temp.ps
     ${GMTpre[GMTv]} pstext cities.xy $AREA $PROJ -D0.1/0.1 -V -O -K >> temp.ps      #Plot names of all airports
     echo "Wrote cities to map"
+  else
+    echo "No cities found in domain"
 fi
 
    #Write caveats to figure
@@ -242,7 +250,7 @@ EOF
 
 if [ $GMTv -eq 4 ] ; then
     ${GMTpre[GMTv]} pstext caption.txt $AREA $PROJ -m -Wwhite,o -N -O >> temp.ps  #-Wwhite,o paints a white recctangle with outline
-else
+  else
     ${GMTpre[GMTv]} pstext caption.txt $AREA $PROJ -M -Gwhite -Wblack,. -N -O >> temp.ps  #-Wwhite,o paints a white recctangle with outline
 fi
 
@@ -251,7 +259,7 @@ if [ $GMTv -eq 4 ] ; then
     ps2epsi temp.ps
     epstopdf temp.epsi
     convert -rotate 90 temp.pdf -alpha off temp.gif
-else
+  else
     ${GMTpre[GMTv]} psconvert temp.ps -A -Tg
     convert -rotate 90 temp.png -resize 630x500 -alpha off temp.gif
 fi
@@ -264,7 +272,7 @@ vidy_UL=$(($height*82/100))
 if test -r official.txt; then
    convert -append -background white temp.gif ${ASH3DSHARE_PP}/caveats_official.png \
                                                                temp.gif
- else
+  else
    convert -append -background white temp.gif \
               ${ASH3DSHARE_PP}/caveats_notofficial_trajectory.png temp.gif
 fi

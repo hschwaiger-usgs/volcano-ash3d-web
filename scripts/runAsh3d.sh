@@ -30,7 +30,8 @@ echo "  Java Thread ID          = $5"
 echo `date`
 echo "------------------------------------------------------------"
 CLEANFILES="T"
-USEPODMAN="T"
+USECONTAINER="T"
+CONTAINEREXE="podman"
 
 t0=`date -u`                                     # record start time
 rc=0                                             # error message accumulator
@@ -208,16 +209,16 @@ echo "gsbins="$gsbins
     #  3 = cloud_load
     #    Cloud load is the default, so run that one first
     #      Note:  the animate gif for this variable is copied to "cloud_animation.gif"
-    if [ "$USEPODMAN" == "T" ]; then
-      podman run --rm -v ${FULLRUNDIR}:/run/user/1004/libpod/tmp:z ash3dpp /opt/USGS/Ash3d/bin/scripts/GFSVolc_to_gif_tvar.sh 3
+    if [ "$USECONTAINER" == "T" ]; then
+      ${CONTAINEREXE} run --rm -v ${FULLRUNDIR}:/run/user/1004/libpod/tmp:z ash3dpp /opt/USGS/Ash3d/bin/scripts/GFSVolc_to_gif_tvar.sh 3
     else
       echo "Calling ${ASH3DSCRIPTDIR}/GFSVolc_to_gif_tvar.sh 3"
       ${ASH3DSCRIPTDIR}/GFSVolc_to_gif_tvar.sh 3
     fi
 #  else
     echo "creating gif images of deposit"
-    if [ "$USEPODMAN" == "T" ]; then
-      podman run --rm -v ${FULLRUNDIR}:/run/user/1004/libpod/tmp:z ash3dpp /opt/USGS/Ash3d/bin/scripts/GFSVolc_to_gif_dp.sh
+    if [ "$USECONTAINER" == "T" ]; then
+      ${CONTAINEREXE} run --rm -v ${FULLRUNDIR}:/run/user/1004/libpod/tmp:z ash3dpp /opt/USGS/Ash3d/bin/scripts/GFSVolc_to_gif_dp.sh
     else
       echo "Calling ${ASH3DSCRIPTDIR}/GFSVolc_to_gif_dp.sh"
       ${ASH3DSCRIPTDIR}/GFSVolc_to_gif_dp.sh

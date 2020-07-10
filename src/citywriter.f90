@@ -20,7 +20,7 @@
       logical            :: IsOkay                 !true if city is not near any others
       logical            :: IsThere
 
-      !write(6,*) 'starting citywriter'
+      write(6,*) 'starting citywriter'
 
       CityName_out = ''           !set default values
       CityLon_out  = 0.0_8
@@ -145,10 +145,13 @@
         close(13)
       endif
 
-!      write(6,*) 'ncities=',ncities
+      write(6,*) 'wrote ',ncities,' to cities.xy'
 
       close(12)
       close(13)
+
+      write(6,*)"citywriter ended normally."
+      stop 0
 
       end program citywriter
          

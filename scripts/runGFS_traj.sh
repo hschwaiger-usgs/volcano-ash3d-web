@@ -22,6 +22,7 @@ echo "------------------------------------------------------------"
 echo "running runGFS_traj.sh"
 echo `date`
 echo "------------------------------------------------------------"
+rc=0                                             # error message accumulator
 
 USGSROOT="/opt/USGS"
 ASH3DROOT="${USGSROOT}/Ash3d"
