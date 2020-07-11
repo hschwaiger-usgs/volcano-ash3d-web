@@ -427,7 +427,7 @@ if [[ $DASHBOARD_RUN == T* ]] ; then
     # Run the puff model with the parameters in the simple input file
     if [ "$USECONTAINER" == "T" ]; then
         ${CONTAINEREXE} run --rm -v /data/WindFiles:/home/ash3d/www/html/puff/data:z \
-                                 -v /home/ash3d/Ash3d/test/test_cloud:/run/user/1004/libpod/tmp:z \
+                                 -v ${FULLRUNDIR}:/run/user/1004/libpod/tmp:z \
                         puffapp /opt/USGS/Ash3d/bin/scripts/runGFS_puff.sh
         rc=$((rc + $?))
         if [[ "$rc" -gt 0 ]] ; then

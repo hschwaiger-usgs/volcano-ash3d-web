@@ -308,7 +308,12 @@ echo "running legend_placer_dp_mm"
 ${ASH3DBINDIR}/legend_placer_dp_mm
 
 echo "adding cities"
-cp ${ASH3DSHARE_PP}/world_cities.txt .
+if test -r world_cities.txt
+  then
+    echo "Found file world_cities.txt"
+  else
+    ln -s ${ASH3DSHARE_PP}/world_cities.txt .
+fi
 ${ASH3DBINDIR}/citywriter ${lonmin} ${lonmax} ${latmin} ${latmax}
 if test -r cities.xy
 then

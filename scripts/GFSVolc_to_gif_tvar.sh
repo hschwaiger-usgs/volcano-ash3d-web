@@ -58,7 +58,12 @@ ASH3DBINDIR="${ASH3DROOT}/bin"
 ASH3DSCRIPTDIR="${ASH3DROOT}/bin/scripts"
 ASH3DSHARE="$ASH3DROOT/share"
 ASH3DSHARE_PP="${ASH3DSHARE}/post_proc"
-cp ${ASH3DSHARE_PP}/world_cities.txt .
+if test -r world_cities.txt
+  then
+    echo "Found file world_cities.txt"
+  else
+    ln -s ${ASH3DSHARE_PP}/world_cities.txt .
+fi
 
 # Static (non-time-dependent) variables
 svar=(depotime ash_arrival_time)

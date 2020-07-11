@@ -144,19 +144,20 @@ EDur=`ncdump -v er_duration ${infile} | grep er_duration | grep "=" | \
 	grep -v ":" | cut -f2 -d"=" | cut -f2 -d" "`
 EPlH=`ncdump -v er_plumeheight ${infile} | grep er_plumeheight | grep "=" | \
 	grep -v ":" | cut -f2 -d"=" | cut -f2 -d" "`
-EVol3=`ncdump -v er_volume ${infile} | grep er_volume | grep "=" | \
-	grep -v ":" | cut -f2 -d"=" | cut -f2 -d" "`
-EVol2=`${ASH3DBINDIR}/convert_to_decimal $EVol3`   #if it's in scientific notation, convert to real
-EVol=`echo "($EVol2 * 20)" |bc -l`
+#EVol3=`ncdump -v er_volume ${infile} | grep er_volume | grep "=" | \
+#	grep -v ":" | cut -f2 -d"=" | cut -f2 -d" "`
+#EVol2=`${ASH3DBINDIR}/convert_to_decimal $EVol3`   #if it's in scientific notation, convert to real
+#EVol=`echo "($EVol2 * 20)" |bc -l`
 
 #If volume equals minimum threshold volume, add annotation
-EVol_int=`echo "$EVol * 10000" | bc -l | sed 's/\.[0-9]*//'`   #convert EVol to an integer
-if [ $EVol_int -eq 1 ] ; then
-    EVol="0.0001"
-    Threshval="(min. threshold)"
-  else
-    Threshval=""
-fi
+#EVol_int=`echo "$EVol * 10000" | bc -l | sed 's/\.[0-9]*//'`   #convert EVol to an integer
+#echo "$EVol3 $EVol2 $EVol $EVol_int"
+#if [ $EVol_int -eq 1 ] ; then
+#    EVol="0.0001"
+#    Threshval="(min. threshold)"
+#  else
+#    Threshval=""
+#fi
 
 windtime=`ncdump -h ${infile} | grep NWPStartTime | cut -c20-39`
 iwindformat=`ncdump -h ${infile} |grep b3l1 | cut -c16-20`
@@ -292,7 +293,7 @@ fi
 echo "Eruption start time: "$year $month $day $hour
 echo "plume height (km) ="$EPlH
 echo "eruption duration (hrs) ="$EDur
-echo "erupted volume (km3 DRE) ="$EVol
+#echo "erupted volume (km3 DRE) ="$EVol
 echo "++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
 echo "finished GFSVolc_to_gif_ac_traj.sh"
 echo `date`
