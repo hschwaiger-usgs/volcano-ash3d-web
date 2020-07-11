@@ -23,16 +23,19 @@ echo "running runGFS_puff.sh"
 echo `date`
 echo "------------------------------------------------------------"
 
-USGSROOT="/opt/USGS"
-ASH3DROOT="${USGSROOT}/Ash3d"
-WINDROOT="/data/WindFiles"
+PUFF_retain=4
+# These are the directories that should be mounted on the podman/docker run command
+WINDHOME="/home/ash3d/www/html/puff/data"
+RUNDIR=`pwd`
 
-GFSDATAHOME="${WINDROOT}/gfs"
-PUFFWIND="${WINDROOT}/puff/gfs"
+# First get today's date
+runYEAR=`date -u +"%Y"`
+runMONTH=`date -u +"%m"`
+runDAY=`date -u +"%d"`
+runHOUR=`date -u +"%H"`
+runMIN=`date -u +"%M"`
 
-ln -s ${PUFFWIND} .
-
-INFILE_SIMPLE="ash3d_input_ac.inp"                #simplified input file
+INFILE_SIMPLE="${RUNDIR}/ash3d_input_ac.inp"                #simplified input file
 LON=`sed -n 2p ${INFILE_SIMPLE} | cut -d' ' -f1`
 LAT=`sed -n 2p ${INFILE_SIMPLE} | cut -d' ' -f2`
 HPLMkm=`sed -n 4p ${INFILE_SIMPLE} | cut -d' ' -f1`
@@ -42,16 +45,27 @@ EDUR=`sed -n 4p ${INFILE_SIMPLE} | cut -d' ' -f2`
 SDUR=`sed -n 4p ${INFILE_SIMPLE} | cut -d' ' -f3`
 YEAR=`sed -n 5p ${INFILE_SIMPLE} | cut -d' ' -f1`
 if [[ "$YEAR" -eq 0 ]] ; then
-  YEAR=`date -u +"%Y"`
-  MONTH=`date -u +"%m"`
-  DAY=`date -u +"%d"`
-  HOUR=`date -u +"%H"`
-  MIN=`date -u +"%M"`
+  YEAR=${runYEAR}
+  MONTH=${runMONTH}
+  DAY=${runDAY}
+  HOUR=${runHOUR}
+  MIN=${runMIN}
 else
-  MONTH=`sed -n 5p ${INFILE_SIMPLE} | cut -d' ' -f2`
-  DAY=`sed -n 5p ${INFILE_SIMPLE} | cut -d' ' -f3`
+  MONTHi=`sed -n 5p ${INFILE_SIMPLE} | cut -d' ' -f2`
+  DAYi=`sed -n 5p ${INFILE_SIMPLE} | cut -d' ' -f3`
   HOURf=`sed -n 5p ${INFILE_SIMPLE} | cut -d' ' -f4`
   HOURi=${HOURf%.*}
+
+  if [[ "$MONTHi" -lt 10 ]] ; then
+    MONTH=0${MONTHi}
+  else
+    MONTH=$MONTHi
+  fi
+  if [[ "$DAYi" -lt 10 ]] ; then
+    DAY=0${DAYi}
+  else
+    DAY=$DAYi
+  fi
   if [[ "$HOURi" -lt 10 ]] ; then
     HOUR=0${HOURi}
   else
@@ -71,6 +85,39 @@ echo "DAY=${DAY}"
 echo "HOUR=${HOUR} ${HOURf} ${HOURi}"
 echo "MIN=${MIN} ${MINf} ${MINi}"
 
+# Calculate date difference from today
+d1=$(date -d "${YEAR}${MONTH}${DAY}" +%s )
+d2=$(date -d "${runYEAR}${runMONTH}${runDAY}" +%s)
+#datediff=`$(( (d2 - d1) / 86400 ))`
+datediff=`echo "(${d2} - ${d1}) / 86400" | bc`
+#datediff=int=${datediff_flt%.*}
+
+echo "Eruption is $datediff days before today's date"
+if [[ "$datediff" -lt $PUFF_retain ]] ; then
+  echo "We are expecting $PUFF_retain day of gfs files on the system"
+  echo "Planning to use GFS windfiles."
+  WINDFILE="${WINDHOME}/puff/gfs/${YEAR}${MONTH}${DAY}00_gfs.nc"
+  # Check if the file exists
+  if test -f "$WINDFILE"; then
+    echo "Found $WINDFILE; good to go."
+    iwf="gfs"
+  else
+    echo "Could not find $WINDFILE; trying ncep."
+    iwf="ncep"
+    WINDFILE="${WINDHOME}/puff/ncep/uwnd.${YEAR}.nc"
+  fi
+else
+  echo "Using NCEP windfiles."
+  iwf="ncep"
+  WINDFILE="${WINDHOME}/puff/ncep/uwnd.${YEAR}.nc"
+fi
+# Double-check that the file exists
+if test -f "$WINDFILE"; then
+  echo "Found $WINDFILE; good to go."
+else
+  echo "Could not find $WINDFILE; exiting."
+  exit
+fi
 SDURi=${SDUR%.*}
 if [[ "$SDURi" -gt 48 ]] ; then
  SHOURS="6.0"
@@ -85,8 +132,6 @@ if [[ "$SDURi" -le 8 ]] ; then
  SHOURS="0.5"
 fi
 
-RUNDIR=`pwd`
-
 echo "SHOURS=$SHOURS"
 FHOURS=`echo "scale=3;${HOUR} + ${MIN}/60.0" | bc`
 echo "-----------------------------------------------------"
@@ -98,7 +143,7 @@ echo "/home/ash3d/www/html/puff/bin/puff \
 --lonLat $LON/$LAT \
 --rcfile /home/ash3d/www/html/puff/etc/puffrc \
 --volcFile /home/ash3d/www/html/puff/etc/volcanos.txt \
---ashLogMean=-6 --model=gfs --restartFile=none --regionalWinds=30 \
+--ashLogMean=-6 --model=${iwf} --restartFile=none --regionalWinds=30 \
 --diffuseH=10000 --phiDist="" \
 --saveHours=${SHOURS} --nAsh=2000 --runHours=${SDUR} \
 --eruptHours=${EDUR} --plumeShape=linear --ashLogSdev=1 \
@@ -108,14 +153,14 @@ echo "/home/ash3d/www/html/puff/bin/puff \
 --diffuseZ=10 --plumeHwidth=0"
 
 #/webdata/volcview.wr.usgs.gov/puff/bin/puff \
-/home/ash3d/www/html/puff/bin/puff \
+time /home/ash3d/www/html/puff/bin/puff \
 --quiet="true" --gridSize="0.5x2000" \
 --averageOutput="true" --repeat="5" --gridOutput="true" \
 --opath=${RUNDIR} \
 --lonLat $LON/$LAT \
 --rcfile /home/ash3d/www/html/puff/etc/puffrc \
 --volcFile /home/ash3d/www/html/puff/etc/volcanos.txt \
---ashLogMean=-6 --model=gfs --restartFile=none --regionalWinds=30 \
+--ashLogMean=-6 --model=${iwf} --restartFile=none --regionalWinds=30 \
 --diffuseH=10000 --phiDist="" \
 --saveHours=${SHOURS} --nAsh=2000 --runHours=${SDUR} \
 --eruptHours=${EDUR} --plumeShape=linear --ashLogSdev=1 \
@@ -125,9 +170,10 @@ echo "/home/ash3d/www/html/puff/bin/puff \
 echo "-----------------------------------------------------"
 
 echo "++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
-echo "finished runGFS_puff.sh"
-echo `date`
+echo "finished running puff, now processing files and making plots"
 echo "++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
+
+#/opt/USGS/Ash3d/bin/scripts/GFSVolc_to_gif_ac_puff.sh
 
 echo "exiting runGFS_puff.sh with status $rc"
 exit $rc
