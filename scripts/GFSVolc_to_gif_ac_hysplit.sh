@@ -22,6 +22,13 @@
 
 echo "------------------------------------------------------------"
 echo "running GFSVolc_to_gif_ac_hysplit.sh"
+if [ -z "$1" ]; then
+  echo "Command line argument detected: setting run directory"
+  RUNHOME=$1
+ else
+  RUNHOME=`pwd`
+fi
+cd ${RUNHOME}
 echo `date`
 echo "------------------------------------------------------------"
 CLEANFILES="T"
@@ -53,7 +60,7 @@ if test -r world_cities.txt
 fi
 
 export PATH=/usr/local/bin:$PATH
-infile="3d_tephra_fall.nc"
+infile=${RUNHOME}/"3d_tephra_fall.nc"
 
 # Defnie Hysplit list
 # This must be consistant with what is in get_Hysplit.sh

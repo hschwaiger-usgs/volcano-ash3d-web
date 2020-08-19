@@ -22,6 +22,13 @@
 
 echo "------------------------------------------------------------"
 echo "running GFSVolc_to_gif_dp.sh"
+if [ -z "$1" ]; then
+  echo "Command line argument detected: setting run directory"
+  RUNHOME=$1
+ else
+  RUNHOME=`pwd`
+fi
+cd ${RUNHOME}
 echo `date`
 echo "------------------------------------------------------------"
 CLEANFILES="T"
@@ -50,7 +57,7 @@ if [ "$CLEANFILES" == "T" ]; then
     echo "removing old files"
     rm -f *.xyz *.grd contour_range.txt map_range.txt
 fi
-infile="3d_tephra_fall.nc"
+infile=${RUNHOME}/"3d_tephra_fall.nc"
 
 volc=`ncdump -h ${infile} | grep b1l1 | cut -d\" -f2 | cut -c1-30 | cut -d# -f1`
 date=`ncdump -h ${infile} | grep Date | cut -d\" -f2 | cut -c 1-10`

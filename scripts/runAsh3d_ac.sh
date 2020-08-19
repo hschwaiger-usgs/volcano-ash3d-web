@@ -31,6 +31,7 @@ echo "------------------------------------------------------------"
 CLEANFILES="T"
 USECONTAINER="T"
 CONTAINEREXE="podman"
+CONTAINERRUNDIR="/run/user/1004/libpod/tmp"
 
 t0=`date -u`                                     # record start time
 rc=0                                             # error message accumulator
@@ -224,8 +225,8 @@ if test -r ${USGSROOT}/bin/MetTraj_F; then
     fi
     if [ "$USECONTAINER" == "T" ]; then
         echo "  Running ${CONTAINEREXE} script (GFSVolc_to_gif_ac_traj.sh) to process traj results."
-        ${CONTAINEREXE} run --rm -v ${FULLRUNDIR}:/run/user/1004/libpod/tmp:z \
-                        ash3dpp /opt/USGS/Ash3d/bin/scripts/GFSVolc_to_gif_ac_traj.sh 0
+        ${CONTAINEREXE} run --rm -v ${FULLRUNDIR}:${CONTAINERRUNDIR}:z \
+                        ash3dpp /opt/USGS/Ash3d/bin/scripts/GFSVolc_to_gif_ac_traj.sh 0 ${CONTAINERRUNDIR}
         rc=$((rc + $?))
         if [[ "$rc" -gt 0 ]] ; then
             echo "Error running ${CONTAINEREXE} ash3dpp GFSVolc_to_gif_ac_traj.sh: rc=$rc"
@@ -339,8 +340,8 @@ echo "creating gif images of ash cloud"
 #    Cloud load is the default, so run that one first
 #      Note:  the animate gif for this variable is copied to "cloud_animation.gif"
 if [ "$USECONTAINER" == "T" ]; then
-    ${CONTAINEREXE} run --rm -v ${FULLRUNDIR}:/run/user/1004/libpod/tmp:z \
-                    ash3dpp /opt/USGS/Ash3d/bin/scripts/GFSVolc_to_gif_tvar.sh 3
+    ${CONTAINEREXE} run --rm -v ${FULLRUNDIR}:${CONTAINERRUNDIR}:z \
+                    ash3dpp /opt/USGS/Ash3d/bin/scripts/GFSVolc_to_gif_tvar.sh 3 ${CONTAINERRUNDIR}
     rc=$((rc + $?))
     if [[ "$rc" -gt 0 ]] ; then
         echo "Error running ${CONTAINEREXE} ash3dpp GFSVolc_to_gif_ac_traj.sh 3: rc=$rc"
@@ -360,8 +361,8 @@ fi
 # the consistant basemap
 if test -r ftraj1.dat; then
     if [ "$USECONTAINER" == "T" ]; then
-        ${CONTAINEREXE} run --rm -v ${FULLRUNDIR}:/run/user/1004/libpod/tmp:z \
-                        ash3dpp /opt/USGS/Ash3d/bin/scripts/GFSVolc_to_gif_ac_traj.sh 1
+        ${CONTAINEREXE} run --rm -v ${FULLRUNDIR}:${CONTAINERRUNDIR}:z \
+                        ash3dpp /opt/USGS/Ash3d/bin/scripts/GFSVolc_to_gif_ac_traj.sh 1 ${CONTAINERRUNDIR}
         rc=$((rc + $?))
         if [[ "$rc" -gt 0 ]] ; then
             echo "Error running ${CONTAINEREXE} ash3dpp GFSVolc_to_gif_ac_traj.sh 1: rc=$rc"
@@ -383,8 +384,8 @@ if [[ $DASHBOARD_RUN == T* ]] ; then
     echo "Since we are exporting to the AVO dashboard, post-process for cloud_height"
     #    Now run it for cloud_height
     if [ "$USECONTAINER" == "T" ]; then
-        ${CONTAINEREXE} run --rm -v ${FULLRUNDIR}:/run/user/1004/libpod/tmp:z \
-                        ash3dpp /opt/USGS/Ash3d/bin/scripts/GFSVolc_to_gif_tvar.sh 2
+        ${CONTAINEREXE} run --rm -v ${FULLRUNDIR}:${CONTAINERRUNDIR}:z \
+                        ash3dpp /opt/USGS/Ash3d/bin/scripts/GFSVolc_to_gif_tvar.sh 2 ${CONTAINERRUNDIR}
         rc=$((rc + $?))
         if [[ "$rc" -gt 0 ]] ; then
             echo "Error running ${CONTAINEREXE} ash3dpp GFSVolc_to_gif_ac_traj.sh 2: rc=$rc"
@@ -405,8 +406,8 @@ if [[ $DASHBOARD_RUN == T* ]] ; then
     echo "Now creating gif images of the hysplit run"
     if [ "$USECONTAINER" == "T" ]; then
         echo "Running ${CONTAINEREXE} image of GFSVolc_to_gif_ac_hysplit.sh"
-        #${CONTAINEREXE} run --rm -v ${FULLRUNDIR}:/run/user/1004/libpod/tmp:z \
-        #                ash3dpp /opt/USGS/Ash3d/bin/scripts/GFSVolc_to_gif_ac_hysplit.sh
+        #${CONTAINEREXE} run --rm -v ${FULLRUNDIR}:${CONTAINERRUNDIR}:z \
+        #                ash3dpp /opt/USGS/Ash3d/bin/scripts/GFSVolc_to_gif_ac_hysplit.sh ${CONTAINERRUNDIR}
         #rc=$((rc + $?))
         #if [[ "$rc" -gt 0 ]] ; then
         #    echo "Error running ${CONTAINEREXE} ash3dpp GFSVolc_to_gif_ac_hysplit.sh: rc=$rc"
@@ -427,15 +428,15 @@ if [[ $DASHBOARD_RUN == T* ]] ; then
     # Run the puff model with the parameters in the simple input file
     if [ "$USECONTAINER" == "T" ]; then
         ${CONTAINEREXE} run --rm -v /data/WindFiles:/home/ash3d/www/html/puff/data:z \
-                                 -v ${FULLRUNDIR}:/run/user/1004/libpod/tmp:z \
-                        puffapp /opt/USGS/Ash3d/bin/scripts/runGFS_puff.sh
+                                 -v ${FULLRUNDIR}:${CONTAINERRUNDIR}:z \
+                        puffapp /opt/USGS/Ash3d/bin/scripts/runGFS_puff.sh ${CONTAINERRUNDIR}
         rc=$((rc + $?))
         if [[ "$rc" -gt 0 ]] ; then
             echo "Error running ${CONTAINEREXE} puffapp runGFS_puff.sh: rc=$rc"
             exit 1
         fi
-        ${CONTAINEREXE} run --rm -v ${FULLRUNDIR}:/run/user/1004/libpod/tmp:z \
-                        ash3dpp /opt/USGS/Ash3d/bin/scripts/GFSVolc_to_gif_ac_puff.sh
+        ${CONTAINEREXE} run --rm -v ${FULLRUNDIR}:${CONTAINERRUNDIR}:z \
+                        ash3dpp /opt/USGS/Ash3d/bin/scripts/GFSVolc_to_gif_ac_puff.sh ${CONTAINERRUNDIR}
         rc=$((rc + $?))
         if [[ "$rc" -gt 0 ]] ; then
             echo "Error running ${CONTAINEREXE} ash3dpp GFSVolc_to_gif_ac_puff.sh: rc=$rc"

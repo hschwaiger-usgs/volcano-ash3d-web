@@ -1,0 +1,58 @@
+# Build this container with the following command:
+#   podman build --no-cache -t puffapp_c6src -f Puff2_Dockerfile .
+#
+#FROM centos:6.9
+FROM puffapp_c6pack
+# Install the distribution libraries needed to run puff
+# and the post-processing scripts
+#RUN yum install -y epel-release
+#COPY ./epel.repo /etc/yum.repos.d/epel.repo
+#RUN yum install -y GMT
+#RUN yum install -y GMT-coastlines*
+#RUN yum install -y ImageMagick
+#RUN yum install -y gifsicle
+#RUN yum install -y gcc gcc-c++
+#RUN yum install -y libjpeg libjpeg-devel freetype freetype-devel
+#RUN yum install -y netcdf*
+#RUN yum install -y nco
+#RUN yum install -y bc dc
+#RUN yum install -y ghostscript
+#COPY ./epstopdf /usr/bin/epstopdf
+
+# Now copy the puff folder
+#   First the pre-built copy the 1.12.11 version of udunits from the Menlo server
+COPY ./gcc_udunits /home/ash3d/gcc
+COPY ./gcc_udunits/etc/* /usr/local/etc/
+COPY ./gcc_udunits/libs/* /usr/local/lib/
+COPY ./gcc_udunits/include/* /usr/local/include/
+
+# Now building puff and the USGS tools from source
+# The build directory for all this will be /tmp2
+# First the puff source
+COPY ./puff-uaf-2.2.2_vsc /tmp2
+RUN /tmp2/rebuild_puff.sh
+# and overwrite the puff resouce file with our own
+COPY ./puffrc /home/ash3d/www/html/puff/etc/puffrc
+
+# Now do the USGS tools (HoursSince, projection, MetReader, Ash3d_web)
+COPY ./USGS-software /tmp2
+# and build/install the tools
+RUN /tmp2/rebuild_USGSlibs.sh
+
+# copy the special run script for this docker container
+#COPY ./runGFS_puff.sh /opt/USGS/Ash3d/bin/scripts/runGFS_puff.sh
+
+# To run this container, use the following command, where 
+# LOCAL_RUNDIR is the folder for the cloud run.  This folder
+# must contain the following two files:
+#   ash3d_input_ac.inp : puff used this for establishing the run
+#   3d_tephra_fall.nc  : output of initial Ash3d run
+#                        This is used in post-processing for map extents
+#                        and legend labels.
+# podman run -v /data/WindFiles:/home/ash3d/www/html/puff/data:z \
+#   -v /home/ash3d/Ash3d/test/test_cloud:/run/user/1004/libpod/tmp:z \
+#   puffapp /opt/USGS/Ash3d/bin/scripts/runGFS_puff.sh 
+#
+# docker run -v /data/WindFiles:/home/ash3d/www/html/puff/data \
+#   -v ${LOCAL_RUNDIR}:/tmp \
+#   puffapp /opt/USGS/Ash3d/bin/scripts/runGFS_puff.sh

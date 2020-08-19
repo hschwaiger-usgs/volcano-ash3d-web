@@ -22,6 +22,13 @@
 
 echo "------------------------------------------------------------"
 echo "running GFSVolc_to_gif_ac_puff.sh"
+if [ -z "$1" ]; then
+  echo "Command line argument detected: setting run directory"
+  RUNHOME=$1
+ else
+  RUNHOME=`pwd`
+fi
+cd ${RUNHOME}
 echo `date`
 echo "------------------------------------------------------------"
 CLEANFILES="T"
@@ -43,7 +50,7 @@ ASH3DSHARE="$ASH3DROOT/share"
 ASH3DSHARE_PP="${ASH3DSHARE}/post_proc"
 
 export PATH=/usr/local/bin:$PATH
-infile="3d_tephra_fall.nc"
+infile=${RUNHOME}/"3d_tephra_fall.nc"
 
 #******************************************************************************
 #MAKE SURE 3D_tephra_fall.nc EXISTS

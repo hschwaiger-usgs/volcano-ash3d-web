@@ -20,6 +20,8 @@
 
 #wh-loopc.sh:           enables while loops?
 
+# Parsing command-line arguments
+#  variable code , rundirectory
 echo "------------------------------------------------------------"
 echo "running GFSVolc_to_gif_tvar.sh with parameter:"
 echo "  $1"
@@ -35,6 +37,13 @@ fi
 if [ $1 -eq 3 ]; then
   echo " 3 = cloud_load"
 fi
+if [ -z "$2" ]; then
+  echo "Second command line argument detected: setting run directory"
+  RUNHOME=$2
+  else
+  RUNHOME=`pwd`
+fi
+cd ${RUNHOME}
 echo `date`
 echo "------------------------------------------------------------"
 
@@ -79,7 +88,7 @@ echo "copying cpt files used for flooded contours"
 cp ${ASH3DSHARE_PP}/Ash3d_$var*cpt .
 
 export PATH=/usr/local/bin:$PATH
-infile="3d_tephra_fall.nc"
+infile=${RUNHOME}/"3d_tephra_fall.nc"
 
 #******************************************************************************
 #MAKE SURE 3D_tephra_fall.nc EXISTS

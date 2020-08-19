@@ -20,20 +20,14 @@
 
 echo "------------------------------------------------------------"
 echo "running runGFS_puff.sh"
-if [ -z "$1" ]; then
-  echo "Command line argument detected: setting run directory"
-  RUNHOME=$1
- else
-  RUNHOME=`pwd`
-fi
-cd ${RUNHOME}
 echo `date`
 echo "------------------------------------------------------------"
 
 PUFF_retain=4
-# These are the directories that should be mounted on the podman/docker run command
+# These are the directories that should be mounted on the docker run command
 WINDHOME="/home/ash3d/www/html/puff/data"
-RUNDIR=`pwd`
+#RUNHOME="/tmp"
+RUNHOME="/run/user/1004/libpod/tmp"
 
 # First get today's date
 runYEAR=`date -u +"%Y"`
@@ -42,7 +36,9 @@ runDAY=`date -u +"%d"`
 runHOUR=`date -u +"%H"`
 runMIN=`date -u +"%M"`
 
-INFILE_SIMPLE="${RUNDIR}/ash3d_input_ac.inp"                #simplified input file
+cd ${RUNHOME}
+
+INFILE_SIMPLE="${RUNHOME}/ash3d_input_ac.inp"                #simplified input file
 LON=`sed -n 2p ${INFILE_SIMPLE} | cut -d' ' -f1`
 LAT=`sed -n 2p ${INFILE_SIMPLE} | cut -d' ' -f2`
 HPLMkm=`sed -n 4p ${INFILE_SIMPLE} | cut -d' ' -f1`
@@ -86,6 +82,11 @@ else
     MIN=$MINi
   fi
 fi
+#YEAR=2020
+#MONTH=04
+#DAY=23
+#HOUR=01
+#MIN=00
 echo "YEAR=${YEAR}"
 echo "MONTH=${MONTH}"
 echo "DAY=${DAY}"
@@ -99,6 +100,9 @@ d2=$(date -d "${runYEAR}${runMONTH}${runDAY}" +%s)
 datediff=`echo "(${d2} - ${d1}) / 86400" | bc`
 #datediff=int=${datediff_flt%.*}
 
+ls -l ${WINDHOME}
+ls -l ${WINDHOME}/puff/gfs
+ls -l ${WINDHOME}/puff/ncep
 echo "Eruption is $datediff days before today's date"
 if [[ "$datediff" -lt $PUFF_retain ]] ; then
   echo "We are expecting $PUFF_retain day of gfs files on the system"
@@ -138,6 +142,8 @@ fi
 if [[ "$SDURi" -le 8 ]] ; then
  SHOURS="0.5"
 fi
+
+RUNDIR=`pwd`
 
 echo "SHOURS=$SHOURS"
 FHOURS=`echo "scale=3;${HOUR} + ${MIN}/60.0" | bc`

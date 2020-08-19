@@ -20,8 +20,24 @@
 
 #wh-loopc.sh:           enables while loops?
 
+# Parsing command-line arguments
+#  first/second pass , rundirectory
 echo "------------------------------------------------------------"
-echo "running GFSVolc_to_gif_ac_traj.sh"
+echo "running GFSVolc_to_gif_ac_traj.sh with parameter:"
+echo "  $1"
+if [ $1 -eq 0 ]; then
+  echo " 0 = first pass"
+fi
+if [ $1 -eq 1 ]; then
+  echo " 1 = second pass"
+fi
+if [ -z "$2" ]; then
+  echo "Second command line argument detected: setting run directory"
+  RUNHOME=$2
+  else
+  RUNHOME=`pwd`
+fi
+cd ${RUNHOME}
 echo `date`
 echo "------------------------------------------------------------"
 rc=0                                             # error message accumulator
@@ -53,7 +69,7 @@ if test -r world_cities.txt
 fi
 
 export PATH=/usr/local/bin:$PATH
-infile="3d_tephra_fall.nc"
+infile=${RUNHOME}/"3d_tephra_fall.nc"
 
 #******************************************************************************
 #MAKE SURE 3D_tephra_fall.nc EXISTS

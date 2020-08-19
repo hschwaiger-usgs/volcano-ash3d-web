@@ -1,0 +1,62 @@
+
+
+To build the Ash3d set of post-processing containter, use the Ash3dPP_* container
+control files.  First, the Ash3dPP_CentOS7packages_PodmanFile file builds a
+CentOS7 container with all the distribution packages needed.  Next, 
+Ash3dPP_CentOS7source_PodmanFile builds and installs the source packges needed.
+Lastly, Ash3dPP_PodmanFile is used to replace any of the Ash3d_web scripts with
+custom versions to be used in the container environment.
+
+The work directory (containing the 3d_tephra_fall.nc) is mapped to /run/user/1004/libpod/tmp
+at run time.  The build directory for the Ash3d/puff packages is /tmp2.  Several
+scripts expect auxillary files and scripts to be in the home directory so netcdf-java
+is copied to /home/ash3d/ncj/ and grid2nc.sh is copied to /home/ash3d/bin/ in the Ash3dPP
+container, and the folder gcc_udunits is copied to /home/ash3d/gcc (and /usr/local) for
+the Puff container.
+
+
+#################################################
+#  Commands for building containers
+#################################################
+
+mkdir ~/work/USGS/Software/Podman_containers
+cd ~/work/USGS/Software/Podman_containers
+mkdir USGS-software ncj
+cd ncj
+wget http://artifacts.unidata.ucar.edu/content/repositories/unidata-releases/edu/ucar/netcdfAll/4.6.15/netcdfAll-4.5.jar
+cd ../USGS-software
+git clone https://github.com/hschwaiger-usgs/volcano-ash3d-hourssince.git
+git clone https://github.com/hschwaiger-usgs/volcano-ash3d-projection.git
+git clone https://github.com/hschwaiger-usgs/volcano-ash3d-metreader.git
+git clone https://github.com/hschwaiger-usgs/Ash3d_web.git
+cp Ash3d_web/Container_Notes/rebuild_USGSlibs.sh .
+cd ~/work/USGS/Software/Podman_containers
+podman build --no-cache -t ash3dpp_c7pack -f Ash3dPP_CentOS7packages_PodmanFile .
+podman build --no-cache -t ash3dpp_c7src -f Ash3dPP_CentOS7source_PodmanFile .
+podman build --no-cache -t ash3dpp -f Ash3dPP_PodmanFile .
+#podman build --no-cache -t ash3dpp_res -f Ash3dPP_Res_PodmanFile .
+
+cp Ash3d_web/Container_Notes/gcc_udunits.tar.bz2 .
+bunzip2 gcc_udunits.tar.bz2
+tar -xvf gcc_udunits.tar
+cp Ash3d_web/Container_Notes/puff-uaf-2.2.2_vsc.tar.bz2 .
+bunzip2 puff-uaf-2.2.2_vsc.tar.bz2
+tar -xvf puff-uaf-2.2.2_vsc.tar
+
+podman build --no-cache -t puffapp_c6pack -f Puff_CentOS6packages_PodmanFile .
+podman build --no-cache -t puffapp_c6src -f Puff_CentOS6source_PodmanFile .
+podman build --no-cache -t puffapp -f Puff_PodmanFile .
+
+#################################################
+#  Commands for executing containers
+#################################################
+
+podman run --rm -v ${FULLRUNDIR}:/run/user/1004/libpod/tmp:z ash3dpp /opt/USGS/Ash3d/bin/scripts/GFSVolc_to_gif_tvar.sh 3
+podman run --rm -v ${FULLRUNDIR}:/run/user/1004/libpod/tmp:z ash3dpp /opt/USGS/Ash3d/bin/scripts/GFSVolc_to_gif_ac_traj.sh 1
+podman run --rm -v ${FULLRUNDIR}:/run/user/1004/libpod/tmp:z ash3dpp /opt/USGS/Ash3d/bin/scripts/GFSVolc_to_gif_ac_traj.sh 0
+podman run --rm -v ${FULLRUNDIR}:/run/user/1004/libpod/tmp:z ash3dpp /opt/USGS/Ash3d/bin/scripts/GFSVolc_to_gif_ac_hysplit.sh
+podman run --rm -v /data/WindFiles:/home/ash3d/www/html/puff/data:z -v /home/ash3d/Ash3d/test/test_cloud:/run/user/1004/libpod/tmp:z puffapp /opt/USGS/Ash3d/bin/scripts/runGFS_puff.sh
+
+podman run -v /data/WindFiles:/home/ash3d/www/html/puff/data:z -v /home/ash3d/Ash3d/test/test_cloud:/run/user/1004/libpod/tmp:z puffapp /opt/USGS/Ash3d/bin/scripts/runGFS_puff.sh
+
+
