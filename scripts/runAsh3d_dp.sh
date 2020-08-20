@@ -311,6 +311,7 @@ else
   echo "Calling ${ASH3DSCRIPTDIR}/GFSVolc_to_gif_dp.sh"
   ${ASH3DSCRIPTDIR}/GFSVolc_to_gif_dp.sh
 fi
+cp deposit_thickness_inches.gif deposit.gif
 rc=$((rc+$?))
 echo "rc=$rc"
 

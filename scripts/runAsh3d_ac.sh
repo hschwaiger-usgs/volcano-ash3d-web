@@ -506,8 +506,7 @@ fi
 #    cloud_arrivaltimes_airports.kmz cloud_arrivaltimes_hours.kmz CloudConcentration.kmz CloudHeight.kmz \
 #    CloudLoad.kmz readme.pdf *rajector*gif ash3d_runlog.txt
 if test -r ftraj1.dat; then
-    #zip -a $ZIPNAME.zip traj*.dat
-    zip $ZIPNAME.zip traj*.dat
+    zip $ZIPNAME.zip ftraj*.dat
 fi
 rc=$((rc + $?))
 if [[ "$rc" -gt 0 ]] ; then
