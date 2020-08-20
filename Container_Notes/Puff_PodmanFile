@@ -2,7 +2,7 @@
 #   podman build --no-cache -t puffapp_c6src -f Puff2_Dockerfile .
 #
 #FROM centos:6.9
-FROM puffapp_c6pack
+FROM puffapp_c6src
 # Install the distribution libraries needed to run puff
 # and the post-processing scripts
 #RUN yum install -y epel-release
@@ -40,7 +40,7 @@ FROM puffapp_c6pack
 #RUN /tmp2/rebuild_USGSlibs.sh
 
 # copy the special run script for this docker container
-COPY ./runGFS_puff.sh /opt/USGS/Ash3d/bin/scripts/runGFS_puff.sh
+#COPY ./runGFS_puff.sh /opt/USGS/Ash3d/bin/scripts/runGFS_puff.sh
 RUN mkdir -p /run/user/1004/libpod/tmp
 RUN chown 1004.1004 /run/user/1004/libpod/tmp
 

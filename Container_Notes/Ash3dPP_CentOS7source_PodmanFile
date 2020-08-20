@@ -31,7 +31,7 @@ RUN /tmp2/rebuild_USGSlibs.sh
 
 # Some scripts may require converting grib2 to netcdf in a predictable way so
 COPY ./ncj /home/ash3d/ncj
-COPY ./USGS-software/Ash3d_web/scripts/grib2nc.sh /home/ash3d/bin/
+COPY ./USGS-software/volcano-ash3d-metreader/autorun_scripts/grib2nc.sh /home/ash3d/bin/
 # copy the special run scripts for this docker container
 #COPY ./GFSVolc_to_gif_tvar.sh /opt/USGS/Ash3d/bin/scripts/GFSVolc_to_gif_tvar.sh
 #COPY ./GFSVolc_to_gif_dp.sh /opt/USGS/Ash3d/bin/scripts/GFSVolc_to_gif_dp.sh 

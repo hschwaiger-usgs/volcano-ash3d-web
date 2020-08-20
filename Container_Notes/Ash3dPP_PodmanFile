@@ -32,12 +32,12 @@ FROM ash3dpp_c7src
 #RUN /tmp2/rebuild_USGSlibs.sh
 
 # copy the special run scripts for this docker container
-COPY ./GFSVolc_to_gif_tvar.sh /opt/USGS/Ash3d/bin/scripts/GFSVolc_to_gif_tvar.sh
-COPY ./GFSVolc_to_gif_ac_puff.sh /opt/USGS/Ash3d/bin/scripts/GFSVolc_to_gif_ac_puff.sh
-COPY ./GFSVolc_to_gif_ac_hysplit.sh /opt/USGS/Ash3d/bin/scripts/GFSVolc_to_gif_ac_hysplit.sh
-COPY ./GFSVolc_to_gif_ac_traj.sh /opt/USGS/Ash3d/bin/scripts/GFSVolc_to_gif_ac_traj.sh
-COPY ./GFSVolc_to_gif_dp.sh /opt/USGS/Ash3d/bin/scripts/GFSVolc_to_gif_dp.sh
-COPY ./GFSVolc_to_gif_dp_mm.sh /opt/USGS/Ash3d/bin/scripts/GFSVolc_to_gif_dp_mm.sh 
+#COPY ./GFSVolc_to_gif_tvar.sh /opt/USGS/Ash3d/bin/scripts/GFSVolc_to_gif_tvar.sh
+#COPY ./GFSVolc_to_gif_ac_puff.sh /opt/USGS/Ash3d/bin/scripts/GFSVolc_to_gif_ac_puff.sh
+#COPY ./GFSVolc_to_gif_ac_hysplit.sh /opt/USGS/Ash3d/bin/scripts/GFSVolc_to_gif_ac_hysplit.sh
+#COPY ./GFSVolc_to_gif_ac_traj.sh /opt/USGS/Ash3d/bin/scripts/GFSVolc_to_gif_ac_traj.sh
+#COPY ./GFSVolc_to_gif_dp.sh /opt/USGS/Ash3d/bin/scripts/GFSVolc_to_gif_dp.sh
+#COPY ./GFSVolc_to_gif_dp_mm.sh /opt/USGS/Ash3d/bin/scripts/GFSVolc_to_gif_dp_mm.sh 
 #COPY ./NAMMet_to_gif.sh /opt/USGS/Ash3d/bin/scripts/NAMMet_to_gif.sh
 RUN mkdir -p /run/user/1004/libpod/tmp
 RUN chown 1004.1004 /run/user/1004/libpod/tmp

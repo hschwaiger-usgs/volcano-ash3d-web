@@ -5,7 +5,8 @@ FROM centos:6.9
 # Install the distribution libraries needed to run puff
 # and the post-processing scripts
 RUN yum install -y epel-release
-COPY ./USGS-software/Ash3d_web/Container_Notes/epel7.repo /etc/yum.repos.d/epel.repo
+RUN yum update -y
+COPY ./USGS-software/Ash3d_web/Container_Notes/epel6.repo /etc/yum.repos.d/epel.repo
 RUN yum install -y GMT
 RUN yum install -y GMT-coastlines*
 RUN yum install -y ImageMagick
