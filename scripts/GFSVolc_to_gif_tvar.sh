@@ -37,7 +37,7 @@ fi
 if [ $1 -eq 3 ]; then
   echo " 3 = cloud_load"
 fi
-if [ -z "$2" ]; then
+if [ "$#" -eq 2 ]; then
   echo "Second command line argument detected: setting run directory"
   RUNHOME=$2
   else

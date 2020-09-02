@@ -306,6 +306,8 @@ echo "creating gif image of deposit"
 #      Note:  the animate gif for this variable is copied to "cloud_animation.gif"
 #  HFS: Add functionality of GFSVolc_to_gif_dp.sh to GFSVolc_to_gif_tvar.sh
 if [ "$USECONTAINER" == "T" ]; then
+  echo "Calling ${CONTAINEREXE}"
+  echo "${CONTAINEREXE} run --rm -v ${FULLRUNDIR}:${CONTAINERRUNDIR}:z ash3dpp /opt/USGS/Ash3d/bin/scripts/GFSVolc_to_gif_dp.sh ${CONTAINERRUNDIR}"
   ${CONTAINEREXE} run --rm -v ${FULLRUNDIR}:${CONTAINERRUNDIR}:z ash3dpp /opt/USGS/Ash3d/bin/scripts/GFSVolc_to_gif_dp.sh ${CONTAINERRUNDIR}
 else
   echo "Calling ${ASH3DSCRIPTDIR}/GFSVolc_to_gif_dp.sh"
@@ -326,8 +328,11 @@ mv Ash3d.lst ash3d_runlog.txt
 
 echo "creating gif image of deposit with mm scale"
 if [ "$USECONTAINER" == "T" ]; then
+  echo "Calling ${CONTAINEREXE}"
+  echo "${CONTAINEREXE} run --rm -v ${FULLRUNDIR}:${CONTAINERRUNDIR}:z ash3dpp /opt/USGS/Ash3d/bin/scripts/GFSVolc_to_gif_dp_mm.sh ${CONTAINERRUNDIR}"
   ${CONTAINEREXE} run --rm -v ${FULLRUNDIR}:${CONTAINERRUNDIR}:z ash3dpp /opt/USGS/Ash3d/bin/scripts/GFSVolc_to_gif_dp_mm.sh ${CONTAINERRUNDIR}
 else
+  echo "Calling ${ASH3DSCRIPTDIR}/GFSVolc_to_gif_dp_mm.sh"
   ${ASH3DSCRIPTDIR}/GFSVolc_to_gif_dp_mm.sh
 fi
 rc=$((rc+$?))

@@ -340,6 +340,7 @@ echo "creating gif images of ash cloud"
 #    Cloud load is the default, so run that one first
 #      Note:  the animate gif for this variable is copied to "cloud_animation.gif"
 if [ "$USECONTAINER" == "T" ]; then
+    echo "  Running ${CONTAINEREXE} script (GFSVolc_to_gif_tvar.sh) to process cloud_load results."
     ${CONTAINEREXE} run --rm -v ${FULLRUNDIR}:${CONTAINERRUNDIR}:z \
                     ash3dpp /opt/USGS/Ash3d/bin/scripts/GFSVolc_to_gif_tvar.sh 3 ${CONTAINERRUNDIR}
     rc=$((rc + $?))
@@ -348,7 +349,8 @@ if [ "$USECONTAINER" == "T" ]; then
         exit 1
     fi
   else
-    echo "Calling ${ASH3DSCRIPTDIR}/GFSVolc_to_gif_tvar.sh 3"
+    
+    echo "  Running installed script ${ASH3DSCRIPTDIR}/GFSVolc_to_gif_tvar.sh 3"
     ${ASH3DSCRIPTDIR}/GFSVolc_to_gif_tvar.sh 3
     rc=$((rc + $?))
     if [[ "$rc" -gt 0 ]] ; then
@@ -361,7 +363,8 @@ fi
 # the consistant basemap
 if test -r ftraj1.dat; then
     if [ "$USECONTAINER" == "T" ]; then
-        ${CONTAINEREXE} run --rm -v ${FULLRUNDIR}:${CONTAINERRUNDIR}:z \
+       echo "  Running ${CONTAINEREXE} script (GFSVolc_to_gif_ac_traj.sh) to process traj results."
+       ${CONTAINEREXE} run --rm -v ${FULLRUNDIR}:${CONTAINERRUNDIR}:z \
                         ash3dpp /opt/USGS/Ash3d/bin/scripts/GFSVolc_to_gif_ac_traj.sh 1 ${CONTAINERRUNDIR}
         rc=$((rc + $?))
         if [[ "$rc" -gt 0 ]] ; then
@@ -369,7 +372,8 @@ if test -r ftraj1.dat; then
             exit 1
         fi
       else
-      ${ASH3DSCRIPTDIR}/GFSVolc_to_gif_ac_traj.sh 1
+	      echo "  Running installed script (GFSVolc_to_gif_ac_traj.sh) to process traj results."
+	${ASH3DSCRIPTDIR}/GFSVolc_to_gif_ac_traj.sh 1
         rc=$((rc + $?))
         if [[ "$rc" -gt 0 ]] ; then
             echo "Error running GFSVolc_to_gif_ac_traj.sh 1: rc=$rc"
@@ -384,6 +388,7 @@ if [[ $DASHBOARD_RUN == T* ]] ; then
     echo "Since we are exporting to the AVO dashboard, post-process for cloud_height"
     #    Now run it for cloud_height
     if [ "$USECONTAINER" == "T" ]; then
+        echo "  Running ${CONTAINEREXE} script (GFSVolc_to_gif_tvar.sh) to process cloud_height results."
         ${CONTAINEREXE} run --rm -v ${FULLRUNDIR}:${CONTAINERRUNDIR}:z \
                         ash3dpp /opt/USGS/Ash3d/bin/scripts/GFSVolc_to_gif_tvar.sh 2 ${CONTAINERRUNDIR}
         rc=$((rc + $?))
@@ -427,6 +432,7 @@ if [[ $DASHBOARD_RUN == T* ]] ; then
     #      puff is installed and puff windfiles are available
     # Run the puff model with the parameters in the simple input file
     if [ "$USECONTAINER" == "T" ]; then
+        echo "  Running ${CONTAINEREXE} script (runGFS_puff.sh) for puff" 
         ${CONTAINEREXE} run --rm -v /data/WindFiles:/home/ash3d/www/html/puff/data:z \
                                  -v ${FULLRUNDIR}:${CONTAINERRUNDIR}:z \
                         puffapp /opt/USGS/Ash3d/bin/scripts/runGFS_puff.sh ${CONTAINERRUNDIR}
@@ -435,6 +441,7 @@ if [[ $DASHBOARD_RUN == T* ]] ; then
             echo "Error running ${CONTAINEREXE} puffapp runGFS_puff.sh: rc=$rc"
             exit 1
         fi
+        echo "  Running ${CONTAINEREXE} script (GFSVolc_to_gif_ac_puff.sh) for puff results."
         ${CONTAINEREXE} run --rm -v ${FULLRUNDIR}:${CONTAINERRUNDIR}:z \
                         ash3dpp /opt/USGS/Ash3d/bin/scripts/GFSVolc_to_gif_ac_puff.sh ${CONTAINERRUNDIR}
         rc=$((rc + $?))

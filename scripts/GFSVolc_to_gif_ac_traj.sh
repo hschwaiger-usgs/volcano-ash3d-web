@@ -31,10 +31,11 @@ fi
 if [ $1 -eq 1 ]; then
   echo " 1 = second pass"
 fi
-if [ -z "$2" ]; then
+if [ "$#" -eq 2 ]; then
   echo "Second command line argument detected: setting run directory"
   RUNHOME=$2
-  else
+ else
+  echo "No second command line argument detected, using cwd"
   RUNHOME=`pwd`
 fi
 cd ${RUNHOME}

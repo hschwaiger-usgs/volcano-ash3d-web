@@ -20,7 +20,8 @@
 
 echo "------------------------------------------------------------"
 echo "running runGFS_puff.sh"
-if [ -z "$1" ]; then
+
+if [ "$#" -eq 1 ]; then
   echo "Command line argument detected: setting run directory"
   RUNHOME=$1
  else

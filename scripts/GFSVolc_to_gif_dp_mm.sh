@@ -22,7 +22,7 @@
 
 echo "------------------------------------------------------------"
 echo "running GFSVolc_to_gif_dp_mm.sh"
-if [ -z "$1" ]; then
+if [ "$#" -eq 1 ]; then
   echo "Command line argument detected: setting run directory"
   RUNHOME=$1
  else
