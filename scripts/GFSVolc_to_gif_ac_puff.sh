@@ -22,7 +22,7 @@
 
 echo "------------------------------------------------------------"
 echo "running GFSVolc_to_gif_ac_puff.sh"
-if [ "$#" -eq 2 ]; then
+if [ "$#" -eq 1 ]; then
   echo "Command line argument detected: setting run directory"
   RUNHOME=$1
   else
@@ -348,7 +348,6 @@ echo "erupted volume (km3 DRE) ="$EVol
 echo "++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
 echo "finished GFSVolc_to_gif_ac_puff.sh"
 echo `date`
-echo `ls -l /data/WindFiles/puff/gfs/`
 echo "++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
 
 echo "exiting GFSVolc_to_gif_ac_puff.sh with status $rc"
