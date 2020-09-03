@@ -502,7 +502,7 @@ zip $ZIPNAME.zip *UTC*.gif \
                  ash3d_input.txt ash3d_runlog.txt \
                  cloud_animation.gif \
                  cloud_arrivaltimes_airports.kmz cloud_arrivaltimes_airports.txt \
-                 CloudConcentration.kmz CloudHeight.kmz CloudLoad.kmz
+                 CloudConcentration.kmz CloudHeight.kmz CloudLoad.kmz traj*.gif
 rc=$((rc+$?))
 if [[ "$rc" -gt 0 ]] ; then
     echo "Error creating final zip file: rc=$rc"
