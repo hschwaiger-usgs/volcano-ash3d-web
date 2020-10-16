@@ -17,7 +17,7 @@ RUN yum install -y gifsicle
 RUN yum install -y unix2dos
 RUN yum install -y GMT GMT-common
 RUN yum install -y gshhg-gmt*
-RUN yum install -y gdal gdal-devel
+RUN yum install -y gdal gdal-devel gdal-python
 RUN yum install -y bc dc
 RUN yum install -y ghostscript
 RUN yum install -y make
