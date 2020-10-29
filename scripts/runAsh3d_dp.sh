@@ -353,10 +353,10 @@ echo "rc=$rc"
 unix2dos ${INFILE_MAIN}
 
 zip $ZIPNAME.zip ash3d_input.txt ash3d_runlog.txt \
-                 ash_arrivaltimes_airports.kmz ash_arrivaltimes_airports.txt \
-                 ash_arrivaltimes_hours.kmz \
+                 ash_arrivaltimes_airports.kmz ashfall_arrivaltimes_airports.txt \
+                 ashfall_arrivaltimes_hours.kmz \
                  deposit_thickness_inches.gif deposit_thickness_inches.kmz \
-                 deposit_thickness_mm.gif deposit_thickness_mm.kmz \
+                 deposit_thickness_mm.gif deposit_thickness_mm.kmz deposit_thickness_mm.txt \
                  dp_shp.zip dp_mm_shp.zip ${INFILE_MAIN}
 
 #zip $ZIPNAME.zip deposit_thickness_inches.gif deposit_thickness_mm.gif \
