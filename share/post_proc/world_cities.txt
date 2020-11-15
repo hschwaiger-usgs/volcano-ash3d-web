@@ -2556,3 +2556,10 @@ POINT_X         POINT_Y        CITY_NAME                 FIPS_CNTRYCNTRY_NAME   
         -71.6992       -15.6628Achoma                    PE        Peru                          -999         7Less than 50,000
         -71.8390       -15.6158Pinchollo                 PE        Peru                          -999         7Less than 50,000
         -71.5972       -15.8468Japutana                  PE        Peru                          -999         7Less than 50,000
+       -121.5281        45.7067Hood River                US        United States                 -999         7Less than 50,000
+       -121.1787        45.5946The Dalles                US        United States                 -999         7Less than 50,000
+       -119.1199        46.2087Kennewick                 US        United States                 -999         7Less than 50,000
+       -120.5059        46.6021Yakima                    US        United States                 -999         7Less than 50,000
+       -121.1306        45.4532Dufur                     US        United States                 -999         7Less than 50,000
+       -121.0814        45.1751Maupin                    US        United States                 -999         7Less than 50,000
+       -121.9112        45.3296Rhododendron              US        United States                 -999         7Less than 50,000
