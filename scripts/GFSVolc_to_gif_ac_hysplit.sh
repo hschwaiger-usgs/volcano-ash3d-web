@@ -52,8 +52,7 @@ ASH3DBINDIR="${ASH3DROOT}/bin"
 ASH3DSCRIPTDIR="${ASH3DROOT}/bin/scripts"
 ASH3DSHARE="$ASH3DROOT/share"
 ASH3DSHARE_PP="${ASH3DSHARE}/post_proc"
-if test -r world_cities.txt
-  then
+if test -r world_cities.txt ; then
     echo "Found file world_cities.txt"
   else
     ln -s ${ASH3DSHARE_PP}/world_cities.txt .
@@ -103,12 +102,11 @@ volcname[34]="Wrangell"
 #******************************************************************************
 #MAKE SURE 3D_tephra_fall.nc EXISTS
 # Note: we need the ash3d stuff just to get a consistant basemap for the hysplit data
-if test -r ${infile}
-then
-	echo "reading from ${infile} file"
-else
-	echo "error: no ${infile} file. Exiting"
-	exit 1
+if test -r ${infile} ; then
+    echo "reading from ${infile} file"
+  else
+    echo "error: no ${infile} file. Exiting"
+    exit 1
 fi
 
 #******************************************************************************
@@ -225,8 +223,7 @@ ${GMTpre[GMTv]} gmtset ${GMTelp[GMTv]} Sphere
 AREA="-R$LLLON/$URLON/$LLLAT/$URLAT"
 #AREA="-Rac_tot_out_t${time}.grd"
 DLON_INT="$(echo $DLON | sed 's/\.[0-9]*//')"  #convert DLON to an integer
-if [ $DLON_INT -le 5 ]
-then
+if [ $DLON_INT -le 5 ] ; then
    BASE="-Ba1/a1"                  # label every 5 degress lat/lon
    DETAIL="-Dh"                        # high resolution coastlines (-Dc=crude)
  elif [ $DLON_INT -le 10 ] ; then
@@ -274,8 +271,7 @@ echo "Finished plotting trajectory data"
 
 #Add cities
 ${ASH3DBINDIR}/citywriter ${LLLON} ${URLON} ${LLLAT} ${URLAT}
-if test -r cities.xy
-then
+if test -r cities.xy ; then
     ${GMTpre[GMTv]} psxy cities.xy $AREA $PROJ -Sc0.05i -Gblack -Wthinnest -V -O -K >> temp.ps
     ${GMTpre[GMTv]} pstext cities.xy $AREA $PROJ -D0.1/0.1 -V -O -K >> temp.ps      #Plot names of all airports
     echo "Wrote cities to map"

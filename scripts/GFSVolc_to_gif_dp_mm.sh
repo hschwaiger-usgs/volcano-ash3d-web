@@ -119,53 +119,50 @@ echo "Processing " $volc " on " $date
 ## First process the netcdf file
 infilell="3d_tephra_fall.nc"
 
-if test 1 -eq 1
-   then
+if test 1 -eq 1 ; then
+    gsbins=`ncdump -h $infilell | grep "bn =" | cut -c6-8`      # # of grain-size bins
+    zbins=`ncdump -h $infilell | grep "z =" | cut -c6-7`        # # of elevation levels
+    tmax=`ncdump -h $infilell | grep "UNLIMITED" | cut -c22-23` # maximum time
 
-   gsbins=`ncdump -h $infilell | grep "bn =" | cut -c6-8`      # # of grain-size bins
-   zbins=`ncdump -h $infilell | grep "z =" | cut -c6-7`        # # of elevation levels
-   tmax=`ncdump -h $infilell | grep "UNLIMITED" | cut -c22-23` # maximum time
+    ## Extracting all the deposit info
+     t=$((tmax-1))
+#    for t in `seq 0 $((tmax-1))`;
+#    do
+        echo " ${volc} : Generating deposit grids for time = " ${t}
+        # Summing over vertical column and grainsizes
+        # First make all the grid files
+        for i in `seq 0 $((gsbins-1))`;
+        do
+           ${GMTpre[GMTv]} ${GMTrgr[GMTv]} "$infilell?depocon[$t,$i]" dep_out_t${t}_g${i}.grd
+        done  #end of loop over gsbins
 
-   ## Extracting all the deposit info
+        # Now loop through again and add them up
+        ${GMTpre[GMTv]} grdmath 1.0 dep_out_t${t}_g0.grd MUL = dep_tot_out_t${t}.grd
+        for i in `seq 1 $((gsbins-1))`;
+        do
+           echo "doing grdmath on dep_out_t${t}_g${i}.grd to dep_tot_out_t${t}.grd"
+           ${GMTpre[GMTv]} grdmath dep_out_t${t}_g${i}.grd dep_tot_out_t${t}.grd ADD = dep_tot_out_t${t}.grd
+        done  # end of loop over gsbins
+#    done  # end of time loop
+
+    # Create the final deposit grid
+    tfinal=$((tmax-1))
+    echo " ${volc} : Generating final deposit grid from dep_tot_out_t${tfinal}.grd"
+    ${GMTpre[GMTv]} grdmath 1.0 dep_tot_out_t${tfinal}.grd MUL = dep_tot_out.grd
+  else
+
     t=$((tmax-1))
-#   for t in `seq 0 $((tmax-1))`;
-#   do
-       echo " ${volc} : Generating deposit grids for time = " ${t}
-       # Summing over vertical column and grainsizes
-       # First make all the grid files
-       for i in `seq 0 $((gsbins-1))`;
-       do
-          ${GMTpre[GMTv]} ${GMTrgr[GMTv]} "$infilell?depocon[$t,$i]" dep_out_t${t}_g${i}.grd
-       done  #end of loop over gsbins
+    lon1=`${GMTpre[GMTv]} grdinfo ${infilell} -C | cut -f2`
+    lon2=`${GMTpre[GMTv]} grdinfo ${infilell} -C | cut -f3`
+    lat1=`${GMTpre[GMTv]} grdinfo ${infilell} -C | cut -f4`
+    lat2=`${GMTpre[GMTv]} grdinfo ${infilell} -C | cut -f5`
+    # use dc (desk calculator)
+    lons1=`echo "$lon1 - 360.0" | bc -l`
+    lons2=`echo "$lon2 - 360.0" | bc -l`
+    tvar=(depothick ashcon_max cloud_height cloud_load)
 
-       # Now loop through again and add them up
-       ${GMTpre[GMTv]} grdmath 1.0 dep_out_t${t}_g0.grd MUL = dep_tot_out_t${t}.grd
-       for i in `seq 1 $((gsbins-1))`;
-       do
-          echo "doing grdmath on dep_out_t${t}_g${i}.grd to dep_tot_out_t${t}.grd"
-          ${GMTpre[GMTv]} grdmath dep_out_t${t}_g${i}.grd dep_tot_out_t${t}.grd ADD = dep_tot_out_t${t}.grd
-       done  # end of loop over gsbins
-#   done  # end of time loop
-
-   # Create the final deposit grid
-   tfinal=$((tmax-1))
-   echo " ${volc} : Generating final deposit grid from dep_tot_out_t${tfinal}.grd"
-   ${GMTpre[GMTv]} grdmath 1.0 dep_tot_out_t${tfinal}.grd MUL = dep_tot_out.grd
-else
-  #
-   t=$((tmax-1))
-   lon1=`${GMTpre[GMTv]} grdinfo ${infilell} -C | cut -f2`
-   lon2=`${GMTpre[GMTv]} grdinfo ${infilell} -C | cut -f3`
-   lat1=`${GMTpre[GMTv]} grdinfo ${infilell} -C | cut -f4`
-   lat2=`${GMTpre[GMTv]} grdinfo ${infilell} -C | cut -f5`
-   # use dc (desk calculator)
-   lons1=`echo "$lon1 - 360.0" | bc -l`
-   lons2=`echo "$lon2 - 360.0" | bc -l`
-   tvar=(depothick ashcon_max cloud_height cloud_load)
-
-   ${GMTpre[GMTv]} ${GMTrgr[GMTv]} "${infile}?depothick[$t]" dep_tot_out.grd
-   ${GMTpre[GMTv]} grdedit dep_tot_out.grd -R${lons1}/${lons2}/${lat1}/${lat2}
-
+    ${GMTpre[GMTv]} ${GMTrgr[GMTv]} "${infile}?depothick[$t]" dep_tot_out.grd
+    ${GMTpre[GMTv]} grdedit dep_tot_out.grd -R${lons1}/${lons2}/${lat1}/${lat2}
 fi
 
 ###############################################################################
@@ -191,8 +188,7 @@ echo "$lonmin $lonmax $latmin $latmax $VCLON $VCLAT" > map_range.txt
 
 #set mapping parameters
 DLON_INT="$(echo $DLON | sed 's/\.[0-9]*//')"  #convert DLON to an integer
-if [ $DLON_INT -le 2 ]
-then
+if [ $DLON_INT -le 2 ] ; then
    BASE="-Ba0.25/a0.25"                  # label every 5 degress lat/lon
    KMSCALE="30"
    MISCALE="20"
@@ -315,15 +311,13 @@ echo "running legend_placer_dp_mm"
 ${ASH3DBINDIR}/legend_placer_dp_mm
 
 echo "adding cities"
-if test -r world_cities.txt
-  then
+if test -r world_cities.txt ; then
     echo "Found file world_cities.txt"
   else
     ln -s ${ASH3DSHARE_PP}/world_cities.txt .
 fi
 ${ASH3DBINDIR}/citywriter ${lonmin} ${lonmax} ${latmin} ${latmax}
-if test -r cities.xy
-then
+if test -r cities.xy ; then
     # Add a condition to plot roads if you'd like
     #tstvolc=`ncdump -h ${infile} | grep b1l1 | cut -d\" -f2 | cut -c1-7`
     #if [ "${tstvolc}" = "Kilauea" ] ; then
@@ -395,8 +389,11 @@ composite -geometry +${legendx_UL}+${legendy_UL} ${ASH3DSHARE_PP}/legend_dep.png
 
 if [ "$CLEANFILES" == "T" ]; then
    # Clean up more temporary files
-   rm *.grd *.lev caption.txt map_range.txt
-   rm temp.* legend_positions_dp_mm.txt
+   rm -f *.grd *.lev
+   rm -f caption.txt cities.xy map_range*txt legend_positions*txt
+   rm -f temp.* 
+   rm -f gmt.conf gmt.history
+   rm -f world_cities.txt
 fi
 
 #Make shapefile

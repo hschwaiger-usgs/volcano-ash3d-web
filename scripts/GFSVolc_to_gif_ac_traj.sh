@@ -18,8 +18,6 @@
 #      and its documentation for any purpose.  We assume no responsibility to provide
 #      technical support to users of this software.
 
-#wh-loopc.sh:           enables while loops?
-
 # Parsing command-line arguments
 #  first/second pass , rundirectory
 echo "------------------------------------------------------------"
@@ -62,8 +60,7 @@ ASH3DSCRIPTDIR="${ASH3DROOT}/bin/scripts"
 ASH3DSHARE="$ASH3DROOT/share"
 ASH3DSHARE_PP="${ASH3DSHARE}/post_proc"
 
-if test -r world_cities.txt
-  then
+if test -r world_cities.txt ; then
     echo "Found file world_cities.txt"
   else
     ln -s ${ASH3DSHARE_PP}/world_cities.txt .
@@ -74,8 +71,7 @@ infile=${RUNHOME}/"3d_tephra_fall.nc"
 
 #******************************************************************************
 #MAKE SURE 3D_tephra_fall.nc EXISTS
-if test -r ${infile}
-then
+if test -r ${infile} ; then
     echo "reading from ${infile} file"
   else
     echo "error: no ${infile} file. Exiting"
@@ -105,34 +101,34 @@ hours_real=`echo "$hour + $minute / 60" | bc -l`
 
 
 if [ $1 -eq 0 ]; then
-  # This is the initial run before the full Ash3d run
-  SUB=0
-  LLLON=`cat map_range_traj.txt | awk '{print $1}'`
-  LLLAT=`cat map_range_traj.txt | awk '{print $3}'`
-  URLON=`cat map_range_traj.txt | awk '{print $2}'`
-  URLAT=`cat map_range_traj.txt | awk '{print $4}'`
-  DLON=`echo "$URLON-$LLLON" | bc -l`
-  DLAT=`echo "$URLAT-$LLLAT" | bc -l`
-  # Now we need to adjust the limits so that the map has the approximately correct aspect ratio
-  dum=`echo "$DLAT * 2.0" | bc -l`
-  test1=`echo "$DLON < $dum" | bc -l`
-  echo "test1 = $test1"
-  #if (( $DLON < $dum )); then
-  if [ $test1 -eq 1 ]; then
-    echo "Resetting DLON"
-    DLON=$dum
+    # This is the initial run before the full Ash3d run
+    SUB=0
+    LLLON=`cat map_range_traj.txt | awk '{print $1}'`
+    LLLAT=`cat map_range_traj.txt | awk '{print $3}'`
+    URLON=`cat map_range_traj.txt | awk '{print $2}'`
+    URLAT=`cat map_range_traj.txt | awk '{print $4}'`
+    DLON=`echo "$URLON-$LLLON" | bc -l`
+    DLAT=`echo "$URLAT-$LLLAT" | bc -l`
+    # Now we need to adjust the limits so that the map has the approximately correct aspect ratio
+    dum=`echo "$DLAT * 2.0" | bc -l`
+    test1=`echo "$DLON < $dum" | bc -l`
+    echo "test1 = $test1"
+    #if (( $DLON < $dum )); then
+    if [ $test1 -eq 1 ]; then
+      echo "Resetting DLON"
+      DLON=$dum
+      URLON=`echo "$LLLON+$DLON" | bc -l`
+    fi
+  else
+    # This is a follow-up run after the full Ash3d run has completed.
+    # This run will have the same basemap as the other Ash3d graphics
+    SUB=1
+    LLLON=`ncdump -h ${infile} | grep b1l3 | cut -d\" -f2 | awk '{print $1}'`
+    LLLAT=`ncdump -h ${infile} | grep b1l3 | cut -d\" -f2 | awk '{print $2}'`
+    DLON=`ncdump -h ${infile} | grep b1l4 | cut -d\" -f2 | awk '{print $1}'`
+    DLAT=`ncdump -h ${infile} | grep b1l4 | cut -d\" -f2 | awk '{print $2}'`
     URLON=`echo "$LLLON+$DLON" | bc -l`
-  fi
-else
-  # This is a follow-up run after the full Ash3d run has completed.
-  # This run will have the same basemap as the other Ash3d graphics
-  SUB=1
-  LLLON=`ncdump -h ${infile} | grep b1l3 | cut -d\" -f2 | awk '{print $1}'`
-  LLLAT=`ncdump -h ${infile} | grep b1l3 | cut -d\" -f2 | awk '{print $2}'`
-  DLON=`ncdump -h ${infile} | grep b1l4 | cut -d\" -f2 | awk '{print $1}'`
-  DLAT=`ncdump -h ${infile} | grep b1l4 | cut -d\" -f2 | awk '{print $2}'`
-  URLON=`echo "$LLLON+$DLON" | bc -l`
-  URLAT=`echo "$LLLAT+$DLAT" | bc -l`
+    URLAT=`echo "$LLLAT+$DLAT" | bc -l`
 fi
 
 echo "LLLON=$LLLON, LLLAT=$LLLAT, DLON=$DLON, DLAT=$DLAT"
@@ -194,8 +190,7 @@ ${GMTpre[GMTv]} gmtset ${GMTelp[GMTv]} Sphere
 AREA="-R$LLLON/$URLON/$LLLAT/$URLAT"
 #AREA="-Rac_tot_out_t${time}.grd"
 DLON_INT="$(echo $DLON | sed 's/\.[0-9]*//')"  #convert DLON to an integer
-if [ $DLON_INT -le 5 ]
-then
+if [ $DLON_INT -le 5 ] ; then
    BASE="-Ba1/a1"                  # label every 5 degress lat/lon
    DETAIL="-Dh"                        # high resolution coastlines (-Dc=crude)
  elif [ $DLON_INT -le 10 ] ; then
@@ -242,6 +237,8 @@ awk '{print $1, $2, 1.0}' ftraj7.dat | ${GMTpre[GMTv]} psxy $AREA $PROJ $BASE -S
 echo "Finished plotting trajectory data"
 
 #Add cities
+echo "Finding cities in domain"
+echo "${ASH3DBINDIR}/citywriter ${LLLON} ${URLON} ${LLLAT} ${URLAT}"
 ${ASH3DBINDIR}/citywriter ${LLLON} ${URLON} ${LLLAT} ${URLAT}
 if test -r cities.xy ; then
     ${GMTpre[GMTv]} psxy cities.xy $AREA $PROJ -Sc0.05i -Gblack -Wthinnest -V -O -K >> temp.ps
@@ -301,10 +298,13 @@ composite -geometry +${legendx_UL}+${legendy_UL} ${ASH3DSHARE_PP}/legend_hysplit
 
 mv temp.gif trajectory_${SUB}.gif
 
-# Clean up more temporary files
+# Clean up temporary files
 if [ "$CLEANFILES" == "T" ]; then
-    rm map_range.txt legend_positions_ac.txt
-    rm temp.*
+   rm -f *.grd *.lev
+   rm -f caption.txt cities.xy map_range*txt legend_positions*txt
+   rm -f temp.* 
+   rm -f gmt.conf gmt.history
+   rm -f world_cities.txt
 fi
 
 echo "Eruption start time: "$year $month $day $hour

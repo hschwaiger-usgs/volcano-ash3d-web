@@ -23,10 +23,10 @@
 echo "------------------------------------------------------------"
 echo "running GFSVolc_to_gif_dp.sh"
 if [ "$#" -eq 1 ]; then
-  echo "Command line argument detected: setting run directory"
-  RUNHOME=$1
+   echo "Command line argument detected: setting run directory"
+   RUNHOME=$1
  else
-  RUNHOME=`pwd`
+   RUNHOME=`pwd`
 fi
 cd ${RUNHOME}
 echo `date`
@@ -119,9 +119,7 @@ echo "Processing " $volc " on " $date
 ## First process the netcdf file
 infilell="3d_tephra_fall.nc"
 
-if test 1 -eq 1
-   then
-
+if test 1 -eq 1 ; then
    gsbins=`ncdump -h $infilell | grep "bn =" | cut -c6-8`      # # of grain-size bins
    zbins=`ncdump -h $infilell | grep "z =" | cut -c6-7`        # # of elevation levels
    tmax=`ncdump -h $infilell | grep "UNLIMITED" | cut -c22-23` # maximum time
@@ -176,9 +174,6 @@ echo "6.0      0 183 255" >   dp_6.lev    #deposit (6 mm)
 echo "25.0   255   0 255" >  dp_25.lev    #deposit (2.5cm)
 echo "100.     0  51  51" > dp_100.lev    #deposit (10cm)
 
-
-
-
 #get latitude & longitude range
 lonmin=$LLLON
 latmin=$LLLAT
@@ -189,8 +184,7 @@ echo "$lonmin $lonmax $latmin $latmax $VCLON $VCLAT" > map_range.txt
 
 #set mapping parameters
 DLON_INT="$(echo $DLON | sed 's/\.[0-9]*//')"  #convert DLON to an integer
-if [ $DLON_INT -le 2 ]
-then
+if [ $DLON_INT -le 2 ] ; then
    BASE="-Ba0.25/a0.25"                  # label every 5 degress lat/lon
    KMSCALE="30"
    MISCALE="20"
@@ -284,15 +278,13 @@ echo "running legend_placer_dp"
 ${ASH3DBINDIR}/legend_placer_dp
 
 echo "adding cities"
-if test -r world_cities.txt
-  then
+if test -r world_cities.txt ; then
     echo "Found file world_cities.txt"
   else
     ln -s ${ASH3DSHARE_PP}/world_cities.txt .
 fi
 ${ASH3DBINDIR}/citywriter ${lonmin} ${lonmax} ${latmin} ${latmax}
-if test -r cities.xy
-then
+if test -r cities.xy ; then
     # Add a condition to plot roads if you'd like
     #tstvolc=`ncdump -h ${infile} | grep b1l1 | cut -d\" -f2 | cut -c1-7`
     #if [ "${tstvolc}" = "Kilauea" ] ; then
@@ -364,8 +356,11 @@ composite -geometry +${legendx_UL}+${legendy_UL} ${ASH3DSHARE_PP}/legend_dep_nws
 
 if [ "$CLEANFILES" == "T" ]; then
    # Clean up more temporary files
-   rm *.grd *.lev caption.txt map_range.txt
-   rm temp.* legend_positions_dp.txt
+   rm -f *.grd *.lev
+   rm -f caption.txt cities.xy map_range*txt legend_positions*txt
+   rm -f temp.*
+   rm -f gmt.conf gmt.history
+   rm -f world_cities.txt
 fi
 
 #Make shapefile

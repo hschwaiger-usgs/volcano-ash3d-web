@@ -34,7 +34,15 @@ echo "------------------------------------------------------------"
 PUFF_retain=4
 # These are the directories that should be mounted on the podman/docker run command
 WINDHOME="/home/ash3d/www/html/puff/data"
+PUFFEXEC="/home/ash3d/www/html/puff/bin/puff"
 RUNDIR=`pwd`
+
+if test -r $PUFFEXEC; then
+    echo "Puff executable found."
+  else
+    echo "Puff executable NOT found.  Exiting"
+    exit 1
+fi
 
 # First get today's date
 runYEAR=`date -u +"%Y"`

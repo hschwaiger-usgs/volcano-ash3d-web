@@ -328,7 +328,6 @@
       close(25)
 
       write(*,*)"legend_placer_dp_mm ended normally."
-      !return
       stop 0
 
       !error trap if there is no contour_0.01_0_i.xyz file

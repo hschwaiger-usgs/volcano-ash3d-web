@@ -67,8 +67,7 @@ ASH3DBINDIR="${ASH3DROOT}/bin"
 ASH3DSCRIPTDIR="${ASH3DROOT}/bin/scripts"
 ASH3DSHARE="$ASH3DROOT/share"
 ASH3DSHARE_PP="${ASH3DSHARE}/post_proc"
-if test -r world_cities.txt
-  then
+if test -r world_cities.txt ; then
     echo "Found file world_cities.txt"
   else
     ln -s ${ASH3DSHARE_PP}/world_cities.txt .
@@ -92,12 +91,11 @@ infile=${RUNHOME}/"3d_tephra_fall.nc"
 
 #******************************************************************************
 #MAKE SURE 3D_tephra_fall.nc EXISTS
-if test -r ${infile}
-then
-	echo "reading from ${infile} file"
-else
-	echo "error: no ${infile} file. Exiting"
-	exit 1
+if test -r ${infile} ; then
+    echo "reading from ${infile} file"
+  else
+    echo "error: no ${infile} file. Exiting"
+    exit 1
 fi
 
 #******************************************************************************
@@ -105,8 +103,8 @@ fi
 volc=`ncdump -h ${infile} | grep b1l1 | cut -d\" -f2 | cut -c1-30 | cut -d# -f1`
 rc=$((rc + $?))
 if [[ "$rc" -gt 0 ]] ; then
-	echo "ncdump command failed.  Exiting script"
-	exit 1
+    echo "ncdump command failed.  Exiting script"
+    exit 1
 fi
 date=`ncdump -h ${infile} | grep Date | cut -d\" -f2 | cut -c 1-10`
 
@@ -148,7 +146,7 @@ DLAT=`echo "$URLAT - $LLLAT" | bc -l`
 echo "captionx_UL=$captionx_UL, captiony_UL=$captiony_UL"
 echo "legendx_UL=$legendx_UL, 'legendy_UL=$legendy_UL"
 echo "LLLAT=$LLLAT, URLAT=$URLAT, DLAT=$DLAT"
-
+#get source parameters from netcdf file
 EDur=`ncdump -v er_duration    ${infile} | grep er_duration | grep "=" | \
 	grep -v ":" | cut -f2 -d"=" | cut -f2 -d" "`
 EPlH=`ncdump -v er_plumeheight ${infile} | grep er_plumeheight | grep "=" | \
@@ -224,8 +222,7 @@ do
 
    AREA="-R$LLLON/$URLON/$LLLAT/$URLAT"
    DLON_INT="$(echo $DLON | sed 's/\.[0-9]*//')"  #convert DLON to an integer
-   if [ $DLON_INT -le 5 ]
-   then
+   if [ $DLON_INT -le 5 ] ; then
       BASE="-Ba1/a1"                  # label every 5 degress lat/lon
       DETAIL="-Dh"                        # high resolution coastlines (-Dc=crude)
     elif [ $DLON_INT -le 10 ] ; then
@@ -276,8 +273,7 @@ do
 
    #Add cities
    ${ASH3DBINDIR}/citywriter ${LLLON} ${URLON} ${LLLAT} ${URLAT}
-   if test -r cities.xy
-   then
+   if test -r cities.xy ; then
        ${GMTpre[GMTv]} psxy cities.xy $AREA $PROJ -Sc0.05i -Gblack -Wthinnest -V -O -K >> temp.ps
        ${GMTpre[GMTv]} pstext cities.xy $AREA $PROJ -D0.1/0.1 -V -O -K >> temp.ps      #Plot names of all airports
    fi
@@ -358,9 +354,14 @@ EOF
              output_t${time}.gif
 done
 
-# Clean up more temporary files
-rm ac_var*grd map_range.txt legend_positions_ac.txt
-rm temp.* 
+# Clean up temporary files
+if [ "$CLEANFILES" == "T" ]; then
+   rm -f *.grd *.lev
+   rm -f caption.txt cities.xy map_range*txt legend_positions*txt
+   rm -f temp.*
+   rm -f gmt.conf gmt.history
+   rm -f world_cities.txt
+fi
 
 if [ $1 -ne 0 ]; then
   echo "combining gifs to  make animation"

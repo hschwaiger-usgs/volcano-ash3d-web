@@ -31,7 +31,14 @@ WINDROOT="/data/WindFiles"
 ASH3DBINDIR="${ASH3DROOT}/bin"
 GFSDATAHOME="${WINDROOT}/gfs"
 
-INFILE_SIMPLE="ash3d_input_ac.inp"                #simplified input file
+if test -r ash3d_input_ac.inp; then
+    INFILE_SIMPLE="ash3d_input_ac.inp"
+elif test -r ash3d_input_dp.inp; then
+    INFILE_SIMPLE="ash3d_input_dp.inp"
+else
+    INFILE_SIMPLE="ash3d_input_simp.inp"
+fi
+
 LASTDOWN="${GFSDATAHOME}/last_downloaded.txt"
 LON=`sed -n 2p ${INFILE_SIMPLE} | cut -d' ' -f1`
 LAT=`sed -n 2p ${INFILE_SIMPLE} | cut -d' ' -f2`
