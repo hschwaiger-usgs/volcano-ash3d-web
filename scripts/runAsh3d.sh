@@ -38,7 +38,7 @@ echo "------------------------------------------------------------"
 # specify run type here: ADV = Advanced
 #                        DEP = Deposit
 #                        ACL = Ash Cloud
-RUNTYPE="ACL"
+RUNTYPE="ADV"
 CLEANFILES="T"
 USECONTAINER="F"
 CONTAINEREXE="podman"
@@ -112,18 +112,26 @@ fi
 nVARS=8
 var_n=(depothick ashcon_max cloud_height cloud_load depotime depothick depothick ash_arrival_time)
 if [ "$RUNTYPE" == "ADV"  ] ; then
+    if test -r ${ASH3DBINDIR}/Ash3d_res ; then
+        echo "Using Ash3d_res for advanced run"
+        ASH3DEXEC="${ASH3DBINDIR}/Ash3d_res"
+      else
+        ASH3DEXEC="${ASH3DBINDIR}/Ash3d"
+    fi
     MAKEINPUT1="makeAsh3dinput1_ac"
     MAKEINPUT2="makeAsh3dinput2_ac"
     INFILE_SIMPLE="ash3d_input_simp.inp"
       # For advanced runs, plot all variables
     plotvars=(1 1 1 1 1 1 1 1)
   elif [ "$RUNTYPE" == "DEP"  ] ; then
+    ASH3DEXEC="${ASH3DBINDIR}/Ash3d"
     MAKEINPUT1="makeAsh3dinput1_dp"
     MAKEINPUT2="makeAsh3dinput2_dp"
     INFILE_SIMPLE="ash3d_input_dp.inp"
       # For deposit runs, plot final deposit (inches and mm)
     plotvars=(0 0 0 0 0 1 1 0)
   elif [ "$RUNTYPE" == "ACL"  ] ; then
+    ASH3DEXEC="${ASH3DBINDIR}/Ash3d"
     MAKEINPUT1="makeAsh3dinput1_ac"
     MAKEINPUT2="makeAsh3dinput2_ac"
     INFILE_SIMPLE="ash3d_input_ac.inp"
@@ -134,7 +142,6 @@ if [ "$RUNTYPE" == "ADV"  ] ; then
         plotvars=(0 0 0 1 0 0 0 0)
     fi
 fi
-
 
 echo "changing directories to ${RUNDIR}"
 if test -r ${RUNDIR} ; then
@@ -364,6 +371,7 @@ if [ "$RUNTYPE" == "ADV"  ] ; then
     fi
     mv AshArrivalTimes_dp.txt AshArrivalTimes.txt
     unix2dos AshArrivalTimes.txt
+    cp AshArrivalTimes.txt ashfall_arrivaltimes_airports.txt
   elif [ "$RUNTYPE" == "ACL"  ] ; then
     echo "First stripping AshArrivalTimes.txt of deposit data"
     ${ASH3DBINDIR}/makeAshArrivalTimes_ac
@@ -374,9 +382,6 @@ if [ "$RUNTYPE" == "ADV"  ] ; then
     fi
     mv AshArrivalTimes_ac.txt AshArrivalTimes.txt
     unix2dos AshArrivalTimes.txt
-
-  elif [ "$RUNTYPE" == "DEP"  ] ; then
-    cp AshArrivalTimes.txt ashfall_arrivaltimes_airports.txt
 fi
 
 # Get time of completed Ash3d calculations

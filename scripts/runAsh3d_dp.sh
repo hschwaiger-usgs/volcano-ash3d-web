@@ -28,11 +28,11 @@
 
 echo "------------------------------------------------------------"
 echo "running runAsh3d_dp.sh with parameters:"
-echo "  run directory  = $1"
-echo "  zip file name  = $2"
-echo "  Dashboard case = $3"
-echo "  Run ID         = $4"
-echo "  Java thread ID = $5"
+echo "  run directory           = $1"
+echo "  zip file name           = $2"
+echo "  Dashboard case (T or F) = $3"
+echo "  Run ID                  = $4"
+echo "  Java thread ID          = $5"
 echo `date`
 echo "------------------------------------------------------------"
 # specify run type here: ADV = Advanced
@@ -134,7 +134,6 @@ if [ "$RUNTYPE" == "ADV"  ] ; then
         plotvars=(0 0 0 1 0 0 0 0)
     fi
 fi
-
 
 echo "changing directories to ${RUNDIR}"
 if test -r ${RUNDIR} ; then
@@ -364,6 +363,7 @@ if [ "$RUNTYPE" == "ADV"  ] ; then
     fi
     mv AshArrivalTimes_dp.txt AshArrivalTimes.txt
     unix2dos AshArrivalTimes.txt
+    cp AshArrivalTimes.txt ashfall_arrivaltimes_airports.txt
   elif [ "$RUNTYPE" == "ACL"  ] ; then
     echo "First stripping AshArrivalTimes.txt of deposit data"
     ${ASH3DBINDIR}/makeAshArrivalTimes_ac
