@@ -230,23 +230,23 @@ echo "Preparing to make the GMT maps."
     #  This is a special loop to general contours for depothick
     #create .lev files of contour values
     # NWS values
-    echo "0.1    255   0   0" > dp_0.1.lev    #deposit (0.1 mm)
-    echo "0.8      0   0 255" > dp_0.8.lev    #deposit (0.8 mm)
-    echo "6.0      0 183 255" >   dp_6.lev    #deposit (6 mm)
-    echo "25.0   255   0 255" >  dp_25.lev    #deposit (2.5cm)
-    echo "100.     0  51  51" > dp_100.lev    #deposit (10cm)
+    #echo "0.1    255   0   0" > dp_0.1.lev    #deposit (0.1 mm)
+    #echo "0.8      0   0 255" > dp_0.8.lev    #deposit (0.8 mm)
+    #echo "6.0      0 183 255" >   dp_6.lev    #deposit (6 mm)
+    #echo "25.0   255   0 255" >  dp_25.lev    #deposit (2.5cm)
+    #echo "100.     0  51  51" > dp_100.lev    #deposit (10cm)
 
-    # Metric
-    echo "0.01    214 222 105" > dpm_0.01.lev   #deposit (0.01 mm)
-    echo "0.03    249 167 113" > dpm_0.03.lev   #deposit (0.03 mm)
-    echo "0.1    128   0 128"  > dpm_0.1.lev    #deposit (0.1 mm)
-    echo "0.3      0   0 255"  > dpm_0.3.lev    #deposit (0.3 mm)
-    echo "1.0      0 128 255"  >   dpm_1.lev    #deposit (1 mm)
-    echo "3.0      0 255 128"  >   dpm_3.lev    #deposit (3 mm)
-    echo "10.0   195 195   0"  >  dpm_10.lev    #deposit (1 cm)
-    echo "30.0   255 128   0"  >  dpm_30.lev    #deposit (3 cm)
-    echo "100.0  255   0   0"  > dpm_100.lev    #deposit (10cm)
-    echo "300.0  128   0   0"  > dpm_300.lev    #deposit (30cm)
+    ## Metric
+    #echo "0.01    214 222 105" > dpm_0.01.lev   #deposit (0.01 mm)
+    #echo "0.03    249 167 113" > dpm_0.03.lev   #deposit (0.03 mm)
+    #echo "0.1    128   0 128"  > dpm_0.1.lev    #deposit (0.1 mm)
+    #echo "0.3      0   0 255"  > dpm_0.3.lev    #deposit (0.3 mm)
+    #echo "1.0      0 128 255"  >   dpm_1.lev    #deposit (1 mm)
+    #echo "3.0      0 255 128"  >   dpm_3.lev    #deposit (3 mm)
+    #echo "10.0   195 195   0"  >  dpm_10.lev    #deposit (1 cm)
+    #echo "30.0   255 128   0"  >  dpm_30.lev    #deposit (3 cm)
+    #echo "100.0  255   0   0"  > dpm_100.lev    #deposit (10cm)
+    #echo "300.0  128   0   0"  > dpm_300.lev    #deposit (30cm)
 
     # NWS values
     echo "0.1    C" > dp_0.1.lev    #deposit (0.1 mm)
@@ -410,7 +410,7 @@ echo "writing caption.txt"
 
    @%1%Wind file: @%0%$windfile
 EOF
-      elif [ $GMTv -eq 5 ] ; then
+      elif [ $GMTv -eq 6 ] ; then
     cat << EOF > caption.txt
 > $captionx_UL $captiony_UL 14p 3.0i j
 
