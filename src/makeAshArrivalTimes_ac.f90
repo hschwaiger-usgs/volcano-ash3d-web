@@ -12,10 +12,10 @@
        integer           :: nerupt
 
        character(len=99) :: inputline
-       character(len=99) :: inputlines(3000)
+       character(len=99) :: inputlines(7000)
        character(len=6)  :: hoursminutes
-       character(len=1)  :: morethan(3000)
-       real              :: arrival_time(3000), duration(3000)
+       character(len=1)  :: morethan(7000)
+       real              :: arrival_time(7000), duration(7000)
        integer           :: i, n_airports
        logical           :: IsThere
 
@@ -115,8 +115,8 @@
 !     subroutine that sorts inputlines according to arrival time
 
 
-       character(len=99) :: inputlines(3000), inputline
-       real              :: arrival_time(3000), a
+       character(len=99) :: inputlines(7000), inputline
+       real              :: arrival_time(7000), a
        integer           :: i,j, n_airports
 
        !Insertion and shell routine as described in Numerical Recipes for F77,
