@@ -250,24 +250,39 @@ fi
 
    #Write caveats to figure
 caption_width=`echo "0.25 * $DLON" | bc -l`
-cat << EOF > caption.txt
-> $captionx_UL $captiony_UL 12 0 0 TL 14p 3.0i l
-   @%1% USGS trajectory Forecast @%0%
-
-   @%1%Volcano: @%0%$volc
-
-   @%1%Trajectory start: @%0%${year} ${month} ${day} ${hour}:${minute} UTC
-
-   @%1%Duration: @%0%24\n hours
-
-   @%1%Wind file: @%0%$windfile
+#cat << EOF > caption.txt
+#> $captionx_UL $captiony_UL 12 0 0 TL 14p 3.0i l
+#   @%1% USGS trajectory Forecast @%0%
+#
+#   @%1%Volcano: @%0%$volc
+#
+#   @%1%Trajectory start: @%0%${year} ${month} ${day} ${hour}:${minute} UTC
+#
+#   @%1%Duration: @%0%24\n hours
+#
+#   @%1%Wind file: @%0%$windfile
+#EOF
+cat << EOF > caption_pgo.txt
+<b>USGS Trajectory Forecast</b>
+<b>Volcano:</b> $volc
+<b>Trajectory start:</b> ${year} ${month} ${day} ${hour}:${minute} UTC
+<b>Duration:</b> 24 hours
+<b>Wind file:</b> $windfile
 EOF
+convert \
+    -size 215x100 \
+    -pointsize 8 \
+    -font Courier-New \
+    pango:@caption_pgo.txt legend.png
 
-if [ $GMTv -eq 4 ] ; then
-    ${GMTpre[GMTv]} pstext caption.txt $AREA $PROJ -m -Wwhite,o -N -O >> temp.ps  #-Wwhite,o paints a white recctangle with outline
-  else
-    ${GMTpre[GMTv]} pstext caption.txt $AREA $PROJ -M -Gwhite -Wblack,. -N -O >> temp.ps  #-Wwhite,o paints a white recctangle with outline
-fi
+# Last gmt command is to plot the volcano and close out the ps file
+echo $VCLON $VCLAT '1.0' | ${GMTpre[GMTv]} psxy $AREA $PROJ -St0.1i -Gblack -Wthinnest -O >> temp.ps
+
+#if [ $GMTv -eq 4 ] ; then
+#    ${GMTpre[GMTv]} pstext caption.txt $AREA $PROJ -m -Wwhite,o -N -O >> temp.ps  #-Wwhite,o paints a white recctangle with outline
+#  else
+#    ${GMTpre[GMTv]} pstext caption.txt $AREA $PROJ -M -Gwhite -Wblack,. -N -O >> temp.ps  #-Wwhite,o paints a white recctangle with outline
+#fi
 
 #  Convert to gif
 if [ $GMTv -eq 4 ] ; then
@@ -278,6 +293,9 @@ if [ $GMTv -eq 4 ] ; then
     ${GMTpre[GMTv]} psconvert temp.ps -A -Tg
     convert -rotate 90 temp.png -resize 630x500 -alpha off temp.gif
 fi
+
+# Adding the ESP legend
+composite -geometry +30+25 legend.png temp.gif temp.gif
 
 width=`identify temp.gif | cut -f3 -d' ' | cut -f1 -d'x'`
 height=`identify temp.gif | cut -f3 -d' ' | cut -f2 -d'x'`

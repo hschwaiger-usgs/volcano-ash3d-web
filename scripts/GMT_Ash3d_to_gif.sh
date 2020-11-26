@@ -542,46 +542,57 @@ do
     fi
     echo "writing caption.txt"
 
-    if [ $GMTv -eq 4 ] || [ $GMTv -eq 5 ]; then
-    cat << EOF > caption.txt
-> $captionx_UL $captiony_UL 12 0 0 TL 14p 3.0i l
-
-   @%1%Volcano: @%0%$volc
-
-   @%1%Run date: @%0%$RUNDATE UTC
-
-   @%1%Eruption start: @%0%${year} ${month} ${day} ${hour}:${minute} UTC
-
-   @%1%Plume height: @%0%$EPlH\n km asl
-
-   @%1%Duration: @%0%$EDur\n hours
-
-   @%1%Volume: @%0%$EVol km3 DRE (5% airborne) $Threshval
-
-   @%1%Wind file: @%0%$windfile
+#    if [ $GMTv -eq 4 ] || [ $GMTv -eq 5 ]; then
+#    cat << EOF > caption.txt
+#> $captionx_UL $captiony_UL 12 0 0 TL 14p 3.0i l
+#
+#   @%1%Volcano: @%0%$volc
+#
+#   @%1%Run date: @%0%$RUNDATE UTC
+#
+#   @%1%Eruption start: @%0%${year} ${month} ${day} ${hour}:${minute} UTC
+#
+#   @%1%Plume height: @%0%$EPlH\n km asl
+#
+#   @%1%Duration: @%0%$EDur\n hours
+#
+#   @%1%Volume: @%0%$EVol km3 DRE (5% airborne) $Threshval
+#
+#   @%1%Wind file: @%0%$windfile
+#EOF
+#      elif [ $GMTv -eq 6 ] ; then
+#    cat << EOF > caption.txt
+#> $captionx_UL $captiony_UL 14p 3.0i j
+#
+#   @%1%Volcano: @%0%$volc
+#
+#   @%1%Run date: @%0%$RUNDATE UTC
+#
+#   @%1%Eruption start: @%0%${year} ${month} ${day} ${hour}:${minute} UTC
+#
+#   @%1%Plume height: @%0%$EPlH\n km asl
+#
+#   @%1%Duration: @%0%$EDur\n hours
+#
+#   @%1%Volume: @%0%$EVol km3 DRE (5% airborne) $Threshval
+#
+#   @%1%Wind file: @%0%$windfile
+#EOF
+#    fi
+    cat << EOF > caption_pgo.txt
+<b>Volcano:</b> $volc
+<b>Run date:</b> $RUNDATE UTC
+<b>Eruption start:</b> ${year} ${month} ${day} ${hour}:${minute} UTC
+<b>Plume height:</b> $EPlH km asl
+<b>Duration:</b> $EDur hours
+<b>Volume:</b> $EVol km<sup>3</sup> DRE (5% airborne)
+<b>Wind file:</b> $windfile
 EOF
-      elif [ $GMTv -eq 6 ] ; then
-    cat << EOF > caption.txt
-> $captionx_UL $captiony_UL 14p 3.0i j
-
-   @%1%Volcano: @%0%$volc
-
-   @%1%Run date: @%0%$RUNDATE UTC
-
-   @%1%Eruption start: @%0%${year} ${month} ${day} ${hour}:${minute} UTC
-
-   @%1%Plume height: @%0%$EPlH\n km asl
-
-   @%1%Duration: @%0%$EDur\n hours
-
-   @%1%Volume: @%0%$EVol km3 DRE (5% airborne) $Threshval
-
-   @%1%Wind file: @%0%$windfile
-EOF
-    fi
-
-    #Plot Volcano
-    echo $VCLON $VCLAT '1.0' | ${GMTpre[GMTv]} psxy $AREA $PROJ -St0.1i -Gblack -Wthinnest -O -K >> temp.ps
+convert \
+    -size 215x122 \
+    -pointsize 8 \
+    -font Courier-New \
+    pango:@caption_pgo.txt legend.png
 
     #Add cities
     ${ASH3DBINDIR}/citywriter ${LLLON} ${URLON} ${LLLAT} ${URLAT}
@@ -637,13 +648,16 @@ EOF
 EOF
 #        ${GMTpre[GMTv]} pstext current_time.txt $AREA $PROJ -O -Wwhite,o -N -K >> temp.ps
     fi
-    # Last gmt command is to write the caption and close out the ps file
-    echo "Writing caption to temp.ps"
-    if [ $GMTv -eq 4 ] ; then
-        ${GMTpre[GMTv]} pstext caption.txt $AREA $PROJ -m -Wwhite,o -N -O >> temp.ps  #-Wwhite,o paints a white recctangle with outline
-      else
-        ${GMTpre[GMTv]} pstext caption.txt $AREA $PROJ -M -Gwhite -Wblack,. -F+f14,Times-Roman+jLT -N -O >> temp.ps  #-Wwhite,o paints a white recctangle with outline
-    fi
+
+    # Last gmt command is to plot the volcano and close out the ps file
+    echo $VCLON $VCLAT '1.0' | ${GMTpre[GMTv]} psxy $AREA $PROJ -St0.1i -Gblack -Wthinnest -O >> temp.ps
+
+    #echo "Writing caption to temp.ps"
+    #if [ $GMTv -eq 4 ] ; then
+    #    ${GMTpre[GMTv]} pstext caption.txt $AREA $PROJ -m -Wwhite,o -N -O >> temp.ps  #-Wwhite,o paints a white recctangle with outline
+    #  else
+    #    ${GMTpre[GMTv]} pstext caption.txt $AREA $PROJ -M -Gwhite -Wblack,. -F+f14,Times-Roman+jLT -N -O >> temp.ps  #-Wwhite,o paints a white recctangle with outline
+    #fi
 
     #  Convert to gif
     echo "Converting temp.ps to temp.gif"
@@ -659,7 +673,10 @@ EOF
         convert temp.png -resize 630x500 -alpha off temp.gif
     fi
 
-    # Add legend for cloud height in feet if needed or deposit runs
+    # Adding the ESP legend
+    composite -geometry +30+25 legend.png temp.gif temp.gif
+
+    # Add data legend for cloud height in feet if needed or deposit runs
     width=`identify temp.gif | cut -f3 -d' ' | cut -f1 -d'x'`
     height=`identify temp.gif | cut -f3 -d' ' | cut -f2 -d'x'`
     vidx_UL=$(($width*73/100))

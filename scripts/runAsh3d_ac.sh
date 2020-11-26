@@ -543,7 +543,7 @@ if [[ $DASHBOARD_RUN == T* ]] ; then
     # HFS: add check here to verify GFS is being used, that
     #      puff is installed and puff windfiles are available
     # Run the puff model with the parameters in the simple input file
-    if [ "$USECONTAINER" == "T" ]; then
+    #if [ "$USECONTAINER" == "T" ]; then
         echo "  Running ${CONTAINEREXE} script (runGFS_puff.sh) for puff" 
         ${CONTAINEREXE} run --rm -v /data/WindFiles:/home/ash3d/www/html/puff/data:z \
                                  -v ${FULLRUNDIR}:${CONTAINERRUNDIR}:z \
@@ -561,23 +561,23 @@ if [[ $DASHBOARD_RUN == T* ]] ; then
             echo "Error running ${CONTAINEREXE} ash3dpp GFSVolc_to_gif_ac_puff.sh: rc=$rc"
             exit 1
         fi
-      else
-        echo "Calling runGFS_puff.sh"
-        ${ASH3DSCRIPTDIR}/runGFS_puff.sh
-        rc=$((rc + $?))
-        if [[ "$rc" -gt 0 ]] ; then
-            echo "Error running runGFS_puff.sh: rc=$rc"
-            echo "Reseting error count and moving on"
-            rc=0
-          else
-            echo "Now creating gif images of puff run"
-            ${ASH3DSCRIPTDIR}/GFSVolc_to_gif_ac_puff.sh
-            rc=$((rc + $?))
-            if [[ "$rc" -gt 0 ]] ; then
-                echo "Error running GFSVolc_to_gif_ac_puff.sh: rc=$rc"
-            fi
-        fi
-    fi
+    #  else
+    #    echo "Calling runGFS_puff.sh"
+    #    ${ASH3DSCRIPTDIR}/runGFS_puff.sh
+    #    rc=$((rc + $?))
+    #    if [[ "$rc" -gt 0 ]] ; then
+    #        echo "Error running runGFS_puff.sh: rc=$rc"
+    #        echo "Reseting error count and moving on"
+    #        rc=0
+    #      else
+    #        echo "Now creating gif images of puff run"
+    #        ${ASH3DSCRIPTDIR}/GFSVolc_to_gif_ac_puff.sh
+    #        rc=$((rc + $?))
+    #        if [[ "$rc" -gt 0 ]] ; then
+    #            echo "Error running GFSVolc_to_gif_ac_puff.sh: rc=$rc"
+    #        fi
+    #    fi
+    #fi
 fi
 echo "Finished supplemental output for AVO dashboard, if needed."
 echo "-------------------------------------------------------------------------------"
