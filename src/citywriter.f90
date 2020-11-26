@@ -139,6 +139,7 @@
         open(unit=13,file='cities.xy')
         do i=1,ncities
           write(13,3) CityLon_out(i),CityLat_out(i),CityName_out(i)
+!         write(6,3) CityLon_out(i),CityLat_out(i),CityName_out(i)
 3         format(2f10.4,'  10  0  9  BL    ',a26)
         enddo
         close(13)
