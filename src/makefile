@@ -284,6 +284,7 @@ install:
 	install -m 755 ../scripts/GFSVolc_to_gif_dp_mm.sh      $(INSTALLDIR)/bin/scripts/
 	install -m 755 ../scripts/GFSVolc_to_gif_dp.sh         $(INSTALLDIR)/bin/scripts/
 	install -m 755 ../scripts/GFSVolc_to_gif_tvar.sh       $(INSTALLDIR)/bin/scripts/
+	install -m 755 ../scripts/GMT_Ash3d_to_gif.sh          $(INSTALLDIR)/bin/scripts/
 	install -m 755 ../scripts/gmt_test.sh                  $(INSTALLDIR)/bin/scripts/
 	install -m 755 ../scripts/killrun.sh                   $(INSTALLDIR)/bin/scripts/
 	install -m 755 ../scripts/runAsh3d_ac.sh               $(INSTALLDIR)/bin/scripts/
@@ -319,6 +320,7 @@ uninstall:
 	rm -f $(INSTALLDIR)/bin/scripts/GFSVolc_to_gif_dp_mm.sh
 	rm -f $(INSTALLDIR)/bin/scripts/GFSVolc_to_gif_dp.sh
 	rm -f $(INSTALLDIR)/bin/scripts/GFSVolc_to_gif_tvar.sh
+	rm -f $(INSTALLDIR)/bin/scripts/GMT_Ash3d_to_gif.sh
 	rm -f $(INSTALLDIR)/bin/scripts/gmt_test.sh
 	rm -f $(INSTALLDIR)/bin/scripts/killrun.sh
 	rm -f $(INSTALLDIR)/bin/scripts/runAsh3d_ac.sh

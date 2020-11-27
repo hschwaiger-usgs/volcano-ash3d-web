@@ -18,18 +18,29 @@
 #      and its documentation for any purpose.  We assume no responsibility to provide
 #      technical support to users of this software.
 
-#      Usage: runAsh3d_dp.sh rundir zipname dash_flag advanced_flag
+#      Usage: runAsh3d_ac.sh INPUT_PATH, ZIP_NAME, DASHBOARD_IND (T or F), RUN_ID, JAVA_THREAD_ID
+#       e.g. /data/www/ash3d-api/htdocs/ash3druns/runAsh3d_dp.sh          \
+#               /data/www/ash3d-api/htdocs/ash3druns/ash3d_run_334699/    \
+#               ash3d_Reventador_rutina_dep_20201015-18:47:50z            \
+#               F                                                         \
+#               334699                                                    \
+#               ash3dclient-thread-361
 
 echo "------------------------------------------------------------"
 echo "running runAsh3d_dp.sh with parameters:"
-echo "  run directory  = $1"
-echo "  zip file name  = $2"
-echo "  Dashboard case = $3"
-echo "  Advances run   = $4"
+echo "  run directory           = $1"
+echo "  zip file name           = $2"
+echo "  Dashboard case (T or F) = $3"
+echo "  Run ID                  = $4"
+echo "  Java thread ID          = $5"
 echo `date`
 echo "------------------------------------------------------------"
+# specify run type here: ADV = Advanced
+#                        DEP = Deposit
+#                        ACL = Ash Cloud
+RUNTYPE="DEP"
 CLEANFILES="T"
-USECONTAINER="T"
+USECONTAINER="F"
 CONTAINEREXE="podman"
 CONTAINERRUNDIR="/run/user/1004/libpod/tmp"
 
@@ -38,191 +49,276 @@ rc=0                                             # error message accumulator
 
 HOST=`hostname | cut -c1-9`
 echo "HOST=$HOST"
-
+if [ "$USECONTAINER" == "T" ]; then
+  echo "Post processing scripts with be run with containers via ${CONTAINEREXE}"
+fi
 USGSROOT="/opt/USGS"
 ASH3DROOT="${USGSROOT}/Ash3d"
 WINDROOT="/data/WindFiles"
+GFSDATAHOME="${WINDROOT}/gfs"
 
 ASH3DBINDIR="${ASH3DROOT}/bin"
 ASH3DSCRIPTDIR="${ASH3DROOT}/bin/scripts"
 ASH3DSHARE="$ASH3DROOT/share"
 ASH3DSHARE_PP="${ASH3DSHARE}/post_proc"
 
-GFSDATAHOME="${WINDROOT}/gfs"
-
 #Determine last downloaded windfile
 LAST_DOWNLOADED=`cat ${WINDROOT}/gfs/last_downloaded.txt`
 echo "last downloaded windfile =${LAST_DOWNLOADED}"
 
-#Assign default filenames and directory names
-INFILE_SIMPLE="ash3d_input_dp.inp"                #simplified input file
 INFILE_PRELIM="ash3d_input_prelim.inp"             #input file used for preliminary Ash3d run
-INFILE_MAIN="ash3d_input.txt"                 #input file used for main Ash3d run
+INFILE_MAIN="ash3d_input.inp"                 #input file used for main Ash3d run
 
-echo "checking input argument"
-if [ -z $1 ]
-then
-    echo "Error: you must specify an input directory containing the file ash3d_input_dp.inp"
-    echo "Usage: runAsh3d_dp.sh rundir zipname dash_flag advanced_flag"
+echo "checking input arguments"
+if [ -z $1 ] ; then
+    echo "Error: you must specify an input directory containing the file ash3d_input_dp.inp."
+    echo "Usage: runAsh3d_dp.sh rundir zipname dash_flag run_ID java_thread_ID"
     exit 1
   else
     RUNDIR=$1
     echo "run directory is $1"
 fi
 
-if [ -z $2 ]
-then
-	echo "Error: you must specify a zip file name"
-	exit 1
-else
-        #ZIPNAME=`echo $2 | tr '/' '-'`        #if there are slashes in the name, replace them with dashes
-        ZIPNAME=$2
+if [ -z $2 ] ; then
+    echo "Error: you must specify a zip file name"
+    exit 1
+  else
+    ZIPNAME=$2
 fi
 
-DASHBOARD_RUN=$3
-#for advanced runs, to create an input file, $ADVANCED_RUN="advanced1"
-#                   to run an existing input file, $ADVANCED_RUN="advanced2"
-ADVANCED_RUN=$4
-echo "ADVANCED_RUN = $ADVANCED_RUN"
-if [ "$ADVANCED_RUN" = "advanced1" ]; then
-    echo "Advanced run, preliminary."
-  elif [ "$ADVANCED_RUN" = "advanced2" ]; then
-    echo "Advanced run using main input file"
+if [ -z $3 ] ; then
+    echo "Dashboard flag not set.  Setting to 'F'"
+    DASHBOARD_RUN='F'
+  else
+    DASHBOARD_RUN=$3
+fi
+
+if [ -z $4 ] ; then
+    echo "Run ID not set"
+    RUNID="000000"
+  else
+    RUNID=$4
+fi
+
+if [ -z $5 ] ; then
+    echo "Java thread ID not set"
+    JAVAID='000'
+  else
+    JAVAID=$5
+fi
+
+#Assign default filenames and directory names and variables to be plotted
+# default variable netcdfnames
+nVARS=8
+var_n=(depothick ashcon_max cloud_height cloud_load depotime depothick depothick ash_arrival_time)
+if [ "$RUNTYPE" == "ADV"  ] ; then
+    MAKEINPUT1="makeAsh3dinput1_ac"
+    MAKEINPUT2="makeAsh3dinput2_ac"
+    INFILE_SIMPLE="ash3d_input_simp.inp"
+      # For advanced runs, plot all variables
+    plotvars=(1 1 1 1 1 1 1 1)
+  elif [ "$RUNTYPE" == "DEP"  ] ; then
+    MAKEINPUT1="makeAsh3dinput1_dp"
+    MAKEINPUT2="makeAsh3dinput2_dp"
+    INFILE_SIMPLE="ash3d_input_dp.inp"
+      # For deposit runs, plot final deposit (inches and mm)
+    plotvars=(0 0 0 0 0 1 1 0)
+  elif [ "$RUNTYPE" == "ACL"  ] ; then
+    MAKEINPUT1="makeAsh3dinput1_ac"
+    MAKEINPUT2="makeAsh3dinput2_ac"
+    INFILE_SIMPLE="ash3d_input_ac.inp"
+      # For cloud runs, plot cloud_height and cloud_load
+    if [[ $DASHBOARD_RUN == T* ]] ; then
+        plotvars=(0 0 1 1 0 0 0 0)
+      else
+        plotvars=(0 0 0 1 0 0 0 0)
+    fi
 fi
 
 echo "changing directories to ${RUNDIR}"
-if test -r ${RUNDIR}
-then
+if test -r ${RUNDIR} ; then
     cd $RUNDIR
     FULLRUNDIR=`pwd`
-    echo "DASHBOARD_RUN = $DASHBOARD_RUN $3" > test.txt
   else
     echo "Error: Directory ${RUNDIR} does not exist."
     exit 1
 fi
-
 if [[ $? -ne 0 ]]; then
-           rc=$((rc + 1))
+    rc=$((rc + 1))
 fi
 
-#if it's an advanced tab run and argument 4 is set to "advanced2",
-#then skip to the last half of the script and read directly from the
-#input file
-if [ "$ADVANCED_RUN" != "advanced2" ]; then
-     #Skip to last part of file is this is an advanced run with setting "advanced2"
+if [ "$CLEANFILES" == "T" ]; then
+    echo "removing old input & output files"
+    rm -f *.gif *.kmz *.zip ${INFILE_PRELIM} ${INFILE_MAIN} *.txt cities.xy *.dat *.pdf 3d_tephra_fall.nc
+    rm -f *.lst Wind_nc *.xyz *.png depTS_*.gnu dp.* ash3d_runlog.txt
+    rc=$((rc + $?))
+    if [[ "$rc" -gt 0 ]] ; then
+        echo "Error removing old files: rc=$rc"
+        exit 1
+    fi
+fi
 
-    if [ "$CLEANFILES" == "T" ]; then
-        echo "removing old input & output files"
-        rm -f *.gif *.kmz *.zip ${INFILE_PRELIM} ${INFILE_MAIN} *.txt cities.xy *.dat *.pdf 3d_tephra_fall.nc
-        rm -f *.lst Wind_nc *.xyz *.png depTS_*.gnu dp.* ash3d_runlog.txt
+echo "copying airports file, cities file, and readme file"
+cp ${ASH3DSHARE}/GlobalAirports_ewert.txt .
+cp ${ASH3DSHARE}/readme.pdf .
+rc=$((rc + $?))
+if [[ "$rc" -gt 0 ]] ; then
+    echo "Error copying files: rc=$rc"
+    exit 1
+fi
+
+echo "creating soft links to wind files"
+rm -f Wind_nc
+ln -s  ${WINDROOT} Wind_nc
+rc=$((rc + $?))
+if [[ "$rc" -gt 0 ]] ; then
+    echo "Error linking ${WINDROOT}: rc=$rc"
+    exit 1
+fi
+
+echo "_______________________________________________________________________________"
+echo ">>>>>>>>>>>>>>>>>          Setting up preliminary run           <<<<<<<<<<<<<<<"
+echo "_______________________________________________________________________________"
+# First, generate the full input file based on the mini-web-version, if needed
+echo "running ${MAKEINPUT1} ${INFILE_SIMPLE} ${INFILE_PRELIM}"
+if test -r ${ASH3DBINDIR}/${MAKEINPUT1} ; then
+    ${ASH3DBINDIR}/${MAKEINPUT1} ${INFILE_SIMPLE} ${INFILE_PRELIM} \
+                                 ${LAST_DOWNLOADED}
+  else
+    echo "Error: ${ASH3DBINDIR}/${MAKEINPUT1} doesn't exist"
+    exit 1
+fi
+rc=$((rc + $?))
+if [[ "$rc" -gt 0 ]] ; then
+    echo "Error running ${MAKEINPUT1}: rc=$rc"
+    exit 1
+fi
+
+if test -r ${INFILE_PRELIM} ; then
+    echo "${INFILE_PRELIM} created okay"
+  else
+    echo "Error: ${INFILE_PRELIM} not created"
+    exit 1
+fi
+
+echo "*******************************************************************************"
+echo "*******************************************************************************"
+echo "**********                  Preliminary Ash3d run                    **********"
+echo "*******************************************************************************"
+echo "*******************************************************************************"
+# The default log file writen by Ash3d is Ash3d.lst, but we will capture all stdout to
+# an alternative log file.  This initial 10x10 run will produce output files that will
+# be processed to determine the geometry of the subsequent full run.
+# For deposit runs, ${INFILE_PRELIM} and DepositFile_____final.dat are needed.
+# For cloud runs, ${INFILE_PRELIM} and CloudLoad_*hrs.dat are needed.
+${ASH3DBINDIR}/Ash3d ${INFILE_PRELIM} | tee ashlog_prelim.txt
+echo "-------------------------------------------------------------------------------"
+echo "-------------------------------------------------------------------------------"
+echo "----------             Completed  Preliminary Ash3d run              ----------"
+echo "-------------------------------------------------------------------------------"
+echo "-------------------------------------------------------------------------------"
+rc=$((rc + $?))
+if [[ "$rc" -gt 0 ]] ; then
+    echo "Error running Preliminary Ash3d run: rc=$rc"
+    exit 1
+fi
+
+echo "zipping up kml files for preliminary Ash3d run"
+if test -r Deposit.kml; then
+    zip Deposit_prelim.kmz Deposit.kml
+fi
+if test -r CloudLoad.kml; then
+    zip CloudLoad_prelim.kmz CloudLoad.kml
+fi
+
+if [ "$CLEANFILES" == "T" ]; then
+    echo "removing kml files"
+    rm -f *.kml AshArrivalTimes.txt
+fi
+
+echo "_______________________________________________________________________________"
+echo ">>>>>>>>>>>>>>>>>              Setting up main run              <<<<<<<<<<<<<<<"
+echo "_______________________________________________________________________________"
+echo "making ${INFILE_MAIN}"
+if [ "$RUNTYPE" == "DEP" ] || [ "$RUNTYPE" == "ACL" ]  ; then
+    if test -r ${ASH3DBINDIR}/${MAKEINPUT2} ; then
+        ${ASH3DBINDIR}/${MAKEINPUT2} ${INFILE_PRELIM} ${INFILE_MAIN}
+      else
+        echo "Error: ${ASH3DBINDIR}/${MAKEINPUT2} does not exist"
+        exit 1
+    fi
+else
+    cp ash3d_input_adv.inp ${INFILE_MAIN}
+fi
+rc=$((rc + $?))
+if [[ "$rc" -gt 0 ]] ; then
+    echo "Error running ${MAKEINPUT2}: rc=$rc"
+    exit 1
+fi
+if test -r ${INFILE_MAIN} ; then
+    echo "${INFILE_MAIN} created okay"
+  else
+    echo "Error: ${INFILE_MAIN} not created"
+    exit 1
+fi
+
+if [ "$CLEANFILES" == "T" ]; then
+    echo "removing .dat file, preliminary ash3d input file"
+    rm -f depTS*.dat depTS*.gnu progress.txt
+fi
+
+# Run the trajectory model with the parameters in the simple input file
+echo "-------------------------------------------------------------------------------"
+if test -r ${USGSROOT}/bin/MetTraj_F; then
+    echo "Calling runGFS_traj.sh"
+    # This script reads the simplified input file, runs MetTraj_F and writes ftraj*.dat
+    ${ASH3DSCRIPTDIR}/runGFS_traj.sh
+    rc=$((rc + $?))
+    if [[ "$rc" -gt 0 ]] ; then
+        echo "Error running runGFS_traj.sh: rc=$rc"
+        exit 1
+    fi
+    # Now post-processing ftraj*.dat
+    # The map information is pulled from 3d_tephra_fall.nc from the preliminary run
+    if [ "$USECONTAINER" == "T" ]; then
+        echo "  Running ${CONTAINEREXE} script (GFSVolc_to_gif_ac_traj.sh) to process traj results."
+        ${CONTAINEREXE} run --rm -v ${FULLRUNDIR}:${CONTAINERRUNDIR}:z \
+                        ash3dpp ${ASH3DSCRIPTDIR}/GFSVolc_to_gif_ac_traj.sh 0 ${CONTAINERRUNDIR}
         rc=$((rc + $?))
-        echo "rc=$rc"
+        if [[ "$rc" -gt 0 ]] ; then
+            echo "Error running ${CONTAINEREXE} ash3dpp GFSVolc_to_gif_ac_traj.sh: rc=$rc"
+            exit 1
+        fi
+      else
+        echo "  Running installed script (GFSVolc_to_gif_ac_traj.sh) to process traj results."
+        ${ASH3DSCRIPTDIR}/GFSVolc_to_gif_ac_traj.sh 0
+        rc=$((rc + $?))
+        if [[ "$rc" -gt 0 ]] ; then
+            echo "Error running GFSVolc_to_gif_ac_traj.sh: rc=$rc"
+            exit 1
+        fi
     fi
-
-    echo "copying airports file, cities file, and readme file"
-    cp ${ASH3DSHARE}/GlobalAirports_ewert.txt .
-    cp ${ASH3DSHARE}/readme.pdf .
-    ln -s ${ASH3DSHARE_PP}/world_cities.txt .
-    rc=$((rc + $?))
-    echo "rc=$rc"
-
-    echo "creating soft links to wind files"
-    rm Wind_nc
-    ln -s  ${WINDROOT} Wind_nc
-    rc=$((rc + $?))
-    echo "rc=$rc"
-
-    echo "running ash3dinput1_dp ${INFILE_SIMPLE} ${INFILE_PRELIM}"
-    if test -r ${ASH3DBINDIR}/makeAsh3dinput1_dp
-    then
-        ${ASH3DBINDIR}/makeAsh3dinput1_dp ${INFILE_SIMPLE} ${INFILE_PRELIM} \
-                                          ${LAST_DOWNLOADED}
-    else
-        echo "Error: ${ASH3DBINDIR}/makeAsh3dinput1_dp doesn't exist"
-        exit 1
-    fi
-    rc=$((rc + $?))
-    echo "rc=$rc"
-    if [[ "$rc" -gt 0 ]] ; then
-        echo "rc=$rc"
-        exit 1
-    fi
-
-    if test -r ${INFILE_PRELIM}
-    then
-        echo "${INFILE_PRELIM} created okay"
-    else
-        echo "Error: ${INFILE_PRELIM} not created"
-        exit 1
-    fi
-
-    echo "*******************************************************************************"
-    echo "*******************************************************************************"
-    echo "**********                  Preliminary Ash3d run                    **********"
-    echo "*******************************************************************************"
-    echo "*******************************************************************************"
-    ${ASH3DBINDIR}/Ash3d ${INFILE_PRELIM} | tee ashlog_prelim.txt
-    echo "-------------------------------------------------------------------------------"
-    echo "-------------------------------------------------------------------------------"
-    echo "----------             Completed  Preliminary Ash3d run              ----------"
-    echo "-------------------------------------------------------------------------------"
-    echo "-------------------------------------------------------------------------------"
-    rc=$((rc + $?))
-    if [[ "$rc" -gt 0 ]] ; then
-        echo "rc=$rc"
-        exit 1
-    fi
-
-    echo "zipping up kml files"
-    zip Deposit_prelim.kmz Deposit.kml             #deposit_thickness_hsv.png
-
-    if [ "$CLEANFILES" == "T" ]; then
-        echo "removing kml files"
-        rm -f *.kml AshArrivalTimes.txt
-    fi
-
-    echo "making ${INFILE_MAIN}"
-    if test -r ${ASH3DBINDIR}/makeAsh3dinput2_dp
-    then
-         ${ASH3DBINDIR}/makeAsh3dinput2_dp ${INFILE_PRELIM} ${INFILE_MAIN}
-    else
-         echo "Error: ${ASH3DBINDIR}/makeAsh3dinput2_dp does not exist"
-         exit 1
-    fi
-
-    if test -r ${INFILE_MAIN}
-    then
-        echo "${INFILE_MAIN} created okay"
-    else
-        echo "Error: ${INFILE_MAIN} not created"
-        exit 1
-    fi
-fi     #end of block skipped for advanced runs when $ADVANCED_RUN="advanced2"
-
-if [ "$ADVANCED_RUN" = "advanced2" ]; then
-    echo "Advanced run2.  Reading from main input file."
-  elif [ "$ADVANCED_RUN" = "advanced1" ]; then
-    echo "Advanced run1.  Input file created.  Stopping."
-    exit
+  else
+     echo "${USGSROOT}/bin/MetTraj_F does not exist.  Skipping trajectory runs."
 fi
+echo "-------------------------------------------------------------------------------"
 
 echo "*******************************************************************************"
 echo "*******************************************************************************"
 echo "**********                   Main Ash3d run                          **********"
 echo "*******************************************************************************"
 echo "*******************************************************************************"
-${ASH3DBINDIR}/Ash3d ${INFILE_MAIN} | tee ashlog.txt
+# Again, the default log file writen by Ash3d is Ash3d.lst, but we will capture all stdout to
+# an alternative log file.  
+${ASH3DBINDIR}/Ash3d ${INFILE_MAIN} | tee ashlog_main.txt
 echo "-------------------------------------------------------------------------------"
 echo "-------------------------------------------------------------------------------"
 echo "----------                Completed  Main Ash3d run                  ----------"
 echo "-------------------------------------------------------------------------------"
 echo "-------------------------------------------------------------------------------"
 rc=$((rc + $?))
-echo "rc=$rc"
-
-rc=$((rc + $?))
 if [[ "$rc" -gt 0 ]] ; then
-    echo "Error: rc=$rc"
+    echo "Error running main Ash3d run: rc=$rc"
     exit 1
 fi
 
@@ -230,158 +326,342 @@ if test -r depTS_0001.gnu; then
    echo "using gnuplot to plot deposit thickness vs. time"
    for i in `ls -1 depTS_*.gnu`
    do
-     #INFILE=${i}
      gnuplot ${i}
    done
 fi
 
+#
+# Zip all kml files, make kmz files
+#
 echo "zipping up kml files"
-zip ash_arrivaltimes_airports.kmz     AshArrivalTimes.kml     depTS*png
-rc=$((rc + $?))
-zip deposit_thickness_mm.kmz          Deposit.kml         
-rc=$((rc + $?))
-zip deposit_thickness_inches.kmz      Deposit_NWS.kml      
-rc=$((rc + $?))
-zip ashfall_arrivaltimes_hours.kmz    DepositArrivalTime.kml
-rc=$((rc + $?))
-echo "rc=$rc"
-if [[ "$rc" -gt 0 ]] ; then
-    echo "Error: rc=$rc"
-    exit 1
-fi
+for file in *.kml
+do
+    IFS='.'
+    array=( $file )
+    zip -r "${array[0]}".kmz "$file"
+    if [[ $? -ne 0 ]]; then
+        echo "Error zipping file $file"
+        rc=$((rc + 1))
+    fi
+    rm "$file"
+    if [[ $? -ne 0 ]]; then
+        echo "Error removing extra file $file after zip"
+        rc=$((rc + 1))
+    fi
+done
 
-echo "running makeAshArrivalTimes_dp"
-${ASH3DBINDIR}/makeAshArrivalTimes_dp
-rc=$((rc+$?))
-echo "rc=$rc"
-
-echo "moving AshArrivalTimes.txt to AshArrivalTimes_old.txt"
-mv AshArrivalTimes.txt AshArrivalTimes_old.txt
-rc=$((rc+$?))
-echo "rc=$rc"
-if [[ "$rc" -gt 0 ]] ; then
-    echo "Error: rc=$rc"
-    exit 1
-fi
-echo "overwriting AshArrivalTimes.txt"
-mv AshArrivalTimes_dp.txt AshArrivalTimes.txt
-rc=$((rc+$?))
-echo "rc=$rc"
-if [[ "$rc" -gt 0 ]] ; then
-    echo "Error: rc=$rc"
-    exit 1
-fi
-
-#convert line endings from unix to dos
-#sed 's/$/\r/' AshArrivalTimes.txt > AshArrivalTimes2.txt
-#mv AshArrivalTimes2.txt AshArrivalTimes.txt
-unix2dos AshArrivalTimes.txt
-rc=$((rc+$?))
-if [[ "$rc" -gt 0 ]] ; then
-    echo "Error: rc=$rc"
-    exit 1
-fi
-
-if [ "$CLEANFILES" == "T" ]; then
-    echo "removing extraneous files"
-    rm -f *.kml
+echo "unix2dos AshArrivalTimes.txt"
+if [ "$RUNTYPE" == "ADV"  ] ; then
+    unix2dos AshArrivalTimes.txt
+  elif [ "$RUNTYPE" == "DEP"  ] ; then
+    echo "First stripping AshArrivalTimes.txt of cloud data"
+    ${ASH3DBINDIR}/makeAshArrivalTimes_dp
     rc=$((rc+$?))
-    echo "rc=$rc"
     if [[ "$rc" -gt 0 ]] ; then
-        echo "Error: rc=$rc"
+        echo "Error running makeAshArrivalTimes_dp: rc=$rc"
+        exit 1
+    fi
+    mv AshArrivalTimes_dp.txt AshArrivalTimes.txt
+    unix2dos AshArrivalTimes.txt
+    cp AshArrivalTimes.txt ashfall_arrivaltimes_airports.txt
+  elif [ "$RUNTYPE" == "ACL"  ] ; then
+    echo "First stripping AshArrivalTimes.txt of deposit data"
+    ${ASH3DBINDIR}/makeAshArrivalTimes_ac
+    rc=$((rc+$?))
+    if [[ "$rc" -gt 0 ]] ; then
+        echo "Error running makeAshArrivalTimes_ac: rc=$rc"
+        exit 1
+    fi
+    mv AshArrivalTimes_ac.txt AshArrivalTimes.txt
+    unix2dos AshArrivalTimes.txt
+fi
+
+# Get time of completed Ash3d calculations
+t1=`date -u`
+
+echo "*******************************************************************************"
+echo "POST-PROCESSING"
+echo "*******************************************************************************"
+echo "Creating gif images from Ash3d output file."
+if [ "$RUNTYPE" == "ADV" ] || [ "$RUNTYPE" == "ACL" ]  ; then
+    echo "Creating gif images of ash cloud"
+    # Generate gifs for the transient variables
+    #  0 = depothick
+    #  1 = ashcon_max
+    #  2 = cloud_height
+    #  3 = cloud_load
+    #    Cloud load is the default, so run that one first
+    #      Note:  the animated gif for this variable is copied to "cloud_animation.gif"
+    echo "First process for cloud load results"
+    if [ "$USECONTAINER" == "T" ]; then
+        echo "  Running ${CONTAINEREXE} script (GFSVolc_to_gif_tvar.sh) to process cloud_load results."
+        echo "${CONTAINEREXE} run --rm -v ${FULLRUNDIR}:${CONTAINERRUNDIR}:z ash3dpp ${ASH3DSCRIPTDIR}/GFSVolc_to_gif_tvar.sh 3 ${CONTAINERRUNDIR}"
+        ${CONTAINEREXE} run --rm -v ${FULLRUNDIR}:${CONTAINERRUNDIR}:z \
+                        ash3dpp ${ASH3DSCRIPTDIR}/GFSVolc_to_gif_tvar.sh 3 ${CONTAINERRUNDIR}
+        rc=$((rc + $?))
+        if [[ "$rc" -gt 0 ]] ; then
+            echo "Error running ${CONTAINEREXE} ash3dpp GFSVolc_to_gif_ac_tvar.sh 3: rc=$rc"
+            exit 1
+        fi
+      else
+        echo "  Running installed script ${ASH3DSCRIPTDIR}/GFSVolc_to_gif_tvar.sh 3"
+        ${ASH3DSCRIPTDIR}/GFSVolc_to_gif_tvar.sh 3
+        rc=$((rc + $?))
+        if [[ "$rc" -gt 0 ]] ; then
+            echo "Error running GFSVolc_to_gif_tvar.sh 3: rc=$rc"
+            exit 1
+        fi
+    fi
+    echo "Finished processing for cloud load results"
+    
+    if [[ $DASHBOARD_RUN == T* ]] ; then
+        echo "Since we are exporting to the AVO dashboard, post-process for cloud_height"
+        #    Now run it for cloud_height
+        if [ "$USECONTAINER" == "T" ]; then
+            echo "  Running ${CONTAINEREXE} script (GFSVolc_to_gif_tvar.sh) to process cloud_height results."
+            ${CONTAINEREXE} run --rm -v ${FULLRUNDIR}:${CONTAINERRUNDIR}:z \
+                            ash3dpp ${ASH3DSCRIPTDIR}/GFSVolc_to_gif_tvar.sh 2 ${CONTAINERRUNDIR}
+            rc=$((rc + $?))
+            if [[ "$rc" -gt 0 ]] ; then
+                echo "Error running ${CONTAINEREXE} ash3dpp GFSVolc_to_gif_ac_traj.sh 2: rc=$rc"
+                exit 1
+            fi
+          else
+            echo "Calling GFSVolc_to_gif_tvar.sh 2"
+            ${ASH3DSCRIPTDIR}/GFSVolc_to_gif_tvar.sh 2
+            rc=$((rc + $?))
+            if [[ "$rc" -gt 0 ]] ; then
+                echo "Error running GFSVolc_to_gif_ac_traj.sh 2: rc=$rc"
+                exit 1
+            fi
+        fi
+    fi
+    
+  elif [ "$RUNTYPE" == "ADV" ] || [ "$RUNTYPE" == "DEP" ]  ; then
+    echo "Creating gif images of deposit"
+    if [ "$USECONTAINER" == "T" ]; then
+        echo "First process for deposit results (in inches)"
+        echo "Calling podman ${ASH3DSCRIPTDIR}/GFSVolc_to_gif_dp.sh"
+        ${CONTAINEREXE} run --rm -v ${FULLRUNDIR}:${CONTAINERRUNDIR}:z \
+                        ash3dpp ${ASH3DSCRIPTDIR}/GFSVolc_to_gif_dp.sh
+        rc=$((rc + $?))
+        if [[ "$rc" -gt 0 ]] ; then
+            echo "Error running ${CONTAINEREXE} ash3dpp GFSVolc_to_gif_dp.sh: rc=$rc"
+            exit 1 
+        fi
+        echo "Now process for deposit results in mm"
+        echo "Calling podman ${ASH3DSCRIPTDIR}/GFSVolc_to_gif_dp_mm.sh"
+        ${CONTAINEREXE} run --rm -v ${FULLRUNDIR}:${CONTAINERRUNDIR}:z \
+                        ash3dpp ${ASH3DSCRIPTDIR}/GFSVolc_to_gif_dp_mm.sh
+        rc=$((rc + $?))
+        if [[ "$rc" -gt 0 ]] ; then
+            echo "Error running ${CONTAINEREXE} ash3dpp GFSVolc_to_gif_dp_mm.sh: rc=$rc"
+            exit 1
+        fi
+      else
+        echo "First process for deposit results (in inches)"
+        echo "Calling ${ASH3DSCRIPTDIR}/GFSVolc_to_gif_dp.sh"
+        ${ASH3DSCRIPTDIR}/GFSVolc_to_gif_dp.sh
+        rc=$((rc + $?))
+        if [[ "$rc" -gt 0 ]] ; then
+            echo "Error running GFSVolc_to_gif_dp.sh: rc=$rc"
+            exit 1 
+        fi
+        echo "Now process for deposit results in mm"
+        echo "Calling ${ASH3DSCRIPTDIR}/GFSVolc_to_gif_dp_mm.sh"
+        ${ASH3DSCRIPTDIR}/GFSVolc_to_gif_dp_mm.sh
+        rc=$((rc + $?))
+        if [[ "$rc" -gt 0 ]] ; then
+            echo "Error running GFSVolc_to_gif_dp_mm.sh: rc=$rc"
+            exit 1
+        fi
+    fi
+fi
+
+if test -r "deposit_thickness_inches.gif"; then
+    # Web-interface expects the English units to be named deposit.gif
+    cp deposit_thickness_inches.gif deposit.gif
+fi
+if test -r "DepositFile_____final.dat"; then
+    mv DepositFile_____final.dat deposit_thickness_mm.txt
+    unix2dos deposit_thickness_mm.txt
+    rc=$((rc+$?))
+    if [[ "$rc" -gt 0 ]] ; then
+        echo "Error running unix2dos deposit_thickness_mm.txt: rc=$rc"
         exit 1
     fi
 fi
 
-echo "started run at:  $t0" >> Ash3d.lst
-echo "  ended run at: " `date` >> Ash3d.lst
-
-echo "creating gif image of deposit"
-# Generate gifs for the transient variables
-#  0 = depothick
-#  1 = ashcon_max
-#  2 = cloud_height
-#  3 = cloud_load
-#    Cloud load is the default, so run that one first
-#      Note:  the animate gif for this variable is copied to "cloud_animation.gif"
-#  HFS: Add functionality of GFSVolc_to_gif_dp.sh to GFSVolc_to_gif_tvar.sh
-if [ "$USECONTAINER" == "T" ]; then
-  echo "Calling ${CONTAINEREXE}"
-  echo "${CONTAINEREXE} run --rm -v ${FULLRUNDIR}:${CONTAINERRUNDIR}:z ash3dpp /opt/USGS/Ash3d/bin/scripts/GFSVolc_to_gif_dp.sh ${CONTAINERRUNDIR}"
-  ${CONTAINEREXE} run --rm -v ${FULLRUNDIR}:${CONTAINERRUNDIR}:z ash3dpp /opt/USGS/Ash3d/bin/scripts/GFSVolc_to_gif_dp.sh ${CONTAINERRUNDIR}
-else
-  echo "Calling ${ASH3DSCRIPTDIR}/GFSVolc_to_gif_dp.sh"
-  ${ASH3DSCRIPTDIR}/GFSVolc_to_gif_dp.sh
+# Recreating the trajectory plot (using previously calculated trajecties), but using
+# the consistant basemap
+if test -r ftraj1.dat; then
+    if [ "$USECONTAINER" == "T" ]; then
+       echo "  Running ${CONTAINEREXE} script (GFSVolc_to_gif_ac_traj.sh) to process traj results."
+       ${CONTAINEREXE} run --rm -v ${FULLRUNDIR}:${CONTAINERRUNDIR}:z \
+                        ash3dpp ${ASH3DSCRIPTDIR}/GFSVolc_to_gif_ac_traj.sh 1 ${CONTAINERRUNDIR}
+        rc=$((rc + $?))
+        if [[ "$rc" -gt 0 ]] ; then
+            echo "Error running ${CONTAINEREXE} ash3dpp GFSVolc_to_gif_ac_traj.sh 1: rc=$rc"
+            exit 1
+        fi
+      else
+        echo "  Running installed script (GFSVolc_to_gif_ac_traj.sh) to process traj results."
+        ${ASH3DSCRIPTDIR}/GFSVolc_to_gif_ac_traj.sh 1
+        rc=$((rc + $?))
+        if [[ "$rc" -gt 0 ]] ; then
+            echo "Error running GFSVolc_to_gif_ac_traj.sh 1: rc=$rc"
+            exit 1
+        fi
+    fi
+  else
+    echo "skipping trajectory plots: no traj files exist in this directory."
 fi
-cp deposit_thickness_inches.gif deposit.gif
-rc=$((rc+$?))
-echo "rc=$rc"
 
-echo "flipping and renaming deposit_thickness_mm.txt"
-mv DepositFile_____final.dat deposit_thickness_mm.txt
-unix2dos deposit_thickness_mm.txt
+echo "-------------------------------------------------------------------------------"
+echo "Checking if we need to process extra output products for dashboard cases (Hysplit,puff)"
+if [[ $DASHBOARD_RUN == T* ]] ; then
+    echo "Now creating gif images of the hysplit run"
+    if [ "$USECONTAINER" == "T" ]; then
+        echo "Running ${CONTAINEREXE} image of GFSVolc_to_gif_ac_hysplit.sh"
+        #${CONTAINEREXE} run --rm -v ${FULLRUNDIR}:${CONTAINERRUNDIR}:z \
+        #                ash3dpp /opt/USGS/Ash3d/bin/scripts/GFSVolc_to_gif_ac_hysplit.sh ${CONTAINERRUNDIR}
+        #rc=$((rc + $?))
+        #if [[ "$rc" -gt 0 ]] ; then
+        #    echo "Error running ${CONTAINEREXE} ash3dpp GFSVolc_to_gif_ac_hysplit.sh: rc=$rc"
+        #    exit 1
+        #fi
+      else
+        echo "Running GFSVolc_to_gif_ac_hysplit.sh"
+        #${ASH3DSCRIPTDIR}/GFSVolc_to_gif_ac_hysplit.sh
+        #rc=$((rc + $?))
+        #if [[ "$rc" -gt 0 ]] ; then
+        #    echo "Error running GFSVolc_to_gif_ac_hysplit.sh: rc=$rc"
+        #    exit 1
+        #fi
+    fi
 
-echo "flipping and renaming Ash3d.lst"
-unix2dos Ash3d.lst
-mv Ash3d.lst ash3d_runlog.txt
-
-
-echo "creating gif image of deposit with mm scale"
-if [ "$USECONTAINER" == "T" ]; then
-  echo "Calling ${CONTAINEREXE}"
-  echo "${CONTAINEREXE} run --rm -v ${FULLRUNDIR}:${CONTAINERRUNDIR}:z ash3dpp /opt/USGS/Ash3d/bin/scripts/GFSVolc_to_gif_dp_mm.sh ${CONTAINERRUNDIR}"
-  ${CONTAINEREXE} run --rm -v ${FULLRUNDIR}:${CONTAINERRUNDIR}:z ash3dpp /opt/USGS/Ash3d/bin/scripts/GFSVolc_to_gif_dp_mm.sh ${CONTAINERRUNDIR}
-else
-  echo "Calling ${ASH3DSCRIPTDIR}/GFSVolc_to_gif_dp_mm.sh"
-  ${ASH3DSCRIPTDIR}/GFSVolc_to_gif_dp_mm.sh
+    # HFS: add check here to verify GFS is being used, that
+    #      puff is installed and puff windfiles are available
+    # Run the puff model with the parameters in the simple input file
+    if [ "$USECONTAINER" == "T" ]; then
+        echo "  Running ${CONTAINEREXE} script (runGFS_puff.sh) for puff" 
+        ${CONTAINEREXE} run --rm -v /data/WindFiles:/home/ash3d/www/html/puff/data:z \
+                                 -v ${FULLRUNDIR}:${CONTAINERRUNDIR}:z \
+                        puffapp ${ASH3DSCRIPTDIR}/runGFS_puff.sh ${CONTAINERRUNDIR}
+        rc=$((rc + $?))
+        if [[ "$rc" -gt 0 ]] ; then
+            echo "Error running ${CONTAINEREXE} puffapp runGFS_puff.sh: rc=$rc"
+            exit 1
+        fi
+        echo "  Running ${CONTAINEREXE} script (GFSVolc_to_gif_ac_puff.sh) for puff results."
+        ${CONTAINEREXE} run --rm -v ${FULLRUNDIR}:${CONTAINERRUNDIR}:z \
+                        ash3dpp ${ASH3DSCRIPTDIR}/GFSVolc_to_gif_ac_puff.sh ${CONTAINERRUNDIR}
+        rc=$((rc + $?))
+        if [[ "$rc" -gt 0 ]] ; then
+            echo "Error running ${CONTAINEREXE} ash3dpp GFSVolc_to_gif_ac_puff.sh: rc=$rc"
+            exit 1
+        fi
+      else
+        echo "Calling runGFS_puff.sh"
+        ${ASH3DSCRIPTDIR}/runGFS_puff.sh
+        rc=$((rc + $?))
+        if [[ "$rc" -gt 0 ]] ; then
+            echo "Error running runGFS_puff.sh: rc=$rc"
+            echo "Reseting error count and moving on"
+            rc=0
+          else
+            echo "Now creating gif images of puff run"
+            ${ASH3DSCRIPTDIR}/GFSVolc_to_gif_ac_puff.sh
+            rc=$((rc + $?))
+            if [[ "$rc" -gt 0 ]] ; then
+                echo "Error running GFSVolc_to_gif_ac_puff.sh: rc=$rc"
+            fi
+        fi
+    fi
 fi
-rc=$((rc+$?))
-echo "rc=$rc"
+echo "Finished supplemental output for AVO dashboard, if needed."
+echo "-------------------------------------------------------------------------------"
 
-#echo "copying deposit.gif to deposit_thickness_inches.gif"
-#cp deposit.gif deposit_thickness_inches.gif
-#rc=$((rc+$?))
-#echo "rc=$rc"
-echo "copying AshArrivalTimes.txt to ashfall_arrivaltimes_airports.txt"
-cp AshArrivalTimes.txt ashfall_arrivaltimes_airports.txt
-rc=$((rc+$?))
-echo "rc=$rc"
+#
+# Delete extra files from Ash3d run
+# Post-processing extra files should be deleted in the post-processing script
+#
+if [ "$CLEANFILES" == "T" ]; then
+    echo "deleting extra files"
+    rm -f progress.txt Ash3d.lst GlobalAirports_ewert.txt
+    rm -f Wind_nc
+fi
 
-#convert line endings from unix to dos
-#sed 's/$/\r/' ${INFILE_MAIN} > ${INFILE_MAIN}2
-#mv ${INFILE_MAIN}2 ${INFILE_MAIN}
-unix2dos ${INFILE_MAIN}
+echo "Making zip file"
 
-zip $ZIPNAME.zip ash3d_input.txt ash3d_runlog.txt \
-                 ash_arrivaltimes_airports.kmz ashfall_arrivaltimes_airports.txt \
-                 ashfall_arrivaltimes_hours.kmz \
-                 deposit_thickness_inches.gif deposit_thickness_inches.kmz \
-                 deposit_thickness_mm.gif deposit_thickness_mm.kmz deposit_thickness_mm.txt \
-                 dp_shp.zip dp_mm_shp.zip ${INFILE_MAIN}
+nout_files=21
+out_files=("${INFILE_MAIN}"         \
+"ashlog_main.txt"                   \
+"ash_arrivaltimes_airports.kmz"     \
+"ashfall_arrivaltimes_airports.txt" \
+"ashfall_arrivaltimes_hours.kmz"    \
+"deposit_thickness_inches.gif"      \
+"deposit_thickness_inches.kmz"      \
+"deposit_thickness_mm.gif"          \
+"deposit_thickness_mm.kmz"          \
+"deposit_thickness_mm.txt"          \
+"dp_shp.zip"                        \
+"dp_mm_shp.zip"                     \
+"trajectory_1.gif"                  \
+"cloud_animation.gif"               \
+"cloud_arrivaltimes_airports.kmz"   \
+"cloud_arrivaltimes_airports.txt"   \
+"CloudConcentration.kmz"            \
+"CloudHeight.kmz"                   \
+"CloudLoad.kmz"                     \
+"ftraj1.dat"                        \
+"readme.pdf")
 
-#zip $ZIPNAME.zip deposit_thickness_inches.gif deposit_thickness_mm.gif \
-#                 deposit_thickness_mm.txt \
-#                 ashfall_arrivaltimes_airports.txt ${INFILE_MAIN} \
-#                 ash_arrivaltimes_airports.kmz deposit_thickness_mm.kmz \
-#                 deposit_thickness_inches.kmz \
-#                 ashfall_arrivaltimes_hours.kmz readme.pdf \
-#                 dp_shp.zip dp_mm_shp.zip ash3d_runlog.txt
-rc=$((rc + $?))
+for (( i=0;i<${nout_files};i++))
+do
+    echo "Testing for ${out_files[i]} ($i/$nout_files)"
+    if test -r "${out_files[i]}"; then
+        echo "   Found ${out_files[i]}"
+        if [ "${out_files[i]}" == "ftraj1.dat" ]; then
+            echo "   Adding trajectory data to zip file."
+            zip $ZIPNAME.zip ftraj*dat
+          elif [ "${out_files[i]}" == "cloud_animation.gif" ]; then
+            echo "   Adding animations to zip file."
+            zip $ZIPNAME.zip *_animation.gif
+            zip $ZIPNAME.zip *UTC*.gif
+          else
+            echo "   Adding ${out_files[i]} to zip file."
+            zip $ZIPNAME.zip "${out_files[i]}"
+        fi
+      else
+        echo "   Did not find ${out_files[i]}"
+    fi
+done
 
-echo "removing extraneous files"
-#rm -f world_cities.txt depTS* GlobalAirports_ewert.txt cities.xy
-rc=$((rc+$?))
-echo "rc=$rc"
+#
+# Make all files writeable by everyone so web process can delete as needed.
+#
+echo "making files writeable"
+find . -type f -exec chmod 666 {} \;
+if [[ $? -ne 0 ]]; then
+    echo "Error making file types readable for everyone."
+    rc=$((rc + 1))
+    exit $rc
+fi
 
+#
+# Finished
+#
 if [[ $rc -ne 0 ]]; then
-	echo "$rc errors detected."
-else
-	echo "successful completion"
+    echo "$rc errors detected."
+  else
+    echo "successful completion"
 fi
 
-t1=`date -u`
-echo "started run at:  $t0"
-echo "  ended run at:  $t1"
+t2=`date -u`
+echo "started run at          :  $t0"
+echo "calculations ended at   :  $t1"
+echo "post-processing ended at:  $t2"
 echo "all done with run $4"
 
 exit $rc

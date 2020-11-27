@@ -178,7 +178,6 @@
       close(25)
 
       write(*,*)"legend_placer_ac ended normally."
-      !return
       stop 0
 
       end program legend_placer_ac

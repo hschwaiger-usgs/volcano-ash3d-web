@@ -115,7 +115,7 @@
       !  Line 1 : Volcano name
       !  Line 2 : Longitude, Latitude
       !  Line 3 : Elevation (m)
-      !  Line 4 : Plume height (km), duration (hrs), sim. time (hrs), optional volume (km3)
+      !  Line 4 : Plume height (km), duration (hrs), optional volume (km3)
       !  Line 5 : YYYY MM DD HH.HH Start time (hours relative to start of current windfile)
       read(10,'(a30)') volcano_name
       read(10,*) v_lon, v_lat
@@ -428,7 +428,7 @@
       'no      #Write KML file of deposit arrival times?  ',/, &
       'no      #write ASCII file of cloud arrival times?  ',/, &
       'no      #Write KML file of cloud arrival times?  ',/, &
-      'no      #Write out 3-D ash concentration at specified times?                       ',/, &
+      'yes     #Write out 3-D ash concentration at specified times?                       ',/, &
       'netcdf  #format of ash concentration files   ("ascii", "binary", or "netcdf")  ',/, &
       '-1      #nWriteTimes  ',/, &
       f6.2)

@@ -23,10 +23,10 @@
 echo "------------------------------------------------------------"
 echo "running GFSVolc_to_gif_ac_puff.sh"
 if [ "$#" -eq 1 ]; then
-  echo "Command line argument detected: setting run directory"
-  RUNHOME=$1
+    echo "Command line argument detected: setting run directory"
+    RUNHOME=$1
   else
-  RUNHOME=`pwd`
+    RUNHOME=`pwd`
 fi
 cd ${RUNHOME}
 echo `date`
@@ -54,12 +54,11 @@ infile=${RUNHOME}/"3d_tephra_fall.nc"
 
 #******************************************************************************
 #MAKE SURE 3D_tephra_fall.nc EXISTS
-if test -r ${infile}
-then
-	echo "reading from ${infile} file"
-else
-	echo "error: no ${infile} file. Exiting"
-	exit 1
+if test -r ${infile} ; then
+    echo "reading from ${infile} file"
+  else
+    echo "error: no ${infile} file. Exiting"
+    exit 1
 fi
 
 #******************************************************************************
@@ -68,8 +67,8 @@ echo "------------------"
 volc=`ncdump -h ${infile} | grep b1l1 | cut -d\" -f2 | cut -c1-30 | cut -d# -f1`
 rc=$((rc + $?))
 if [[ "$rc" -gt 0 ]] ; then
-	echo "ncdump command failed.  Exiting script"
-	exit 1
+    echo "ncdump command failed.  Exiting script"
+    exit 1
 fi
 date=`ncdump -h ${infile} | grep Date | cut -d\" -f2 | cut -c 1-10`
 
@@ -163,9 +162,7 @@ t=$((tmax-1))
 
 ###############################################################################
 ##  Now make the maps
-if test 1 -eq 1
-then
-
+if test 1 -eq 1 ; then
 #echo "0.2 0 0 255"  > ac_0.2.lev     #concentration and RGB color of 0.2 mg/m3 air concentration
 #echo "2.0 255 0 0" > ac_2.0.lev     #concentration and RGB color of 2.0 mg/m3 air concentration
 CPT=Ash3d_cloud_height.cpt
@@ -195,8 +192,7 @@ do
    AREA="-R$LLLON/$URLON/$LLLAT/$URLAT"
    #AREA="-Rac_tot_out_t${time}.grd"
    DLON_INT="$(echo $DLON | sed 's/\.[0-9]*//')"  #convert DLON to an integer
-   if [ $DLON_INT -le 5 ]
-   then
+   if [ $DLON_INT -le 5 ] ; then
       BASE="-Ba1/a1"                  # label every 5 degress lat/lon
       DETAIL="-Dh"                        # high resolution coastlines (-Dc=crude)
     elif [ $DLON_INT -le 10 ] ; then
@@ -226,8 +222,7 @@ do
 
    #Add cities
    ${ASH3DBINDIR}/citywriter ${LLLON} ${URLON} ${LLLAT} ${URLAT}
-   if test -r cities.xy
-   then
+   if test -r cities.xy ; then
        ${GMTpre[GMTv]} psxy cities.xy $AREA $PROJ -Sc0.05i -Gblack -Wthinnest -V -O -K >> temp.ps
        ${GMTpre[GMTv]} pstext cities.xy $AREA $PROJ -D0.1/0.1 -V -O -K >> temp.ps      #Plot names of all airports
    fi

@@ -33,13 +33,16 @@ echo `date`
 echo "------------------------------------------------------------"
 CLEANFILES="T"
 
-# We need to know if we must prefix all gmt commands with 'gmt', as required by version 5
+# We need to know if we must prefix all gmt commands with 'gmt', as required by version 5/6
 GMTv=5
 type gmt >/dev/null 2>&1 || { echo >&2 "Command 'gmt' not found.  Assuming GMTv4."; GMTv=4;}
-GMTpre=("-" "-" "-" "-" " "   "gmt ")
-GMTelp=("-" "-" "-" "-" "ELLIPSOID" "PROJ_ELLIPSOID")
-GMTnan=("-" "-" "-" "-" "-Ts" "-Q")
-GMTrgr=("-" "-" "-" "-" "grdreformat" "grdconvert")
+if [ $GMTv -ne 4 ] ; then
+    GMTv=`gmt --version | cut -c1`
+fi
+GMTpre=("-" "-" "-" "-" " "   "gmt " "gmt ")
+GMTelp=("-" "-" "-" "-" "ELLIPSOID" "PROJ_ELLIPSOID" "PROJ_ELLIPSOID")
+GMTnan=("-" "-" "-" "-" "-Ts" "-Q" "-Q")
+GMTrgr=("-" "-" "-" "-" "grdreformat" "grdconvert" "grdconvert")
 GMTpen=("-" "-" "-" "-" "/" ",")
 echo "GMT version = ${GMTv}: prefix = ${GMTpre[GMTv]}"
 
@@ -52,8 +55,7 @@ ASH3DBINDIR="${ASH3DROOT}/bin"
 ASH3DSCRIPTDIR="${ASH3DROOT}/bin/scripts"
 ASH3DSHARE="$ASH3DROOT/share"
 ASH3DSHARE_PP="${ASH3DSHARE}/post_proc"
-if test -r world_cities.txt
-  then
+if test -r world_cities.txt ; then
     echo "Found file world_cities.txt"
   else
     ln -s ${ASH3DSHARE_PP}/world_cities.txt .
@@ -103,12 +105,11 @@ volcname[34]="Wrangell"
 #******************************************************************************
 #MAKE SURE 3D_tephra_fall.nc EXISTS
 # Note: we need the ash3d stuff just to get a consistant basemap for the hysplit data
-if test -r ${infile}
-then
-	echo "reading from ${infile} file"
-else
-	echo "error: no ${infile} file. Exiting"
-	exit 1
+if test -r ${infile} ; then
+    echo "reading from ${infile} file"
+  else
+    echo "error: no ${infile} file. Exiting"
+    exit 1
 fi
 
 #******************************************************************************
@@ -225,8 +226,7 @@ ${GMTpre[GMTv]} gmtset ${GMTelp[GMTv]} Sphere
 AREA="-R$LLLON/$URLON/$LLLAT/$URLAT"
 #AREA="-Rac_tot_out_t${time}.grd"
 DLON_INT="$(echo $DLON | sed 's/\.[0-9]*//')"  #convert DLON to an integer
-if [ $DLON_INT -le 5 ]
-then
+if [ $DLON_INT -le 5 ] ; then
    BASE="-Ba1/a1"                  # label every 5 degress lat/lon
    DETAIL="-Dh"                        # high resolution coastlines (-Dc=crude)
  elif [ $DLON_INT -le 10 ] ; then
@@ -274,8 +274,7 @@ echo "Finished plotting trajectory data"
 
 #Add cities
 ${ASH3DBINDIR}/citywriter ${LLLON} ${URLON} ${LLLAT} ${URLAT}
-if test -r cities.xy
-then
+if test -r cities.xy ; then
     ${GMTpre[GMTv]} psxy cities.xy $AREA $PROJ -Sc0.05i -Gblack -Wthinnest -V -O -K >> temp.ps
     ${GMTpre[GMTv]} pstext cities.xy $AREA $PROJ -D0.1/0.1 -V -O -K >> temp.ps      #Plot names of all airports
     echo "Wrote cities to map"
@@ -283,34 +282,56 @@ fi
 
    #Write caveats to figure
 caption_width=`echo "0.25 * $DLON" | bc -l`
-cat << EOF > caption.txt
-> $captionx_UL $captiony_UL 12 0 0 TL 14p 3.0i l
-   @%1% NOAA HYSPLIT MODEL @%0%
-
-   @%1%Volcano: @%0%$volc
-
-   @%1%Trajectory start: @%0%${year} ${month} ${day} ${FC_Hysplit} UTC
-
-   @%1%Duration: @%0%6\n hours
-
-   @%1%Wind file: @%0%$windfile
+#cat << EOF > caption.txt
+#> $captionx_UL $captiony_UL 12 0 0 TL 14p 3.0i l
+#   @%1% NOAA HYSPLIT MODEL @%0%
+#
+#   @%1%Volcano: @%0%$volc
+#
+#   @%1%Trajectory start: @%0%${year} ${month} ${day} ${FC_Hysplit} UTC
+#
+#   @%1%Duration: @%0%6\n hours
+#
+#   @%1%Wind file: @%0%$windfile
+#EOF
+cat << EOF > caption_pgo.txt
+<b>NOAA HYSPLIT MODEL</b>
+<b>Volcano:</b> $volc
+<b>Run date:</b> $RUNDATE UTC
+<b>Trajectory start:</b> ${year} ${month} ${day} ${hour}:${minute} UTC
+<b>Duration:</b> 6 hours
+<b>Wind file:</b> $windfile
 EOF
+convert \
+    -size 215x100 \
+    -pointsize 8 \
+    -font Courier-New \
+    pango:@caption_pgo.txt legend.png
 
-if [ $GMTv -eq 4 ] ; then
-    ${GMTpre[GMTv]} pstext caption.txt $AREA $PROJ -m -Wwhite,o -N -O >> temp.ps  #-Wwhite,o paints a white recctangle with outline
-else
-    ${GMTpre[GMTv]} pstext caption.txt $AREA $PROJ -M -Gwhite -Wblack,. -N -O >> temp.ps  #-Wwhite,o paints a white recctangle with outline
-fi
+# Last gmt command is to plot the volcano and close out the ps file
+echo $VCLON $VCLAT '1.0' | ${GMTpre[GMTv]} psxy $AREA $PROJ -St0.1i -Gblack -Wthinnest -O >> temp.ps
+
+#if [ $GMTv -eq 4 ] ; then
+#    ${GMTpre[GMTv]} pstext caption.txt $AREA $PROJ -m -Wwhite,o -N -O >> temp.ps  #-Wwhite,o paints a white recctangle with outline
+#else
+#    ${GMTpre[GMTv]} pstext caption.txt $AREA $PROJ -M -Gwhite -Wblack,. -N -O >> temp.ps  #-Wwhite,o paints a white recctangle with outline
+#fi
 
 #  Convert to gif
 if [ $GMTv -eq 4 ] ; then
     ps2epsi temp.ps
     epstopdf temp.epsi
     convert -rotate 90 temp.pdf -alpha off temp.gif
-else
+  elif [ $GMTv -eq 5 ] ; then
     ${GMTpre[GMTv]} psconvert temp.ps -A -Tg
     convert -rotate 90 temp.png -resize 630x500 -alpha off temp.gif
+  else
+    ${GMTpre[GMTv]} psconvert temp.ps -A -Tg
+    convert temp.png -resize 630x500 -alpha off temp.gif
 fi
+
+# Adding the ESP legend
+composite -geometry +30+25 legend.png temp.gif temp.gif
 
 width=`identify temp.gif | cut -f3 -d' ' | cut -f1 -d'x'`
 height=`identify temp.gif | cut -f3 -d' ' | cut -f2 -d'x'`
