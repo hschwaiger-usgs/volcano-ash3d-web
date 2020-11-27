@@ -42,13 +42,16 @@ echo "------------------------------------------------------------"
 rc=0                                             # error message accumulator
 CLEANFILES="T"
 
-# We need to know if we must prefix all gmt commands with 'gmt', as required by version 5
+# We need to know if we must prefix all gmt commands with 'gmt', as required by version 5/6
 GMTv=5
 type gmt >/dev/null 2>&1 || { echo >&2 "Command 'gmt' not found.  Assuming GMTv4."; GMTv=4;}
-GMTpre=("-" "-" "-" "-" " "   "gmt ")
-GMTelp=("-" "-" "-" "-" "ELLIPSOID" "PROJ_ELLIPSOID")
-GMTnan=("-" "-" "-" "-" "-Ts" "-Q")
-GMTrgr=("-" "-" "-" "-" "grdreformat" "grdconvert")
+if [ $GMTv -ne 4 ] ; then
+    GMTv=`gmt --version | cut -c1`
+fi
+GMTpre=("-" "-" "-" "-" " "   "gmt " "gmt ")
+GMTelp=("-" "-" "-" "-" "ELLIPSOID" "PROJ_ELLIPSOID" "PROJ_ELLIPSOID")
+GMTnan=("-" "-" "-" "-" "-Ts" "-Q" "-Q")
+GMTrgr=("-" "-" "-" "-" "grdreformat" "grdconvert" "grdconvert")
 GMTpen=("-" "-" "-" "-" "/" ",")
 echo "GMT version = ${GMTv}"
 
@@ -289,9 +292,12 @@ if [ $GMTv -eq 4 ] ; then
     ps2epsi temp.ps
     epstopdf temp.epsi
     convert -rotate 90 temp.pdf -alpha off temp.gif
-  else
+  elif [ $GMTv -eq 5 ] ; then
     ${GMTpre[GMTv]} psconvert temp.ps -A -Tg
     convert -rotate 90 temp.png -resize 630x500 -alpha off temp.gif
+  else
+    ${GMTpre[GMTv]} psconvert temp.ps -A -Tg
+    convert temp.png -resize 630x500 -alpha off temp.gif
 fi
 
 # Adding the ESP legend
