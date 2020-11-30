@@ -112,18 +112,26 @@ fi
 nVARS=8
 var_n=(depothick ashcon_max cloud_height cloud_load depotime depothick depothick ash_arrival_time)
 if [ "$RUNTYPE" == "ADV"  ] ; then
+    if test -r ${ASH3DBINDIR}/Ash3d_res ; then
+        echo "Using Ash3d_res for advanced run"
+        ASH3DEXEC="${ASH3DBINDIR}/Ash3d_res"
+      else
+        ASH3DEXEC="${ASH3DBINDIR}/Ash3d"
+    fi
     MAKEINPUT1="makeAsh3dinput1_ac"
     MAKEINPUT2="makeAsh3dinput2_ac"
     INFILE_SIMPLE="ash3d_input_simp.inp"
       # For advanced runs, plot all variables
     plotvars=(1 1 1 1 1 1 1 1)
   elif [ "$RUNTYPE" == "DEP"  ] ; then
+    ASH3DEXEC="${ASH3DBINDIR}/Ash3d"
     MAKEINPUT1="makeAsh3dinput1_dp"
     MAKEINPUT2="makeAsh3dinput2_dp"
     INFILE_SIMPLE="ash3d_input_dp.inp"
       # For deposit runs, plot final deposit (inches and mm)
     plotvars=(0 0 0 0 0 1 1 0)
   elif [ "$RUNTYPE" == "ACL"  ] ; then
+    ASH3DEXEC="${ASH3DBINDIR}/Ash3d"
     MAKEINPUT1="makeAsh3dinput1_ac"
     MAKEINPUT2="makeAsh3dinput2_ac"
     INFILE_SIMPLE="ash3d_input_ac.inp"
@@ -211,7 +219,7 @@ echo "**************************************************************************
 # be processed to determine the geometry of the subsequent full run.
 # For deposit runs, ${INFILE_PRELIM} and DepositFile_____final.dat are needed.
 # For cloud runs, ${INFILE_PRELIM} and CloudLoad_*hrs.dat are needed.
-${ASH3DBINDIR}/Ash3d ${INFILE_PRELIM} | tee ashlog_prelim.txt
+${ASH3DEXEC} ${INFILE_PRELIM} | tee ashlog_prelim.txt
 echo "-------------------------------------------------------------------------------"
 echo "-------------------------------------------------------------------------------"
 echo "----------             Completed  Preliminary Ash3d run              ----------"
@@ -310,7 +318,20 @@ echo "**************************************************************************
 echo "*******************************************************************************"
 # Again, the default log file writen by Ash3d is Ash3d.lst, but we will capture all stdout to
 # an alternative log file.  
-${ASH3DBINDIR}/Ash3d ${INFILE_MAIN} | tee ashlog_main.txt
+${ASH3DEXEC} ${INFILE_MAIN} | tee ashlog_main.txt
+# This will produce the following output files writen directly by Ash3d:
+#  3d_tephra_fall.nc
+#  Ash3d.lst
+#  ashlog_main.txt
+#  AshArrivalTimes.kml
+#  AshArrivalTimes.txt
+#  DepositFile_____final.dat
+#  DepositArrivalTime.kml
+#  Deposit.kml
+#  Deposit_NWS.kml
+#  ashfall_arrivaltimes_airports.txt
+#  depTS_000*.gnu
+#  depTS_000*.dat
 echo "-------------------------------------------------------------------------------"
 echo "-------------------------------------------------------------------------------"
 echo "----------                Completed  Main Ash3d run                  ----------"
@@ -361,6 +382,7 @@ if [ "$RUNTYPE" == "ADV"  ] ; then
         echo "Error running makeAshArrivalTimes_dp: rc=$rc"
         exit 1
     fi
+    # copy output of makeAshArrivalTimes_dp back to AshArrivalTimes.txt
     mv AshArrivalTimes_dp.txt AshArrivalTimes.txt
     unix2dos AshArrivalTimes.txt
     cp AshArrivalTimes.txt ashfall_arrivaltimes_airports.txt
@@ -372,6 +394,7 @@ if [ "$RUNTYPE" == "ADV"  ] ; then
         echo "Error running makeAshArrivalTimes_ac: rc=$rc"
         exit 1
     fi
+    # copy output of makeAshArrivalTimes_ac back to AshArrivalTimes.txt
     mv AshArrivalTimes_ac.txt AshArrivalTimes.txt
     unix2dos AshArrivalTimes.txt
 fi
@@ -543,7 +566,7 @@ if [[ $DASHBOARD_RUN == T* ]] ; then
     # HFS: add check here to verify GFS is being used, that
     #      puff is installed and puff windfiles are available
     # Run the puff model with the parameters in the simple input file
-    if [ "$USECONTAINER" == "T" ]; then
+    #if [ "$USECONTAINER" == "T" ]; then
         echo "  Running ${CONTAINEREXE} script (runGFS_puff.sh) for puff" 
         ${CONTAINEREXE} run --rm -v /data/WindFiles:/home/ash3d/www/html/puff/data:z \
                                  -v ${FULLRUNDIR}:${CONTAINERRUNDIR}:z \
@@ -561,23 +584,23 @@ if [[ $DASHBOARD_RUN == T* ]] ; then
             echo "Error running ${CONTAINEREXE} ash3dpp GFSVolc_to_gif_ac_puff.sh: rc=$rc"
             exit 1
         fi
-      else
-        echo "Calling runGFS_puff.sh"
-        ${ASH3DSCRIPTDIR}/runGFS_puff.sh
-        rc=$((rc + $?))
-        if [[ "$rc" -gt 0 ]] ; then
-            echo "Error running runGFS_puff.sh: rc=$rc"
-            echo "Reseting error count and moving on"
-            rc=0
-          else
-            echo "Now creating gif images of puff run"
-            ${ASH3DSCRIPTDIR}/GFSVolc_to_gif_ac_puff.sh
-            rc=$((rc + $?))
-            if [[ "$rc" -gt 0 ]] ; then
-                echo "Error running GFSVolc_to_gif_ac_puff.sh: rc=$rc"
-            fi
-        fi
-    fi
+    #  else
+    #    echo "Calling runGFS_puff.sh"
+    #    ${ASH3DSCRIPTDIR}/runGFS_puff.sh
+    #    rc=$((rc + $?))
+    #    if [[ "$rc" -gt 0 ]] ; then
+    #        echo "Error running runGFS_puff.sh: rc=$rc"
+    #        echo "Reseting error count and moving on"
+    #        rc=0
+    #      else
+    #        echo "Now creating gif images of puff run"
+    #        ${ASH3DSCRIPTDIR}/GFSVolc_to_gif_ac_puff.sh
+    #        rc=$((rc + $?))
+    #        if [[ "$rc" -gt 0 ]] ; then
+    #            echo "Error running GFSVolc_to_gif_ac_puff.sh: rc=$rc"
+    #        fi
+    #    fi
+    #fi
 fi
 echo "Finished supplemental output for AVO dashboard, if needed."
 echo "-------------------------------------------------------------------------------"
@@ -594,15 +617,18 @@ fi
 
 echo "Making zip file"
 
-nout_files=21
+nout_files=28
 out_files=("${INFILE_MAIN}"         \
 "ashlog_main.txt"                   \
 "ash_arrivaltimes_airports.kmz"     \
 "ashfall_arrivaltimes_airports.txt" \
 "ashfall_arrivaltimes_hours.kmz"    \
+"DepositArrivalTime.kmz"            \
+"Deposit_NWS.kmz"                   \
 "deposit_thickness_inches.gif"      \
 "deposit_thickness_inches.kmz"      \
 "deposit_thickness_mm.gif"          \
+"Deposit.kmz"                       \
 "deposit_thickness_mm.kmz"          \
 "deposit_thickness_mm.txt"          \
 "dp_shp.zip"                        \
@@ -614,6 +640,10 @@ out_files=("${INFILE_MAIN}"         \
 "CloudConcentration.kmz"            \
 "CloudHeight.kmz"                   \
 "CloudLoad.kmz"                     \
+"AshArrivalTimes.kmz"               \
+"CloudArrivalTime.kmz"              \
+"CloudBottom.kmz"                   \
+"AshArrivalTimes.txt"               \
 "ftraj1.dat"                        \
 "readme.pdf")
 
