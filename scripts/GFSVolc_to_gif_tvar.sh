@@ -157,7 +157,7 @@ EVol_dec=`${ASH3DBINDIR}/convert_to_decimal $EVol_fl`   #if it's in scientific n
 EVol_ac=`echo "($EVol_dec * 20)" | bc -l`
 EVol_dp=$EVol_dec
 
-EVol=$EVol_dp
+EVol=$EVol_ac
 #If volume equals minimum threshold volume, add annotation
 EVol_int=`echo "$EVol * 10000" | bc -l | sed 's/\.[0-9]*//'`   #convert EVol to an integer
 if [ $EVol_int -eq 1 ] ; then
