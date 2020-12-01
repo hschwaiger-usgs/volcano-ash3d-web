@@ -40,7 +40,7 @@ echo "------------------------------------------------------------"
 #                        ACL = Ash Cloud
 RUNTYPE="ADV"
 CLEANFILES="T"
-USECONTAINER="F"
+USECONTAINER="T"
 CONTAINEREXE="podman"
 CONTAINERRUNDIR="/run/user/1004/libpod/tmp"
 

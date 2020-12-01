@@ -40,7 +40,7 @@ echo "------------------------------------------------------------"
 #                        ACL = Ash Cloud
 RUNTYPE="ACL"
 CLEANFILES="T"
-USECONTAINER="F"
+USECONTAINER="T"
 CONTAINEREXE="podman"
 CONTAINERRUNDIR="/run/user/1004/libpod/tmp"
 
@@ -471,7 +471,7 @@ if [ "$RUNTYPE" == "ADV" ] || [ "$RUNTYPE" == "ACL" ]  ; then
         echo "First process for deposit results (in inches)"
         echo "Calling podman ${ASH3DSCRIPTDIR}/GFSVolc_to_gif_dp.sh"
         ${CONTAINEREXE} run --rm -v ${FULLRUNDIR}:${CONTAINERRUNDIR}:z \
-                        ash3dpp ${ASH3DSCRIPTDIR}/GFSVolc_to_gif_dp.sh
+                        ash3dpp ${ASH3DSCRIPTDIR}/GFSVolc_to_gif_dp.sh ${CONTAINERRUNDIR}
         rc=$((rc + $?))
         if [[ "$rc" -gt 0 ]] ; then
             echo "Error running ${CONTAINEREXE} ash3dpp GFSVolc_to_gif_dp.sh: rc=$rc"
@@ -480,7 +480,7 @@ if [ "$RUNTYPE" == "ADV" ] || [ "$RUNTYPE" == "ACL" ]  ; then
         echo "Now process for deposit results in mm"
         echo "Calling podman ${ASH3DSCRIPTDIR}/GFSVolc_to_gif_dp_mm.sh"
         ${CONTAINEREXE} run --rm -v ${FULLRUNDIR}:${CONTAINERRUNDIR}:z \
-                        ash3dpp ${ASH3DSCRIPTDIR}/GFSVolc_to_gif_dp_mm.sh
+                        ash3dpp ${ASH3DSCRIPTDIR}/GFSVolc_to_gif_dp_mm.sh ${CONTAINERRUNDIR}
         rc=$((rc + $?))
         if [[ "$rc" -gt 0 ]] ; then
             echo "Error running ${CONTAINEREXE} ash3dpp GFSVolc_to_gif_dp_mm.sh: rc=$rc"

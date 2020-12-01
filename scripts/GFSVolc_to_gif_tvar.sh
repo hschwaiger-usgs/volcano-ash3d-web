@@ -157,7 +157,7 @@ EVol_dec=`${ASH3DBINDIR}/convert_to_decimal $EVol_fl`   #if it's in scientific n
 EVol_ac=`echo "($EVol_dec * 20)" | bc -l`
 EVol_dp=$EVol_dec
 
-EVol=$EVol_dp
+EVol=$EVol_ac
 #If volume equals minimum threshold volume, add annotation
 EVol_int=`echo "$EVol * 10000" | bc -l | sed 's/\.[0-9]*//'`   #convert EVol to an integer
 if [ $EVol_int -eq 1 ] ; then
@@ -557,7 +557,7 @@ EOF
         cat << EOF > current_time.txt
         $curtimex_UR  $curtimey_UR  16  0  0  TR @%1%Model valid on: @%0%$current_time
 EOF
-        ${GMTpre[GMTv]} pstext current_time.txt $AREA $PROJ -O -Wwhite,o -N -K >> temp.ps
+        ${GMTpre[GMTv]} pstext current_time.txt $AREA $PROJ -O -Gwhite -Wwhite,o -N -K >> temp.ps
     fi
     # Last gmt command is to plot the volcano and close out the ps file
     echo $VCLON $VCLAT '1.0' | ${GMTpre[GMTv]} psxy $AREA $PROJ -St0.1i -Gblack -Wthinnest -O >> temp.ps
