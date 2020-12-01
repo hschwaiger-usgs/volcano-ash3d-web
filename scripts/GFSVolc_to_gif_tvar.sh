@@ -557,7 +557,7 @@ EOF
         cat << EOF > current_time.txt
         $curtimex_UR  $curtimey_UR  16  0  0  TR @%1%Model valid on: @%0%$current_time
 EOF
-        ${GMTpre[GMTv]} pstext current_time.txt $AREA $PROJ -O -Wwhite,o -N -K >> temp.ps
+        ${GMTpre[GMTv]} pstext current_time.txt $AREA $PROJ -O -Gwhite -Wwhite,o -N -K >> temp.ps
     fi
     # Last gmt command is to plot the volcano and close out the ps file
     echo $VCLON $VCLAT '1.0' | ${GMTpre[GMTv]} psxy $AREA $PROJ -St0.1i -Gblack -Wthinnest -O >> temp.ps

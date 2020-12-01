@@ -485,7 +485,7 @@ if [ $GMTv -eq 4 ] ; then
 fi
 
 # Adding the ESP legend
-composite -geometry +30+25 legend.png temp.gif temp.gif
+composite -geometry +45+25 legend.png temp.gif temp.gif
 
 # Add data legend
 width=`identify temp.gif | cut -f3 -d' ' | cut -f1 -d'x'`
