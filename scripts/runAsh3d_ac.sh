@@ -406,6 +406,7 @@ if [ "$RUNTYPE" == "ADV"  ] ; then
     # copy output of makeAshArrivalTimes_ac back to ash_arrivaltimes_airports.txt
     mv ash_arrivaltimes_airports_ac.txt cloud_arrivaltimes_airports.txt
     unix2dos cloud_arrivaltimes_airports.txt
+    ln -s cloud_arrivaltimes_airports.txt AshArrivalTimes.txt
 fi
 
 # Get time of completed Ash3d calculations

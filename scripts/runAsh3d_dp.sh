@@ -390,6 +390,7 @@ if [ "$RUNTYPE" == "ADV"  ] ; then
     mv ash_arrivaltimes_airports_dp.txt ash_arrivaltimes_airports.txt
     unix2dos ash_arrivaltimes_airports.txt
     cp ash_arrivaltimes_airports.txt ashfall_arrivaltimes_airports.txt
+    ln -s ash_arrivaltimes_airports.txt AshArrivalTimes.txt
   elif [ "$RUNTYPE" == "ACL"  ] ; then
     echo "First stripping ash_arrivaltimes_airports.txt of deposit data"
     ${ASH3DBINDIR}/makeAshArrivalTimes_ac
@@ -401,6 +402,7 @@ if [ "$RUNTYPE" == "ADV"  ] ; then
     # copy output of makeAshArrivalTimes_ac back to ash_arrivaltimes_airports.txt
     mv ash_arrivaltimes_airports_ac.txt ash_arrivaltimes_airports.txt
     unix2dos ash_arrivaltimes_airports.txt
+    ln -s ash_arrivaltimes_airports.txt AshArrivalTimes.txt
 fi
 
 # Get time of completed Ash3d calculations
