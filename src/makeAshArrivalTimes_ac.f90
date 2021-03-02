@@ -1,8 +1,8 @@
        program MakeAshArrivalTimes_ac
 
-!      program that takes the file AshArrivalTimes.txt for airborne runs and
+!      program that takes the file ash_arrivaltimes_airports.txt for airborne runs and
 !      removes the deposit information, writing out a new file,
-!      AshArrivalTimes_ac.txt
+!      ash_arrivaltimes_airports_ac.txt
 
        implicit none
 
@@ -31,15 +31,16 @@
          read(arg,*)nerupt
        endif
 
-       inquire( file='AshArrivalTimes.txt', exist=IsThere )
+       inquire( file='ash_arrivaltimes_airports.txt', exist=IsThere )
        if(.not.IsThere)then
-         write(6,*)"ERROR: Could not find file AshArrivalTimes.txt"
+         write(6,*)&
+          "ERROR: Could not find file ash_arrivaltimes_airports.txt"
          write(6,*)"       Please copy file to cwd"
          stop 1
        endif
 
-       open(unit=10,file='AshArrivalTimes.txt',status='old',err=2000)
-       open(unit=11,file='AshArrivalTimes_ac.txt')
+       open(unit=10,file='ash_arrivaltimes_airports.txt',status='old',err=2000)
+       open(unit=11,file='ash_arrivaltimes_airports_ac.txt')
 
        do i=1,17+nerupt                                !read header lines
            read(10,1) inputline
@@ -103,7 +104,7 @@
               '  require updating the forecast.')
        stop 1
 
-2000   write(6,*) 'error: AshArrivalTimes.txt cant be found.  Stopping'
+2000   write(6,*) 'error: ash_arrivaltimes_airports.txt cant be found.  Stopping'
        stop 1
 
        end program MakeAshArrivalTimes_ac
