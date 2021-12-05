@@ -1,0 +1,5 @@
+Rincón de la Vieja # Volcano name
+-85.32388889 10.83  # Longitude, Latitude
+1916.0              # Elevation (m)
+16.0 6.0 0.01       # Plume height (km), duration (hrs), sim. time (hrs), optional volume (km3)
+2021 4 23 1.0       # Start time (hours relative to start of current windfile)
