@@ -39,8 +39,8 @@ echo "------------------------------------------------------------"
 #                        DEP = Deposit
 #                        ACL = Ash Cloud
 RUNTYPE="ACL"
-CLEANFILES="T"
-USECONTAINER="T"
+CLEANFILES="F"
+USECONTAINER="F"
 CONTAINEREXE="podman"
 CONTAINERRUNDIR="/run/user/1004/libpod/tmp"
 
@@ -154,7 +154,12 @@ fi
 if [[ $? -ne 0 ]]; then
     rc=$((rc + 1))
 fi
-
+if [ "$RUNTYPE" == "ADV"  ] ; then
+    # lobby to have the file written from the webpage be called ash3d_input_adv.inp
+    cp ${INFILE_MAIN} ash3d_input_adv.inp
+    echo "Running full_2_simp.sh"
+    ${ASH3DSCRIPTDIR}/full_2_simp.sh ash3d_input_adv.inp
+fi
 if [ "$CLEANFILES" == "T" ]; then
     echo "removing old input & output files"
     rm -f *.gif *.kmz *.zip ${INFILE_PRELIM} ${INFILE_MAIN} *.txt cities.xy *.dat *.pdf 3d_tephra_fall.nc
@@ -218,6 +223,7 @@ echo "**************************************************************************
 # be processed to determine the geometry of the subsequent full run.
 # For deposit runs, ${INFILE_PRELIM} and DepositFile_____final.dat are needed.
 # For cloud runs, ${INFILE_PRELIM} and CloudLoad_*hrs.dat are needed.
+echo "   Running :: ${ASH3DEXEC} ${INFILE_PRELIM} | tee ashlog_prelim.txt"
 ${ASH3DEXEC} ${INFILE_PRELIM} | tee ashlog_prelim.txt
 echo "-------------------------------------------------------------------------------"
 echo "-------------------------------------------------------------------------------"
@@ -317,6 +323,7 @@ echo "**************************************************************************
 echo "*******************************************************************************"
 # Again, the default log file writen by Ash3d is Ash3d.lst, but we will capture all stdout to
 # an alternative log file.  
+echo "   Running :: ${ASH3DEXEC} ${INFILE_MAIN} | tee ash3d_runlog.txt"
 ${ASH3DEXEC} ${INFILE_MAIN} | tee ash3d_runlog.txt
 # This will produce the following output files writen directly by Ash3d:
 #  3d_tephra_fall.nc
@@ -355,7 +362,7 @@ if test -r depTS_0001.gnu; then
    zip -r ash_arrivaltimes_airports.kmz ash_arrivaltimes_airports.kml depTS*.png
    rm ash_arrivaltimes_airports.kml
 else
-   mv ash_arrivaltimes_airports.kmz cloud_arrivaltimes_airports.kmz
+   mv ash_arrivaltimes_airports.kml cloud_arrivaltimes_airports.kml
    zip -r cloud_arrivaltimes_airports.kmz cloud_arrivaltimes_airports.kml
    rm cloud_arrivaltimes_airports.kml
 fi
@@ -406,6 +413,7 @@ if [ "$RUNTYPE" == "ADV"  ] ; then
     # copy output of makeAshArrivalTimes_ac back to ash_arrivaltimes_airports.txt
     mv ash_arrivaltimes_airports_ac.txt cloud_arrivaltimes_airports.txt
     unix2dos cloud_arrivaltimes_airports.txt
+    ln -s cloud_arrivaltimes_airports.txt AshArrivalTimes.txt
 fi
 
 # Get time of completed Ash3d calculations

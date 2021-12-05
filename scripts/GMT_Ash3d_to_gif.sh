@@ -157,11 +157,15 @@ EPlH=`ncdump -v er_plumeheight ${infile} | grep er_plumeheight | grep "=" | \
 EVol_fl=`ncdump -v er_volume ${infile} | grep er_volume | grep "=" | \
         grep -v ":" | cut -f2 -d"=" | cut -f2 -d" "`
 
+FineAshFrac=0.05
 EVol_dec=`${ASH3DBINDIR}/convert_to_decimal $EVol_fl`   #if it's in scientific notation, convert to real
-EVol_ac=`echo "($EVol_dec * 20)" | bc -l`
+EVol_ac=`echo "($EVol_dec / $FineAshFrac)" | bc -l`
 EVol_dp=$EVol_dec
 
-EVol=$EVol_dp
+# Remove the trailing zeros
+echo $EVol_dp  | awk ' sub("\\.*0+$","") ' > tmp.txt
+EVol=`cat tmp.txt`
+#EVol=$EVol_dp
 #If volume equals minimum threshold volume, add annotation
 EVol_int=`echo "$EVol * 10000" | bc -l | sed 's/\.[0-9]*//'`   #convert EVol to an integer
 if [ $EVol_int -eq 1 ] ; then
@@ -176,7 +180,7 @@ echo "getting windfile time"
 windtime=`ncdump -h ${infile} | grep NWPStartTime | cut -c20-39`
 gsbins=`ncdump   -h ${infile} | grep "bn =" | cut -c6-8`        # of grain-size bins
 zbins=`ncdump    -h ${infile} | grep "z ="  | cut -c6-7`        # # of elevation levels
-tmax=`ncdump     -h ${infile} | grep "UNLIMITED" | cut -c22-23` # maximum time dimension
+tmax=`ncdump     -h ${infile} | grep "t = UNLIMITED" | cut -c22-23` # maximum time dimension
 t0=`ncdump     -v t ${infile} | grep \ t\ = | cut -f4 -d" " | cut -f1 -d","`
 t1=`ncdump     -v t ${infile} | grep \ t\ = | cut -f5 -d" " | cut -f1 -d","`
 time_interval=`echo "($t1 - $t0)" |bc -l`
@@ -323,7 +327,7 @@ do
         KMSCALE="400"
         MISCALE="200"
       else
-        BASE="-Ba20/a20"               # label every 10 degrees lat/lon
+        BASE="-Ba20/a20"               # label every 20 degrees lat/lon
         DETAIL="-Dl"                   # low resolution coastlines (-Dc=crude)
         KMSCALE="400"
         MISCALE="200"

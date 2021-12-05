@@ -39,7 +39,7 @@ echo "------------------------------------------------------------"
 #                        DEP = Deposit
 #                        ACL = Ash Cloud
 RUNTYPE="DEP"
-CLEANFILES="T"
+CLEANFILES="F"
 USECONTAINER="T"
 CONTAINEREXE="podman"
 CONTAINERRUNDIR="/run/user/1004/libpod/tmp"

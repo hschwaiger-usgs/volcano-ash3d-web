@@ -20,13 +20,15 @@
 
 #wh-loopc.sh:           enables while loops?
 
+# Parsing command-line arguments
+#  [rundirectory]
 echo "------------------------------------------------------------"
 echo "running GFSVolc_to_gif_dp_mm.sh"
 if [ "$#" -eq 1 ]; then
-  echo "Command line argument detected: setting run directory"
-  RUNHOME=$1
+   echo "Command line argument detected: setting run directory"
+   RUNHOME=$1
  else
-  RUNHOME=`pwd`
+   RUNHOME=`pwd`
 fi
 cd ${RUNHOME}
 echo `date`
@@ -82,6 +84,7 @@ if test -r ${infile} ; then
     echo "error: no ${infile} file. Exiting"
     exit 1
 fi
+
 #******************************************************************************
 if [ "$CLEANFILES" == "T" ]; then
     echo "removing old files"
@@ -103,6 +106,8 @@ echo "Processing " $volc " on " $date
 year=`ncdump -h ${infile} | grep ReferenceTime | cut -d\" -f2 | cut -c1-4`
 month=`ncdump -h ${infile} | grep ReferenceTime | cut -d\" -f2 | cut -c5-6`
 day=`ncdump -h ${infile} | grep ReferenceTime | cut -d\" -f2 | cut -c7-8`
+#day=17
+#year=2021
 hour=`ncdump -h ${infile} | grep ReferenceTime | cut -d\" -f2 | cut -c9-10`
 minute=`ncdump -h ${infile} | grep ReferenceTime | cut -d\" -f2 | cut -c12-13`
 hours_real=`echo "$hour + $minute / 60" | bc -l`
@@ -128,10 +133,17 @@ EPlH=`ncdump -v er_plumeheight ${infile} | grep er_plumeheight | grep "=" | \
 EVol_fl=`ncdump -v er_volume ${infile} | grep er_volume | grep "=" | \
         grep -v ":" | cut -f2 -d"=" | cut -f2 -d" "`
 
+FineAshFrac=0.05
+#FineAshFrac=1.0
 EVol_dec=`${ASH3DBINDIR}/convert_to_decimal $EVol_fl`   #if it's in scientific notation, convert to real
-EVol_ac=`echo "($EVol_dec * 20)" | bc -l`
+EVol_ac=`echo "( $EVol_dec / $FineAshFrac)" | bc -l`
 EVol_dp=$EVol_dec
 
+# Remove the trailing zeros
+echo $EVol_ac  | awk ' sub("\\.*0+$","") ' > tmp.txt
+EVol_ac=`cat tmp.txt`
+echo $EVol_dp  | awk ' sub("\\.*0+$","") ' > tmp.txt
+EVol_dp=`cat tmp.txt`
 EVol=$EVol_dp
 #If volume equals minimum threshold volume, add annotation
 EVol_int=`echo "$EVol * 10000" | bc -l | sed 's/\.[0-9]*//'`   #convert EVol to an integer
@@ -147,11 +159,11 @@ echo "getting windfile time"
 windtime=`ncdump -h ${infile} | grep NWPStartTime | cut -c20-39`
 gsbins=`ncdump   -h ${infile} | grep "bn =" | cut -c6-8`        # of grain-size bins
 zbins=`ncdump    -h ${infile} | grep "z ="  | cut -c6-7`        # # of elevation levels
-tmax=`ncdump     -h ${infile} | grep "UNLIMITED" | cut -c22-23` # maximum time dimension
+tmax=`ncdump     -h ${infile} | grep "t = UNLIMITED" | cut -c22-23` # maximum time dimension
 t0=`ncdump     -v t ${infile} | grep \ t\ = | cut -f4 -d" " | cut -f1 -d","`
 t1=`ncdump     -v t ${infile} | grep \ t\ = | cut -f5 -d" " | cut -f1 -d","`
 time_interval=`echo "($t1 - $t0)" |bc -l`
-iwindformat=`ncdump -h ${infile} |grep b3l1 | cut -c16-20`
+iwindformat=`ncdump -h ${infile} |grep b3l1 | cut -f2 -d= | cut -f2 -d\" | cut -f2 -d' '`
 echo "windtime=$windtime"
 if [ ${iwindformat} -eq 25 ]; then
     windfile="NCEP reanalysis 2.5 degree"
@@ -219,7 +231,6 @@ lonmax=`echo "$LLLON + $DLON" | bc -l`
 latmax=`echo "$LLLAT + $DLAT" | bc -l`
 echo "lonmin="$lonmin ", lonmax="$lonmax ", latmin="$latmin ", latmax="$latmax
 echo "$lonmin $lonmax $latmin $latmax $VCLON $VCLAT" > map_range.txt
-#echo "$LLLON $URLON $LLLAT $URLAT $VCLON $VCLAT" > map_range.txt
 
 ## Setting up color mapping and contour lines
 CPT=Ash3d_${var}.cpt
@@ -315,7 +326,7 @@ if [ $DLON_INT -le 2 ] ; then
 fi
 #set mapping parameters
 AREA="-R$lonmin/$lonmax/$latmin/$latmax"
-PROJ="-JM${VCLON}/${VCLAT}/20"      # Mercator projection, with origina at lat & lon of volcano, 20 cm width
+PROJ="-JM${VCLON}/${VCLAT}/20"      # Mercator projection, with origin at lat & lon of volcano, 20 cm width
 COAST="-G220/220/220 -W"            # RGB values for land areas (220/220/220=light gray)
 BOUNDARIES="-Na"                    # -N=draw political boundaries, a=all national, Am. state & marine b.
 RIVERS="-I1/1p,blue -I2/0.25p,blue" # Perm. large rivers used 1p blue line, other large rivers 0.25p blue line
@@ -454,20 +465,44 @@ echo "writing caption.txt"
 #   @%1%Wind file: @%0%$windfile
 #EOF
 #    fi
-    cat << EOF > caption_pgo.txt
+#    cat << EOF > caption_pgo.txt
+#<b>Volcano:</b> $volc
+#<b>Run date:</b> $RUNDATE UTC
+#<b>Eruption start:</b> ${year} ${month} ${day} ${hour}:${minute} UTC
+#<b>Plume height:</b> $EPlH km asl
+#<b>Duration:</b> $EDur hours
+#<b>Volume:</b> $EVol km<sup>3</sup> DRE (5% airborne)
+#<b>Wind file:</b> $windfile
+#EOF
+#convert \
+#    -size 215x122 \
+#    -pointsize 8 \
+#    -font Courier-New \
+#    pango:@caption_pgo.txt legend.png
+
+    cat << EOF > caption_pgo1.txt
 <b>Volcano:</b> $volc
 <b>Run date:</b> $RUNDATE UTC
+<b>Wind file:</b> $windfile
+EOF
+convert \
+    -size 230x60 \
+    -pointsize 8 \
+    -font Courier-New \
+    pango:@caption_pgo1.txt legend1.png
+
+    cat << EOF > caption_pgo2.txt
 <b>Eruption start:</b> ${year} ${month} ${day} ${hour}:${minute} UTC
 <b>Plume height:</b> $EPlH km asl
 <b>Duration:</b> $EDur hours
 <b>Volume:</b> $EVol km<sup>3</sup> DRE (5% airborne)
-<b>Wind file:</b> $windfile
 EOF
 convert \
-    -size 215x122 \
+    -size 230x60 \
     -pointsize 8 \
     -font Courier-New \
-    pango:@caption_pgo.txt legend.png
+    pango:@caption_pgo2.txt legend2.png
+    convert +append -background white legend1.png legend2.png ${ASH3DSHARE_PP}/USGSvid.png legend.png
 
 echo "adding cities"
 ${ASH3DBINDIR}/citywriter ${lonmin} ${lonmax} ${latmin} ${latmax}
@@ -510,7 +545,10 @@ if [ $GMTv -eq 4 ] ; then
 fi
 
 # Adding the ESP legend
-composite -geometry +45+25 legend.png temp.gif temp.gif
+#  first insert a bit of white space above the legend
+convert -append -background white -splice 0x10+0+0 legend.png legend.png
+#  Now add this padded legend to the bottom of temp.gif
+convert -gravity center -append -background white temp.gif legend.png temp.gif
 
 # Add data legend
 width=`identify temp.gif | cut -f3 -d' ' | cut -f1 -d'x'`
@@ -525,8 +563,8 @@ else
     convert -append -background white deposit_thickness_mm.gif \
             ${ASH3DSHARE_PP}/caveats_notofficial.png deposit_thickness_mm.gif
 fi
-composite -geometry +${vidx_UL}+${vidy_UL} ${ASH3DSHARE_PP}/USGSvid.png \
-          deposit_thickness_mm.gif  deposit_thickness_mm.gif
+#composite -geometry +${vidx_UL}+${vidy_UL} ${ASH3DSHARE_PP}/USGSvid.png \
+#          deposit_thickness_mm.gif  deposit_thickness_mm.gif
 composite -geometry +${legendx_UL}+${legendy_UL} ${ASH3DSHARE_PP}/legend_dep.png \
           deposit_thickness_mm.gif  deposit_thickness_mm.gif
 #  End of time loop would go here

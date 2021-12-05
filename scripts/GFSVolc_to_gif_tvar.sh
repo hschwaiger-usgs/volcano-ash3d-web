@@ -21,7 +21,7 @@
 #wh-loopc.sh:           enables while loops?
 
 # Parsing command-line arguments
-#  variable code , rundirectory
+#  variable code , [rundirectory]
 echo "------------------------------------------------------------"
 echo "running GFSVolc_to_gif_tvar.sh with parameter:"
 echo "  $1"
@@ -100,14 +100,6 @@ if test -r ${infile} ; then
 fi
 
 #******************************************************************************
-#MAKE SURE 3D_tephra_fall.nc EXISTS
-if test -r ${infile} ; then
-    echo "reading from ${infile} file"
-  else
-    echo "error: no ${infile} file. Exiting"
-    exit 1
-fi
-#******************************************************************************
 if [ "$CLEANFILES" == "T" ]; then
     echo "removing old files"
     rm -f *.xyz *.grd contour_range.txt map_range.txt
@@ -128,6 +120,8 @@ echo "Processing " $volc " on " $date
 year=`ncdump -h ${infile} | grep ReferenceTime | cut -d\" -f2 | cut -c1-4`
 month=`ncdump -h ${infile} | grep ReferenceTime | cut -d\" -f2 | cut -c5-6`
 day=`ncdump -h ${infile} | grep ReferenceTime | cut -d\" -f2 | cut -c7-8`
+#day=17
+#year=2021
 hour=`ncdump -h ${infile} | grep ReferenceTime | cut -d\" -f2 | cut -c9-10`
 minute=`ncdump -h ${infile} | grep ReferenceTime | cut -d\" -f2 | cut -c12-13`
 hours_real=`echo "$hour + $minute / 60" | bc -l`
@@ -147,16 +141,23 @@ echo "VCLON="$VCLON ", VCLAT="$VCLAT
 
 #get source parameters from netcdf file
 EDur=`ncdump -v er_duration ${infile} | grep er_duration | grep "=" | \
-	grep -v ":" | cut -f2 -d"=" | cut -f2 -d" "`
+        grep -v ":" | cut -f2 -d"=" | cut -f2 -d" "`
 EPlH=`ncdump -v er_plumeheight ${infile} | grep er_plumeheight | grep "=" | \
-	grep -v ":" | cut -f2 -d"=" | cut -f2 -d" "`
+        grep -v ":" | cut -f2 -d"=" | cut -f2 -d" "`
 EVol_fl=`ncdump -v er_volume ${infile} | grep er_volume | grep "=" | \
-	grep -v ":" | cut -f2 -d"=" | cut -f2 -d" "`
+        grep -v ":" | cut -f2 -d"=" | cut -f2 -d" "`
 
+FineAshFrac=0.05
+#FineAshFrac=1.0
 EVol_dec=`${ASH3DBINDIR}/convert_to_decimal $EVol_fl`   #if it's in scientific notation, convert to real
-EVol_ac=`echo "($EVol_dec * 20)" | bc -l`
+EVol_ac=`echo "( $EVol_dec / $FineAshFrac)" | bc -l`
 EVol_dp=$EVol_dec
 
+# Remove the trailing zeros
+echo $EVol_ac  | awk ' sub("\\.*0+$","") ' > tmp.txt
+EVol_ac=`cat tmp.txt`
+echo $EVol_dp  | awk ' sub("\\.*0+$","") ' > tmp.txt
+EVol_dp=`cat tmp.txt`
 EVol=$EVol_ac
 #If volume equals minimum threshold volume, add annotation
 EVol_int=`echo "$EVol * 10000" | bc -l | sed 's/\.[0-9]*//'`   #convert EVol to an integer
@@ -170,13 +171,13 @@ fi
 #get start time of wind file
 echo "getting windfile time"
 windtime=`ncdump -h ${infile} | grep NWPStartTime | cut -c20-39`
-gsbins=`ncdump   -h ${infile} | grep "gs =" | cut -c6-8`        # of grain-size bins
+gsbins=`ncdump   -h ${infile} | grep "bn =" | cut -c6-8`        # of grain-size bins
 zbins=`ncdump    -h ${infile} | grep "z ="  | cut -c6-7`        # # of elevation levels
-tmax=`ncdump     -h ${infile} | grep "UNLIMITED" | cut -c22-23` # maximum time dimension
+tmax=`ncdump     -h ${infile} | grep "t = UNLIMITED" | cut -c22-23` # maximum time dimension
 t0=`ncdump     -v t ${infile} | grep \ t\ = | cut -f4 -d" " | cut -f1 -d","`
 t1=`ncdump     -v t ${infile} | grep \ t\ = | cut -f5 -d" " | cut -f1 -d","`
 time_interval=`echo "($t1 - $t0)" |bc -l`
-iwindformat=`ncdump -h ${infile} |grep b3l1 | cut -c16-20`
+iwindformat=`ncdump -h ${infile} |grep b3l1 | cut -f2 -d= | cut -f2 -d\" | cut -f2 -d' '`
 echo "windtime=$windtime"
 if [ ${iwindformat} -eq 25 ]; then
     windfile="NCEP reanalysis 2.5 degree"
@@ -235,6 +236,7 @@ echo "$lonmin $lonmax $latmin $latmax $VCLON $VCLAT" > map_range.txt
 CPT=Ash3d_${var}.cpt
 CPTft=Ash3d_cloud_height_km50kft.cpt
 
+echo "Preparing to make the GMT maps."
 if [ $1 -eq 0 ] || [ $1 -eq 5 ] || [ $1 -eq 6 ] ; then
     #  This is a special loop to general contours for depothick
     #create .lev files of contour values
@@ -304,7 +306,12 @@ do
 
     #set mapping parameters
     DLON_INT="$(echo $DLON | sed 's/\.[0-9]*//')"  #convert DLON to an integer
-    if [ $DLON_INT -le 5 ] ; then
+    if [ $DLON_INT -le 2 ] ; then
+        BASE="-Ba0.25/a0.25"            # label every 5 degress lat/lon
+        DETAIL="-Dh"                    # high resolution coastlines (-Dc=crude)
+        KMSCALE="30"
+        MISCALE="20"
+     elif [ $DLON_INT -le 5 ] ; then
         BASE="-Ba1/a1"                 # label every 5 degress lat/lon
         DETAIL="-Dh"                   # high resolution coastlines (-Dc=crude)
         KMSCALE="50"
@@ -332,17 +339,17 @@ do
     fi
     #set mapping parameters
     AREA="-R$lonmin/$lonmax/$latmin/$latmax"
-    PROJ="-JM${VCLON}/${VCLAT}/20"
+    PROJ="-JM${VCLON}/${VCLAT}/20"      # Mercator projection, with origin at lat & lon of volcano, 20 cm width
     COAST="-G220/220/220 -W"            # RGB values for land areas (220/220/220=light gray)
     BOUNDARIES="-Na"                    # -N=draw political boundaries, a=all national, Am. state & marine b.
     RIVERS="-I1/1p,blue -I2/0.25p,blue" # Perm. large rivers used 1p blue line, other large rivers 0.25p blue line
 
-    mapscale1_x=`echo "$LLLON + 0.6*$DLON" | bc -l`                #x location of km scale bar
-    mapscale1_y=`echo "$LLLAT + 0.07 * ($URLAT - $LLLAT)" | bc -l`      #y location of km scale bar
-    km_symbol=`echo "$mapscale1_y + 0.05 * ($URLAT - $LLLAT)" | bc -l`  #location of km symbol
-    mapscale2_x=`echo "$LLLON + 0.6*$DLON" | bc -l`                #x location of km scale bar
-    mapscale2_y=`echo "$LLLAT + 0.15 * ($URLAT - $LLLAT)" | bc -l`      #y location of km scale bar
-    mile_symbol=`echo "$mapscale2_y + 0.05 * ($URLAT - $LLLAT)" | bc -l`  #location of km symbol
+    mapscale1_x=`echo "$lonmin + 0.6*$DLON" | bc -l`                #x location of km scale bar
+    mapscale1_y=`echo "$latmin + 0.07 * ($latmax - $latmin)" | bc -l`      #y location of km scale bar
+    km_symbol=`echo "$mapscale1_y + 0.05 * ($latmax - $latmin)" | bc -l`  #location of km symbol
+    mapscale2_x=`echo "$lonmin + 0.6*$DLON" | bc -l`                #x location of km scale bar
+    mapscale2_y=`echo "$latmin + 0.15 * ($latmax - $latmin)" | bc -l`      #y location of km scale bar
+    mile_symbol=`echo "$mapscale2_y + 0.05 * ($latmax - $latmin)" | bc -l`  #location of km symbol
     if [ $GMTv -eq 4 ] ; then
         SCALE1="-L${mapscale1_x}/${mapscale1_y}/${km_symbol}/${KMSCALE}+p+f255"  #specs for drawing km scale bar
         SCALE2="-L${mapscale2_x}/${mapscale2_y}/${mile_symbol}/${MISCALE}m+p+f255"  #specs for drawing mile scale bar
@@ -361,7 +368,7 @@ do
     if [ $1 -eq 4 ] || [ $1 -eq 5 ] || [ $1 -eq 6 ] || [ $1 -eq 7 ] ; then
         #  For final times or non-time-series, plot rivers as well
         echo "Starting base map for final/non-time-series plot"
-        ${GMTpre[GMTv]} pscoast $AREA $PROJ $BASE $DETAIL $COAST $BOUNDARIES $RIVER -K  > temp.ps
+        ${GMTpre[GMTv]} pscoast $AREA $PROJ $BASE $DETAIL $COAST $BOUNDARIES $RIVERS -K  > temp.ps
       else
         # For normal time-series variables, assume plot is too big to include rivers
         echo "Starting base map for time-series plot"
@@ -487,23 +494,47 @@ do
 #   @%1%Wind file: @%0%$windfile
 #EOF
 #    fi
-    cat << EOF > caption_pgo.txt
+#    cat << EOF > caption_pgo.txt
+#<b>Volcano:</b> $volc
+#<b>Run date:</b> $RUNDATE UTC
+#<b>Eruption start:</b> ${year} ${month} ${day} ${hour}:${minute} UTC
+#<b>Plume height:</b> $EPlH km asl
+#<b>Duration:</b> $EDur hours
+#<b>Volume:</b> $EVol km<sup>3</sup> DRE (5% airborne)
+#<b>Wind file:</b> $windfile
+#EOF
+#convert \
+#    -size 215x122 \
+#    -pointsize 8 \
+#    -font Courier-New \
+#    pango:@caption_pgo.txt legend.png
+
+    cat << EOF > caption_pgo1.txt
 <b>Volcano:</b> $volc
 <b>Run date:</b> $RUNDATE UTC
+<b>Wind file:</b> $windfile
+EOF
+convert \
+    -size 230x60 \
+    -pointsize 8 \
+    -font Courier-New \
+    pango:@caption_pgo1.txt legend1.png
+
+    cat << EOF > caption_pgo2.txt
 <b>Eruption start:</b> ${year} ${month} ${day} ${hour}:${minute} UTC
 <b>Plume height:</b> $EPlH km asl
 <b>Duration:</b> $EDur hours
 <b>Volume:</b> $EVol km<sup>3</sup> DRE (5% airborne)
-<b>Wind file:</b> $windfile
 EOF
 convert \
-    -size 215x122 \
+    -size 230x60 \
     -pointsize 8 \
     -font Courier-New \
-    pango:@caption_pgo.txt legend.png
+    pango:@caption_pgo2.txt legend2.png
+    convert +append -background white legend1.png legend2.png ${ASH3DSHARE_PP}/USGSvid.png legend.png
 
-    #Add cities
-    ${ASH3DBINDIR}/citywriter ${LLLON} ${URLON} ${LLLAT} ${URLAT}
+    echo "adding cities"
+    ${ASH3DBINDIR}/citywriter ${lonmin} ${lonmax} ${latmin} ${latmax}
     if test -r cities.xy ; then
         echo "Adding cities to map"
         # Add a condition to plot roads if you'd like
@@ -518,7 +549,32 @@ convert \
     #${GMTpre[GMTv]} psbasemap $AREA $PROJ $SCALE1 -O -K >> temp.ps                      #add km scale bar in overlay
     #${GMTpre[GMTv]} psbasemap $AREA $PROJ $SCALE2 -O -K >> temp.ps                      #add mile scale bar in overlay
 
-    if [ $1 -eq 3 ] ; then
+    if [ $1 -eq 1 ] ; then
+        # cloud_concentration
+        ${GMTpre[GMTv]} psscale -D1.25i/0.5i/2i/0.15ih -C$CPT -Q -B10f5/:"mg/m^3": -O -K >> temp.ps
+        if [ $GMTv -eq 4 ] ; then
+            echo "writing CC.txt for GMT 4"
+            cat << EOF > CC.txt
+> 0.25 1.25 14 0 4 TL 14p 3i j
+@%1%Ash Cloud Max Concentration
+EOF
+            ${GMTpre[GMTv]} pstext CC.txt -R0/3/0/5 -JX3i -O -K -m -N >> temp.ps
+          elif [ $GMTv -eq 5 ] ; then
+            echo "writing CC.txt for GMT 5"
+            cat << EOF > CC.txt
+> 0.25 1.25 14p 3i j
+@%1%Ash Cloud Max Concentration
+EOF
+            ${GMTpre[GMTv]} pstext CC.txt -R0/3/0/5 -JX3i -F+f14,Times-Roman+jLT -O -K -M -N >> temp.ps
+          else
+            echo "writing CC.txt for GMT 6"
+            cat << EOF > CC.txt
+> 0.25 1.25 14p 3i j
+@%1%Ash Cloud Max Concentration
+EOF
+            ${GMTpre[GMTv]} pstext CL.txt -R0/3/0/5 -JX3i -F+f14,Times-Roman+jLT -O -K -M -N >> temp.ps
+        fi
+      elif [ $1 -eq 3 ] ; then
         # cloud_load
         ${GMTpre[GMTv]} psscale -D1.25i/0.5i/2i/0.15ih -C$CPT -Q -B10f5/:"g/m^2": -O -K >> temp.ps
         if [ $GMTv -eq 4 ] ; then
@@ -542,7 +598,7 @@ EOF
 @%1%Ash Cloud Load
 EOF
             ${GMTpre[GMTv]} pstext CL.txt -R0/3/0/5 -JX3i -F+f14,Times-Roman+jLT -O -K -M -N >> temp.ps
-        fi  
+        fi
     fi
 
     # depothick(trans);  ashcon_max;     cloud_height;   cloud_load;
@@ -585,13 +641,20 @@ EOF
     fi
 
     # Adding the ESP legend
-    composite -geometry +30+25 legend.png temp.gif temp.gif
+    #  first insert a bit of white space above the legend
+    convert -append -background white -splice 0x10+0+0 legend.png legend.png
+    #  Now add this padded legend to the bottom of temp.gif
+    convert -gravity center -append -background white temp.gif legend.png temp.gif
 
     # Add data legend for cloud height in feet if needed
     width=`identify temp.gif | cut -f3 -d' ' | cut -f1 -d'x'`
     height=`identify temp.gif | cut -f3 -d' ' | cut -f2 -d'x'`
     vidx_UL=$(($width*73/100))
     vidy_UL=$(($height*82/100))
+    #if [ $1 -eq 1 ]; then
+    #    composite -geometry +${legendx_UL}+${legendy_UL} ${ASH3DSHARE_PP}/concentration_legend2.png \
+    #              temp.gif temp.gif
+    #fi
     if [ $1 -eq 2 ]; then
         composite -geometry +${legendx_UL}+${legendy_UL} ${ASH3DSHARE_PP}/CloudHeightLegend2.png \
                   temp.gif temp.gif
@@ -605,8 +668,8 @@ EOF
        convert -append -background white output_t${time}.gif ${ASH3DSHARE_PP}/caveats_notofficial.png \
                output_t${time}.gif
     fi
-    composite -geometry +${vidx_UL}+${vidy_UL} ${ASH3DSHARE_PP}/USGSvid.png output_t${time}.gif \
-              output_t${time}.gif
+    #composite -geometry +${vidx_UL}+${vidy_UL} ${ASH3DSHARE_PP}/USGSvid.png output_t${time}.gif \
+    #          output_t${time}.gif
 done
 # End of time loop
 
@@ -641,7 +704,7 @@ do
     fi
 done
 
-# Clean up temporary files
+# Clean up more temporary files
 if [ "$CLEANFILES" == "T" ]; then
    echo "End of GFSVolc_to_gif_tvar.sh: removing files."
    rm -f *.grd *.lev

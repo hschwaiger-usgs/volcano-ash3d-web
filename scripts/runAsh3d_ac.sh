@@ -39,8 +39,8 @@ echo "------------------------------------------------------------"
 #                        DEP = Deposit
 #                        ACL = Ash Cloud
 RUNTYPE="ACL"
-CLEANFILES="T"
-USECONTAINER="T"
+CLEANFILES="F"
+USECONTAINER="F"
 CONTAINEREXE="podman"
 CONTAINERRUNDIR="/run/user/1004/libpod/tmp"
 
@@ -154,7 +154,12 @@ fi
 if [[ $? -ne 0 ]]; then
     rc=$((rc + 1))
 fi
-
+if [ "$RUNTYPE" == "ADV"  ] ; then
+    # lobby to have the file written from the webpage be called ash3d_input_adv.inp
+    cp ${INFILE_MAIN} ash3d_input_adv.inp
+    echo "Running full_2_simp.sh"
+    ${ASH3DSCRIPTDIR}/full_2_simp.sh ash3d_input_adv.inp
+fi
 if [ "$CLEANFILES" == "T" ]; then
     echo "removing old input & output files"
     rm -f *.gif *.kmz *.zip ${INFILE_PRELIM} ${INFILE_MAIN} *.txt cities.xy *.dat *.pdf 3d_tephra_fall.nc

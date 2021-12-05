@@ -293,6 +293,7 @@ install:
 	install -m 755 ../scripts/runGFS_puff.sh               $(INSTALLDIR)/bin/scripts/
 	install -m 755 ../scripts/runGFS_traj.sh               $(INSTALLDIR)/bin/scripts/
 	install -m 755 ../scripts/xyz2shp.py                   $(INSTALLDIR)/bin/scripts/
+	install -m 755 ../scripts/full_2_simp.sh               $(INSTALLDIR)/bin/scripts/
 	install -m 644 ../share/GlobalAirports_ewert.txt   $(INSTALLDIR)/share/
 	install -m 644 ../share/readme.pdf                 $(INSTALLDIR)/share/
 	install -m 644 ../share/post_proc/*cpt             $(INSTALLDIR)/share/post_proc/
