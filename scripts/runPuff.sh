@@ -19,7 +19,7 @@
 #      technical support to users of this software.
 
 echo "------------------------------------------------------------"
-echo "running runGFS_puff.sh"
+echo "running runPuff.sh"
 
 if [ "$#" -eq 1 ]; then
   echo "Command line argument detected: setting run directory"
@@ -191,6 +191,6 @@ echo "++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
 
 #/opt/USGS/Ash3d/bin/scripts/GFSVolc_to_gif_ac_puff.sh
 
-echo "exiting runGFS_puff.sh with status $rc"
+echo "exiting runPuff.sh with status $rc"
 exit $rc
 

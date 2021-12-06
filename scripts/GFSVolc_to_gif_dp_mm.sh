@@ -188,7 +188,11 @@ echo "Extracting ${var} information from ${infile} for each time step."
 #     #    Fin.Dep (in);  Fin.Dep (mm)
 #  elif [ $1 -eq 5 ] || [ $1 -eq 6 ] ; then
     t=$((tmax-1))
+    # We need to convert the NaN's to zero to get the lowest contour
+    ${GMTpre[GMTv]} ${GMTrgr[GMTv]} "$infile?area" zero.grd
+    ${GMTpre[GMTv]} grdmath 0.0 zero.grd MUL = zero.grd
     ${GMTpre[GMTv]} ${GMTrgr[GMTv]} "$infile?$var[$t]" var_out_final.grd
+    ${GMTpre[GMTv]} grdmath var_out_final.grd zero.grd AND = var_out_final.grd
      #   depotime;       ash_arrival_time
 #  elif [ $1 -eq 4 ] || [ $1 -eq 7 ] ; then
 #    ${GMTpre[GMTv]} ${GMTrgr[GMTv]} "$infile?$var" var_out_final.grd

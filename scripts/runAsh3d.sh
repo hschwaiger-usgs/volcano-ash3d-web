@@ -283,12 +283,12 @@ fi
 # Run the trajectory model with the parameters in the simple input file
 echo "-------------------------------------------------------------------------------"
 if test -r ${USGSROOT}/bin/MetTraj_F; then
-    echo "Calling runGFS_traj.sh"
+    echo "Calling runTraj.sh"
     # This script reads the simplified input file, runs MetTraj_F and writes ftraj*.dat
-    ${ASH3DSCRIPTDIR}/runGFS_traj.sh
+    ${ASH3DSCRIPTDIR}/runTraj.sh
     rc=$((rc + $?))
     if [[ "$rc" -gt 0 ]] ; then
-        echo "Error running runGFS_traj.sh: rc=$rc"
+        echo "Error running runTraj.sh: rc=$rc"
         exit 1
     fi
     # Now post-processing ftraj*.dat
@@ -522,13 +522,13 @@ if [[ $DASHBOARD_RUN == T* ]] ; then
     #      puff is installed and puff windfiles are available
     # Run the puff model with the parameters in the simple input file
     if [ "$USECONTAINER" == "T" ]; then
-        echo "  Running ${CONTAINEREXE} script (runGFS_puff.sh) for puff" 
+        echo "  Running ${CONTAINEREXE} script (runPuff.sh) for puff" 
         ${CONTAINEREXE} run --rm -v /data/WindFiles:/home/ash3d/www/html/puff/data:z \
                                  -v ${FULLRUNDIR}:${CONTAINERRUNDIR}:z \
-                        puffapp ${ASH3DSCRIPTDIR}/runGFS_puff.sh ${CONTAINERRUNDIR}
+                        puffapp ${ASH3DSCRIPTDIR}/runPuff.sh ${CONTAINERRUNDIR}
         rc=$((rc + $?))
         if [[ "$rc" -gt 0 ]] ; then
-            echo "Error running ${CONTAINEREXE} puffapp runGFS_puff.sh: rc=$rc"
+            echo "Error running ${CONTAINEREXE} puffapp runPuff.sh: rc=$rc"
             exit 1
         fi
         echo "  Running ${CONTAINEREXE} script (GFSVolc_to_gif_ac_puff.sh) for puff results."
@@ -540,11 +540,11 @@ if [[ $DASHBOARD_RUN == T* ]] ; then
             exit 1
         fi
       else
-        echo "Calling runGFS_puff.sh"
-        ${ASH3DSCRIPTDIR}/runGFS_puff.sh
+        echo "Calling runPuff.sh"
+        ${ASH3DSCRIPTDIR}/runPuff.sh
         rc=$((rc + $?))
         if [[ "$rc" -gt 0 ]] ; then
-            echo "Error running runGFS_puff.sh: rc=$rc"
+            echo "Error running runPuff.sh: rc=$rc"
             echo "Reseting error count and moving on"
             rc=0
           else

@@ -19,7 +19,7 @@
 #      technical support to users of this software.
 
 echo "------------------------------------------------------------"
-echo "running runGFS_traj.sh"
+echo "running runTraj.sh"
 echo `date`
 echo "------------------------------------------------------------"
 rc=0                                             # error message accumulator
@@ -80,10 +80,10 @@ ${USGSROOT}/bin/MetTraj_F $LON $LAT ${YEAR} ${MONTH} ${DAY} ${FHOURS} 24 7 1.52 
 rc=$((rc + $?))
 
 echo "++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
-echo "finished runGFS_traj.sh"
+echo "finished runTraj.sh"
 echo `date`
 echo "++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
 
-echo "exiting runGFS_traj.sh with status $rc"
+echo "exiting runTraj.sh with status $rc"
 exit $rc
 
