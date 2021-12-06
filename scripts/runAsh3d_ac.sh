@@ -353,6 +353,7 @@ ${ASH3DEXEC} ${INFILE_MAIN} | tee ash3d_runlog.txt
 #  ashfall_arrivaltimes_hours.kml
 #  deposit_thickness_mm.kml
 #  deposit_thickness_inches.kml
+#  ashfall_arrivaltimes_airports.txt
 #  depTS_000*.gnu
 #  depTS_000*.dat
 echo "-------------------------------------------------------------------------------"
@@ -415,6 +416,7 @@ if [ "$RUNTYPE" == "ADV"  ] ; then
     mv ash_arrivaltimes_airports_dp.txt ash_arrivaltimes_airports.txt
     unix2dos ash_arrivaltimes_airports.txt
     cp ash_arrivaltimes_airports.txt ashfall_arrivaltimes_airports.txt
+    ln -s ash_arrivaltimes_airports.txt AshArrivalTimes.txt
   elif [ "$RUNTYPE" == "ACL"  ] ; then
     echo "First stripping ash_arrivaltimes_airports.txt of deposit data"
     ${ASH3DBINDIR}/makeAshArrivalTimes_ac

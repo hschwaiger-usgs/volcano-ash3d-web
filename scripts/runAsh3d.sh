@@ -40,7 +40,10 @@ echo "------------------------------------------------------------"
 #                        ACL = Ash Cloud
 RUNTYPE="ACL"
 CLEANFILES="F"
-USECONTAINER="F"
+USECONTAINERASH="F"
+USECONTAINERTRAJ="F"
+USECONTAINERHYSP="F"
+USECONTAINERPUFF="F"
 CONTAINEREXE="podman"
 CONTAINERRUNDIR="/run/user/1004/libpod/tmp"
 
@@ -49,9 +52,19 @@ rc=0                                             # error message accumulator
 
 HOST=`hostname | cut -c1-9`
 echo "HOST=$HOST"
-if [ "$USECONTAINER" == "T" ]; then
-  echo "Post processing scripts with be run with containers via ${CONTAINEREXE}"
+if [ "$USECONTAINERASH" == "T" ]; then
+  echo "Post processing scripts for Ash3d results will be run with containers via ${CONTAINEREXE}"
 fi
+if [ "$USECONTAINERTRAJ" == "T" ]; then
+  echo "Post processing scripts for traj results will be run with containers via ${CONTAINEREXE}"
+fi
+if [ "$USECONTAINERHYSP" == "T" ]; then
+  echo "Post processing scripts for Hysplit results will be run with containers via ${CONTAINEREXE}"
+fi
+if [ "$USECONTAINERPUFF" == "T" ]; then
+  echo "Post processing scripts for purr results will be run with containers via ${CONTAINEREXE}"
+fi
+
 USGSROOT="/opt/USGS"
 ASH3DROOT="${USGSROOT}/Ash3d"
 WINDROOT="/data/WindFiles"
@@ -293,7 +306,7 @@ if test -r ${USGSROOT}/bin/MetTraj_F; then
     fi
     # Now post-processing ftraj*.dat
     # The map information is pulled from 3d_tephra_fall.nc from the preliminary run
-    if [ "$USECONTAINER" == "T" ]; then
+    if [ "$USECONTAINERTRAJ" == "T" ]; then
         echo "  Running ${CONTAINEREXE} script (GFSVolc_to_gif_ac_traj.sh) to process traj results."
         ${CONTAINEREXE} run --rm -v ${FULLRUNDIR}:${CONTAINERRUNDIR}:z \
                         ash3dpp ${ASH3DSCRIPTDIR}/GFSVolc_to_gif_ac_traj.sh 0 ${CONTAINERRUNDIR}
@@ -321,11 +334,11 @@ echo "**************************************************************************
 echo "**********                   Main Ash3d run                          **********"
 echo "*******************************************************************************"
 echo "*******************************************************************************"
-# Again, the default log file writen by Ash3d is Ash3d.lst, but we will capture all stdout to
+# Again, the default log file written by Ash3d is Ash3d.lst, but we will capture all stdout to
 # an alternative log file.  
 echo "   Running :: ${ASH3DEXEC} ${INFILE_MAIN} | tee ash3d_runlog.txt"
 ${ASH3DEXEC} ${INFILE_MAIN} | tee ash3d_runlog.txt
-# This will produce the following output files writen directly by Ash3d:
+# This will produce the following output files written directly by Ash3d:
 #  3d_tephra_fall.nc
 #  Ash3d.lst
 #  ash3d_runlog.txt
@@ -340,6 +353,7 @@ ${ASH3DEXEC} ${INFILE_MAIN} | tee ash3d_runlog.txt
 #  ashfall_arrivaltimes_hours.kml
 #  deposit_thickness_mm.kml
 #  deposit_thickness_inches.kml
+#  ashfall_arrivaltimes_airports.txt
 #  depTS_000*.gnu
 #  depTS_000*.dat
 echo "-------------------------------------------------------------------------------"
@@ -402,6 +416,7 @@ if [ "$RUNTYPE" == "ADV"  ] ; then
     mv ash_arrivaltimes_airports_dp.txt ash_arrivaltimes_airports.txt
     unix2dos ash_arrivaltimes_airports.txt
     cp ash_arrivaltimes_airports.txt ashfall_arrivaltimes_airports.txt
+    ln -s ash_arrivaltimes_airports.txt AshArrivalTimes.txt
   elif [ "$RUNTYPE" == "ACL"  ] ; then
     echo "First stripping ash_arrivaltimes_airports.txt of deposit data"
     ${ASH3DBINDIR}/makeAshArrivalTimes_ac
@@ -426,7 +441,7 @@ echo "Creating gif images from the standard Ash3d output file."
 for (( i=0;i<${nVARS};i++))
 do
     if [ "${plotvars[i]}" == "1" ]; then
-        if [ "$USECONTAINER" == "T" ]; then
+        if [ "$USECONTAINERASH" == "T" ]; then
             #echo "  Running ${CONTAINEREXE} script (GFSVolc_to_gif_tvar.sh) to process cloud_load results."
             #echo "${CONTAINEREXE} run --rm -v ${FULLRUNDIR}:${CONTAINERRUNDIR}:z ash3dpp ${ASH3DSCRIPTDIR}/GFSVolc_to_gif_tvar.sh 3 ${CONTAINERRUNDIR}"
             #${CONTAINEREXE} run --rm -v ${FULLRUNDIR}:${CONTAINERRUNDIR}:z \
@@ -473,7 +488,7 @@ fi
 # Recreating the trajectory plot (using previously calculated trajecties), but using
 # the consistant basemap
 if test -r ftraj1.dat; then
-    if [ "$USECONTAINER" == "T" ]; then
+    if [ "$USECONTAINERTRAJ" == "T" ]; then
        echo "  Running ${CONTAINEREXE} script (GFSVolc_to_gif_ac_traj.sh) to process traj results."
        ${CONTAINEREXE} run --rm -v ${FULLRUNDIR}:${CONTAINERRUNDIR}:z \
                         ash3dpp ${ASH3DSCRIPTDIR}/GFSVolc_to_gif_ac_traj.sh 1 ${CONTAINERRUNDIR}
@@ -499,7 +514,7 @@ echo "--------------------------------------------------------------------------
 echo "Checking if we need to process extra output products for dashboard cases (Hysplit,puff)"
 if [[ $DASHBOARD_RUN == T* ]] ; then
     echo "Now creating gif images of the hysplit run"
-    if [ "$USECONTAINER" == "T" ]; then
+    if [ "$USECONTAINERHYSP" == "T" ]; then
         echo "Running ${CONTAINEREXE} image of GFSVolc_to_gif_ac_hysplit.sh"
         #${CONTAINEREXE} run --rm -v ${FULLRUNDIR}:${CONTAINERRUNDIR}:z \
         #                ash3dpp /opt/USGS/Ash3d/bin/scripts/GFSVolc_to_gif_ac_hysplit.sh ${CONTAINERRUNDIR}
@@ -521,7 +536,7 @@ if [[ $DASHBOARD_RUN == T* ]] ; then
     # HFS: add check here to verify GFS is being used, that
     #      puff is installed and puff windfiles are available
     # Run the puff model with the parameters in the simple input file
-    if [ "$USECONTAINER" == "T" ]; then
+    if [ "$USECONTAINERPUFF" == "T" ]; then
         echo "  Running ${CONTAINEREXE} script (runPuff.sh) for puff" 
         ${CONTAINEREXE} run --rm -v /data/WindFiles:/home/ash3d/www/html/puff/data:z \
                                  -v ${FULLRUNDIR}:${CONTAINERRUNDIR}:z \
@@ -606,7 +621,7 @@ do
             zip $ZIPNAME.zip ftraj*dat
           elif [ "${out_files[i]}" == "cloud_animation.gif" ]; then
             echo "   Adding animations to zip file."
-            zip $ZIPNAME.zip cloud_load_animation.gif
+            zip $ZIPNAME.zip *_animation.gif
             zip $ZIPNAME.zip *UTC*.gif
           else
             echo "   Adding ${out_files[i]} to zip file."

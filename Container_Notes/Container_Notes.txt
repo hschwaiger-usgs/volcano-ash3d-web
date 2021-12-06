@@ -59,8 +59,8 @@ podman run --rm -v ${FULLRUNDIR}:/run/user/1004/libpod/tmp:z ash3dpp /opt/USGS/A
 podman run --rm -v ${FULLRUNDIR}:/run/user/1004/libpod/tmp:z ash3dpp /opt/USGS/Ash3d/bin/scripts/GFSVolc_to_gif_ac_traj.sh 1
 podman run --rm -v ${FULLRUNDIR}:/run/user/1004/libpod/tmp:z ash3dpp /opt/USGS/Ash3d/bin/scripts/GFSVolc_to_gif_ac_traj.sh 0
 podman run --rm -v ${FULLRUNDIR}:/run/user/1004/libpod/tmp:z ash3dpp /opt/USGS/Ash3d/bin/scripts/GFSVolc_to_gif_ac_hysplit.sh
-podman run --rm -v /data/WindFiles:/home/ash3d/www/html/puff/data:z -v /home/ash3d/Ash3d/test/test_cloud:/run/user/1004/libpod/tmp:z puffapp /opt/USGS/Ash3d/bin/scripts/runGFS_puff.sh
+podman run --rm -v /data/WindFiles:/home/ash3d/www/html/puff/data:z -v /home/ash3d/Ash3d/test/test_cloud:/run/user/1004/libpod/tmp:z puffapp /opt/USGS/Ash3d/bin/scripts/runPuff.sh
 
-podman run -v /data/WindFiles:/home/ash3d/www/html/puff/data:z -v /home/ash3d/Ash3d/test/test_cloud:/run/user/1004/libpod/tmp:z puffapp /opt/USGS/Ash3d/bin/scripts/runGFS_puff.sh
+podman run -v /data/WindFiles:/home/ash3d/www/html/puff/data:z -v /home/ash3d/Ash3d/test/test_cloud:/run/user/1004/libpod/tmp:z puffapp /opt/USGS/Ash3d/bin/scripts/runPuff.sh
 
 

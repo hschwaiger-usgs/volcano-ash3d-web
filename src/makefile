@@ -264,7 +264,7 @@ clean:
 	rm -rf ../bin/legend* ../bin/makeAsh*
 
 install:
-	install -d $(INSTALLDIR)/bin/scripts/              $(INSTALLDIR)/share/post_proc
+	install -d $(INSTALLDIR)/bin/scripts/                  $(INSTALLDIR)/share/post_proc
 	install -m 755 ../bin/citywriter                       $(INSTALLDIR)/bin/
 	install -m 755 ../bin/convert_to_decimal               $(INSTALLDIR)/bin/
 	install -m 755 ../bin/legend_placer_ac                 $(INSTALLDIR)/bin/
@@ -290,17 +290,17 @@ install:
 	install -m 755 ../scripts/runAsh3d_ac.sh               $(INSTALLDIR)/bin/scripts/
 	install -m 755 ../scripts/runAsh3d_dp.sh               $(INSTALLDIR)/bin/scripts/
 	install -m 755 ../scripts/runAsh3d.sh                  $(INSTALLDIR)/bin/scripts/
-	install -m 755 ../scripts/runGFS_puff.sh               $(INSTALLDIR)/bin/scripts/
-	install -m 755 ../scripts/runGFS_traj.sh               $(INSTALLDIR)/bin/scripts/
+	install -m 755 ../scripts/runPuff.sh                   $(INSTALLDIR)/bin/scripts/
+	install -m 755 ../scripts/runTraj.sh                   $(INSTALLDIR)/bin/scripts/
 	install -m 755 ../scripts/xyz2shp.py                   $(INSTALLDIR)/bin/scripts/
 	install -m 755 ../scripts/full_2_simp.sh               $(INSTALLDIR)/bin/scripts/
-	install -m 644 ../share/GlobalAirports_ewert.txt   $(INSTALLDIR)/share/
-	install -m 644 ../share/readme.pdf                 $(INSTALLDIR)/share/
-	install -m 644 ../share/post_proc/*cpt             $(INSTALLDIR)/share/post_proc/
-	install -m 644 ../share/post_proc/*png             $(INSTALLDIR)/share/post_proc/
-	install -m 644 ../share/post_proc/*xy              $(INSTALLDIR)/share/post_proc/
-	install -m 644 ../share/post_proc/world_cities.txt $(INSTALLDIR)/share/post_proc/
-	install -m 755 ../bin/ncGFS4_2_pf                  $(USGSROOT)/bin/
+	install -m 644 ../share/GlobalAirports_ewert.txt       $(INSTALLDIR)/share/
+	install -m 644 ../share/readme.pdf                     $(INSTALLDIR)/share/
+	install -m 644 ../share/post_proc/*cpt                 $(INSTALLDIR)/share/post_proc/
+	install -m 644 ../share/post_proc/*png                 $(INSTALLDIR)/share/post_proc/
+	install -m 644 ../share/post_proc/*xy                  $(INSTALLDIR)/share/post_proc/
+	install -m 644 ../share/post_proc/world_cities.txt     $(INSTALLDIR)/share/post_proc/
+	install -m 755 ../bin/ncGFS4_2_pf                      $(USGSROOT)/bin/
 
 uninstall:
 	rm -f $(INSTALLDIR)/bin/citywriter
@@ -327,8 +327,8 @@ uninstall:
 	rm -f $(INSTALLDIR)/bin/scripts/runAsh3d_ac.sh
 	rm -f $(INSTALLDIR)/bin/scripts/runAsh3d_dp.sh
 	rm -f $(INSTALLDIR)/bin/scripts/runAsh3d.sh
-	rm -f $(INSTALLDIR)/bin/scripts/runGFS_puff.sh
-	rm -f $(INSTALLDIR)/bin/scripts/runGFS_traj.sh
+	rm -f $(INSTALLDIR)/bin/scripts/runPuff.sh
+	rm -f $(INSTALLDIR)/bin/scripts/runTraj.sh
 	rm -f $(INSTALLDIR)/bin/scripts/xyz2shp.py
 	rmdir $(INSTALLDIR)/bin/scripts/
 	rm -f $(INSTALLDIR)/share/post_proc/*png

@@ -343,6 +343,11 @@ ${ASH3DEXEC} ${INFILE_MAIN} | tee ash3d_runlog.txt
 #  Ash3d.lst
 #  ash3d_runlog.txt
 #  ash_arrivaltimes_airports.kml
+#  CloudArrivalTime.kml
+#  CloudBottom.kml
+#  CloudConcentration.kml
+#  CloudHeight.kml
+#  CloudLoad.kml
 #  ash_arrivaltimes_airports.txt
 #  DepositFile_____final.dat
 #  ashfall_arrivaltimes_hours.kml
@@ -371,8 +376,9 @@ if test -r depTS_0001.gnu; then
    zip -r ash_arrivaltimes_airports.kmz ash_arrivaltimes_airports.kml depTS*.png
    rm ash_arrivaltimes_airports.kml
 else
-   zip -r ash_arrivaltimes_airports.kmz ash_arrivaltimes_airports.kml
-   rm ash_arrivaltimes_airports.kml
+   mv ash_arrivaltimes_airports.kml cloud_arrivaltimes_airports.kml
+   zip -r cloud_arrivaltimes_airports.kmz cloud_arrivaltimes_airports.kml
+   rm cloud_arrivaltimes_airports.kml
 fi
 
 #
@@ -420,9 +426,9 @@ if [ "$RUNTYPE" == "ADV"  ] ; then
         exit 1
     fi
     # copy output of makeAshArrivalTimes_ac back to ash_arrivaltimes_airports.txt
-    mv ash_arrivaltimes_airports_ac.txt ash_arrivaltimes_airports.txt
-    unix2dos ash_arrivaltimes_airports.txt
-    ln -s ash_arrivaltimes_airports.txt AshArrivalTimes.txt
+    mv ash_arrivaltimes_airports_ac.txt cloud_arrivaltimes_airports.txt
+    unix2dos cloud_arrivaltimes_airports.txt
+    ln -s cloud_arrivaltimes_airports.txt AshArrivalTimes.txt
 fi
 
 # Get time of completed Ash3d calculations

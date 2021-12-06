@@ -252,31 +252,41 @@ if test -r cities.xy ; then
 fi
 
    #Write caveats to figure
-caption_width=`echo "0.25 * $DLON" | bc -l`
-#cat << EOF > caption.txt
-#> $captionx_UL $captiony_UL 12 0 0 TL 14p 3.0i l
-#   @%1% USGS trajectory Forecast @%0%
-#
-#   @%1%Volcano: @%0%$volc
-#
-#   @%1%Trajectory start: @%0%${year} ${month} ${day} ${hour}:${minute} UTC
-#
-#   @%1%Duration: @%0%24\n hours
-#
-#   @%1%Wind file: @%0%$windfile
+#cat << EOF > caption_pgo.txt
+#<b>USGS Trajectory Forecast</b>
+#<b>Volcano:</b> $volc
+#<b>Trajectory start:</b> ${year} ${month} ${day} ${hour}:${minute} UTC
+#<b>Duration:</b> 24 hours
+#<b>Wind file:</b> $windfile
 #EOF
-cat << EOF > caption_pgo.txt
-<b>USGS Trajectory Forecast</b>
+#convert \
+#    -size 215x100 \
+#    -pointsize 8 \
+#    -font Courier-New \
+#    pango:@caption_pgo.txt legend.png
+    cat << EOF > caption_pgo1.txt
 <b>Volcano:</b> $volc
-<b>Trajectory start:</b> ${year} ${month} ${day} ${hour}:${minute} UTC
-<b>Duration:</b> 24 hours
+<b>Run date:</b> $RUNDATE UTC
 <b>Wind file:</b> $windfile
 EOF
 convert \
-    -size 215x100 \
+    -size 230x60 \
     -pointsize 8 \
     -font Courier-New \
-    pango:@caption_pgo.txt legend.png
+    pango:@caption_pgo1.txt legend1.png
+
+    cat << EOF > caption_pgo2.txt
+<b>Eruption start:</b> ${year} ${month} ${day} ${hour}:${minute} UTC
+<b>Plume height:</b> $EPlH km asl
+<b>Duration:</b> $EDur hours
+<b>Volume:</b> $EVol km<sup>3</sup> DRE (5% airborne)
+EOF
+convert \
+    -size 230x60 \
+    -pointsize 8 \
+    -font Courier-New \
+    pango:@caption_pgo2.txt legend2.png
+    convert +append -background white legend1.png legend2.png ${ASH3DSHARE_PP}/USGSvid.png legend.png
 
 # Last gmt command is to plot the volcano and close out the ps file
 echo $VCLON $VCLAT '1.0' | ${GMTpre[GMTv]} psxy $AREA $PROJ -St0.1i -Gblack -Wthinnest -O >> temp.ps
@@ -301,7 +311,11 @@ if [ $GMTv -eq 4 ] ; then
 fi
 
 # Adding the ESP legend
-composite -geometry +30+25 legend.png temp.gif temp.gif
+#composite -geometry +30+25 legend.png temp.gif temp.gif
+#  first insert a bit of white space above the legend
+convert -append -background white -splice 0x10+0+0 legend.png legend.png
+#  Now add this padded legend to the bottom of temp.gif
+convert -gravity center -append -background white temp.gif legend.png temp.gif
 
 width=`identify temp.gif | cut -f3 -d' ' | cut -f1 -d'x'`
 height=`identify temp.gif | cut -f3 -d' ' | cut -f2 -d'x'`
@@ -315,8 +329,8 @@ if test -r official.txt; then
    convert -append -background white temp.gif \
               ${ASH3DSHARE_PP}/caveats_notofficial_trajectory.png temp.gif
 fi
-composite -geometry +${vidx_UL}+${vidy_UL} ${ASH3DSHARE_PP}/USGSvid.png \
-      temp.gif  temp.gif
+#composite -geometry +${vidx_UL}+${vidy_UL} ${ASH3DSHARE_PP}/USGSvid.png \
+#      temp.gif  temp.gif
 composite -geometry +${legendx_UL}+${legendy_UL} ${ASH3DSHARE_PP}/legend_hysplit.png \
       temp.gif  temp.gif
 
