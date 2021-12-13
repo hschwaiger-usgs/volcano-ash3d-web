@@ -19,8 +19,8 @@ the Puff container.
 #  Commands for building containers
 #################################################
 
-mkdir ~/work/USGS/Software/Podman_containers
-cd ~/work/USGS/Software/Podman_containers
+mkdir ~/Programs/Podman_containers
+cd ~/Programs/Podman_containers
 mkdir USGS-software ncj
 cd ncj
 wget --no-check-certificate http://artifacts.unidata.ucar.edu/content/repositories/unidata-releases/edu/ucar/netcdfAll/4.6.15/netcdfAll-4.6.15.jar
