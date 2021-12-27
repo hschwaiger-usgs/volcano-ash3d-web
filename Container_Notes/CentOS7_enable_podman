@@ -1,3 +1,3 @@
 sudo sysctl user.max_user_namespaces=15000
-sudo usermod --add-subuids 200000-202000 --add-subgids 200000-202000 ash3d
-sudo sysctl -w "net.ipv4.ping_group_range=0 2000000"
+sudo usermod --add-subuids 100000-165536 --add-subgids 100000-165536 ash3d
+sudo sysctl -w "net.ipv4.ping_group_range=0 165536"
