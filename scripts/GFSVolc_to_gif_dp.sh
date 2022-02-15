@@ -408,58 +408,6 @@ captiony_UL=`cat legend_positions_dp.txt   | grep "legend1x_UL" | cut -c36-42`
 legendx_UL=$((`cat legend_positions_dp.txt | grep "legend2x_UL" | cut -c13-15`))
 legendy_UL=$((`cat legend_positions_dp.txt | grep "legend2x_UL" | cut -c31-33`))
 echo "writing caption.txt"
-#    if [ $GMTv -eq 4 ] || [ $GMTv -eq 5 ]; then
-#    cat << EOF > caption.txt
-#> $captionx_UL $captiony_UL 12 0 0 TL 14p 3.0i l
-#
-#   @%1%Volcano: @%0%$volc
-#
-#   @%1%Run date: @%0%$RUNDATE UTC
-#
-#   @%1%Eruption start: @%0%${year} ${month} ${day} ${hour}:${minute} UTC
-#
-#   @%1%Plume height: @%0%$EPlH\n km asl
-#
-#   @%1%Duration: @%0%$EDur\n hours
-#
-#   @%1%Volume: @%0%$EVol km3 DRE (5% airborne) $Threshval
-#
-#   @%1%Wind file: @%0%$windfile
-#EOF
-#      elif [ $GMTv -eq 6 ] ; then
-#    cat << EOF > caption.txt
-#> $captionx_UL $captiony_UL 14p 3.0i j
-#
-#   @%1%Volcano: @%0%$volc
-#
-#   @%1%Run date: @%0%$RUNDATE UTC
-#
-#   @%1%Eruption start: @%0%${year} ${month} ${day} ${hour}:${minute} UTC
-#
-#   @%1%Plume height: @%0%$EPlH\n km asl
-#
-#   @%1%Duration: @%0%$EDur\n hours
-#
-#   @%1%Volume: @%0%$EVol km3 DRE (5% airborne) $Threshval
-#
-#   @%1%Wind file: @%0%$windfile
-#EOF
-#    fi
-#    cat << EOF > caption_pgo.txt
-#<b>Volcano:</b> $volc
-#<b>Run date:</b> $RUNDATE UTC
-#<b>Eruption start:</b> ${year} ${month} ${day} ${hour}:${minute} UTC
-#<b>Plume height:</b> $EPlH km asl
-#<b>Duration:</b> $EDur hours
-#<b>Volume:</b> $EVol km<sup>3</sup> DRE (5% airborne)
-#<b>Wind file:</b> $windfile
-#EOF
-#convert \
-#    -size 215x122 \
-#    -pointsize 8 \
-#    -font Courier-New \
-#    pango:@caption_pgo.txt legend.png
-
     cat << EOF > caption_pgo1.txt
 <b>Volcano:</b> $volc
 <b>Run date:</b> $RUNDATE UTC

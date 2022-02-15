@@ -339,8 +339,8 @@
       2f13.3,                   '      #grid width and height (km, or deg. if latlonflag=1)  ',/, &
       2f13.3,                   '      #vent location         (km, or deg. if latlonflag=1)  ',/, &
       2f13.5,                   '      #DX, DY of grid cells  (km, or deg.)  ',/, &
-      f8.3,'                        #DZ of grid cells      (always km)  ',/, &
-      '1000.      4.                    #diffusion coefficient (m2/s), Suzuki constant  ',/, &
+      f8.3,'                           #DZ of grid cells      (always km)  ',/, &
+      '000.      4.                    #diffusion coefficient (m2/s), Suzuki constant  ',/, &
       '1                               #neruptions, number of eruptions or pulses  ',/, &
       '******************************************************************************* ',/, &
       '#ERUPTION LINES (number = neruptions) ',/, &

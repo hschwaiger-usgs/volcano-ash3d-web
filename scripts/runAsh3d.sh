@@ -38,7 +38,8 @@ echo "------------------------------------------------------------"
 # specify run type here: ADV = Advanced
 #                        DEP = Deposit
 #                        ACL = Ash Cloud
-RUNTYPE="ADV"
+#RUNTYPE="ACL"
+echo "RUNTYPE = ${RUNTYPE}"
 CLEANFILES="F"
 USECONTAINERASH="F"
 USECONTAINERTRAJ="F"

@@ -202,7 +202,11 @@ echo "Extracting ${var} information from ${infile} for each time step."
 #     #    Fin.Dep (in);  Fin.Dep (mm)
 #  elif [ $1 -eq 5 ] || [ $1 -eq 6 ] ; then
 #    t=$((tmax-1))
+#    # We need to convert the NaN's to zero to get the lowest contour
+#    ${GMTpre[GMTv]} ${GMTrgr[GMTv]} "$infile?area" zero.grd
+#    ${GMTpre[GMTv]} grdmath 0.0 zero.grd MUL = zero.grd
 #    ${GMTpre[GMTv]} ${GMTrgr[GMTv]} "$infile?$var[$t]" var_out_final.grd
+#    ${GMTpre[GMTv]} grdmath var_out_final.grd zero.grd AND = var_out_final.grd
 #     #   depotime;       ash_arrival_time
 #  elif [ $1 -eq 4 ] || [ $1 -eq 7 ] ; then
 #    ${GMTpre[GMTv]} ${GMTrgr[GMTv]} "$infile?$var" var_out_final.grd
@@ -603,14 +607,14 @@ EOF
 
     convert temp.gif output_t${time}.gif
     if test -r official.txt; then
-       convert -append -background white output_t${time}.gif ${ASH3DSHARE_PP}/caveats_official.png \
-               output_t${time}.gif
+       convert -append -background white output_t${time}.gif \
+	           ${ASH3DSHARE_PP}/caveats_official.png output_t${time}.gif
       else
-       convert -append -background white output_t${time}.gif ${ASH3DSHARE_PP}/caveats_notofficial.png \
-               output_t${time}.gif
+       convert -append -background white output_t${time}.gif \
+	           ${ASH3DSHARE_PP}/caveats_notofficial.png output_t${time}.gif
     fi
-    #composite -geometry +${vidx_UL}+${vidy_UL} ${ASH3DSHARE_PP}/USGSvid.png output_t${time}.gif \
-    #          output_t${time}.gif
+    #composite -geometry +${vidx_UL}+${vidy_UL} ${ASH3DSHARE_PP}/USGSvid.png \
+	           output_t${time}.gif
 done
 # End of time loop
 

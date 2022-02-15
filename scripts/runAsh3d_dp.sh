@@ -39,6 +39,7 @@ echo "------------------------------------------------------------"
 #                        DEP = Deposit
 #                        ACL = Ash Cloud
 RUNTYPE="DEP"
+echo "RUNTYPE = ${RUNTYPE}"
 CLEANFILES="F"
 USECONTAINERASH="F"
 USECONTAINERTRAJ="F"

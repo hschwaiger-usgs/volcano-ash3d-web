@@ -39,6 +39,7 @@ echo "------------------------------------------------------------"
 #                        DEP = Deposit
 #                        ACL = Ash Cloud
 RUNTYPE="ACL"
+echo "RUNTYPE = ${RUNTYPE}"
 CLEANFILES="F"
 USECONTAINERASH="F"
 USECONTAINERTRAJ="F"
@@ -670,7 +671,7 @@ out_files=("${INFILE_MAIN}"         \
 "CloudConcentration.kmz"            \
 "CloudHeight.kmz"                   \
 "CloudLoad.kmz"                     \
-"CloudArrivalTime.kmz"              \
+"cloud_arrivaltime_hours.kmz"              \
 "CloudBottom.kmz"                   \
 "ftraj1.dat")
 
