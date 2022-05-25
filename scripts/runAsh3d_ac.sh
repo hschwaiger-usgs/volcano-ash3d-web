@@ -303,27 +303,31 @@ if test -r ${USGSROOT}/bin/MetTraj_F; then
     rc=$((rc + $?))
     if [[ "$rc" -gt 0 ]] ; then
         echo "Error running runTraj.sh: rc=$rc"
-        exit 1
-    fi
-    # Now post-processing ftraj*.dat
-    # The map information is pulled from 3d_tephra_fall.nc from the preliminary run
-    if [ "$USECONTAINERTRAJ" == "T" ]; then
-        echo "  Running ${CONTAINEREXE} script (GFSVolc_to_gif_ac_traj.sh) to process traj results."
-        ${CONTAINEREXE} run --rm -v ${FULLRUNDIR}:${CONTAINERRUNDIR}:z \
-                        ash3dpp ${ASH3DSCRIPTDIR}/GFSVolc_to_gif_ac_traj.sh 0 ${CONTAINERRUNDIR}
-        rc=$((rc + $?))
-        if [[ "$rc" -gt 0 ]] ; then
-            echo "Error running ${CONTAINEREXE} ash3dpp GFSVolc_to_gif_ac_traj.sh: rc=$rc"
-            exit 1
-        fi
-      else
-        echo "  Running installed script (GFSVolc_to_gif_ac_traj.sh) to process traj results."
-        ${ASH3DSCRIPTDIR}/GFSVolc_to_gif_ac_traj.sh 0
-        rc=$((rc + $?))
-        if [[ "$rc" -gt 0 ]] ; then
-            echo "Error running GFSVolc_to_gif_ac_traj.sh: rc=$rc"
-            exit 1
-        fi
+        echo "Skipping post-processing"
+        #exit 1
+     else
+      # Now post-processing ftraj*.dat
+      # The map information is pulled from 3d_tephra_fall.nc from the preliminary run
+      if [ "$USECONTAINERTRAJ" == "T" ]; then
+          echo "  Running ${CONTAINEREXE} script (GFSVolc_to_gif_ac_traj.sh) to process traj results."
+          ${CONTAINEREXE} run --rm -v ${FULLRUNDIR}:${CONTAINERRUNDIR}:z \
+                          ash3dpp ${ASH3DSCRIPTDIR}/GFSVolc_to_gif_ac_traj.sh 0 ${CONTAINERRUNDIR}
+          rc=$((rc + $?))
+          if [[ "$rc" -gt 0 ]] ; then
+              echo "Error running ${CONTAINEREXE} ash3dpp GFSVolc_to_gif_ac_traj.sh: rc=$rc"
+              echo "No trajectory output produced; continuing with run script"
+              #exit 1
+          fi
+        else
+          echo "  Running installed script (GFSVolc_to_gif_ac_traj.sh) to process traj results."
+          ${ASH3DSCRIPTDIR}/GFSVolc_to_gif_ac_traj.sh 0
+          rc=$((rc + $?))
+          if [[ "$rc" -gt 0 ]] ; then
+              echo "Error running GFSVolc_to_gif_ac_traj.sh: rc=$rc"
+              echo "No trajectory output produced; continuing with run script"
+              #exit 1
+          fi
+      fi
     fi
   else
      echo "${USGSROOT}/bin/MetTraj_F does not exist.  Skipping trajectory runs."
@@ -479,7 +483,7 @@ if [ "$RUNTYPE" == "ADV" ] || [ "$RUNTYPE" == "ACL" ]  ; then
                             ash3dpp ${ASH3DSCRIPTDIR}/GFSVolc_to_gif_tvar.sh 2 ${CONTAINERRUNDIR}
             rc=$((rc + $?))
             if [[ "$rc" -gt 0 ]] ; then
-                echo "Error running ${CONTAINEREXE} ash3dpp GFSVolc_to_gif_ac_traj.sh 2: rc=$rc"
+                echo "Error running ${CONTAINEREXE} ash3dpp GFSVolc_to_gif_tvar.sh 2: rc=$rc"
                 exit 1
             fi
           else
@@ -487,7 +491,7 @@ if [ "$RUNTYPE" == "ADV" ] || [ "$RUNTYPE" == "ACL" ]  ; then
             ${ASH3DSCRIPTDIR}/GFSVolc_to_gif_tvar.sh 2
             rc=$((rc + $?))
             if [[ "$rc" -gt 0 ]] ; then
-                echo "Error running GFSVolc_to_gif_ac_traj.sh 2: rc=$rc"
+                echo "Error running GFSVolc_to_gif_tvar.sh 2: rc=$rc"
                 exit 1
             fi
         fi
@@ -559,7 +563,9 @@ if test -r ftraj1.dat; then
         rc=$((rc + $?))
         if [[ "$rc" -gt 0 ]] ; then
             echo "Error running ${CONTAINEREXE} ash3dpp GFSVolc_to_gif_ac_traj.sh 1: rc=$rc"
-            exit 1
+            echo "Skipping post-processing"
+            echo "No trajectory output produced; continuing with run script"
+            #exit 1
         fi
       else
         echo "  Running installed script (GFSVolc_to_gif_ac_traj.sh) to process traj results."
@@ -567,7 +573,9 @@ if test -r ftraj1.dat; then
         rc=$((rc + $?))
         if [[ "$rc" -gt 0 ]] ; then
             echo "Error running GFSVolc_to_gif_ac_traj.sh 1: rc=$rc"
-            exit 1
+            echo "Skipping post-processing"
+            echo "No trajectory output produced; continuing with run script"
+            #exit 1
         fi
     fi
   else

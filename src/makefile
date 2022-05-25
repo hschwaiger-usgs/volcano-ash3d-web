@@ -330,12 +330,17 @@ uninstall:
 	rm -f $(INSTALLDIR)/bin/scripts/runPuff.sh
 	rm -f $(INSTALLDIR)/bin/scripts/runTraj.sh
 	rm -f $(INSTALLDIR)/bin/scripts/xyz2shp.py
-	rmdir $(INSTALLDIR)/bin/scripts/
 	rm -f $(INSTALLDIR)/share/post_proc/*png
 	rm -f $(INSTALLDIR)/share/post_proc/VAAC*.xy
 	rm -f $(INSTALLDIR)/share/post_proc/Ash3d*cpt
 	rm -f $(INSTALLDIR)/share/post_proc/world_cities.txt
 	rm -f $(INSTALLDIR)/share/readme.pdf
+	rm -f $(INSTALLDIR)/share/post_proc/*cpt
+	rm -f $(INSTALLDIR)/share/post_proc/*png 
+	rm -f $(INSTALLDIR)/share/post_proc/*xy
+	rm -f $(INSTALLDIR)/share/post_proc/world_cities.txt 
+	rm -f $(INSTALLDIR)/bin/ncGFS4_2_pf
+	rmdir $(INSTALLDIR)/bin/scripts/
 	
 
 
