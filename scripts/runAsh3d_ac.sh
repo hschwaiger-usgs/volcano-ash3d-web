@@ -20,11 +20,11 @@
 
 #      Usage: runAsh3d_ac.sh INPUT_PATH, ZIP_NAME, DASHBOARD_IND (T or F), RUN_ID, JAVA_THREAD_ID
 #       e.g. /data/www/ash3d-api/htdocs/ash3druns/runAsh3d_ac.sh          \
-#               /data/www/ash3d-api/htdocs/ash3druns/ash3d_run_334735/    \
-#               ash3d_Popo_air_20201015-19:25:29z                         \
+#               /data/www/ash3d-api/htdocs/ash3druns/ash3d_run_334738/    \
+#               ash3d_test_air_20201015-19:25:29z                         \
 #               F                                                         \
-#               334735                                                    \
-#               ash3dclient-thread-364
+#               334738                                                    \
+#               ash3dclient-thread-370
 
 echo "------------------------------------------------------------"
 echo "running runAsh3d_ac.sh with parameters:"

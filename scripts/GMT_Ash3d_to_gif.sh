@@ -23,7 +23,8 @@
 # Parsing command-line arguments
 #  variable code , rundirectory
 echo "------------------------------------------------------------"
-echo "running GMT_Ash3d_to_gif.sh with parameter:  $1"
+echo "running GMT_Ash3d_to_gif.sh with parameter:"
+echo "  $1"
 if [ $1 -eq 0 ]; then
   echo " 0 = depothick"
 fi
@@ -184,7 +185,7 @@ tmax=`ncdump     -h ${infile} | grep "t = UNLIMITED" | cut -c22-23` # maximum ti
 t0=`ncdump     -v t ${infile} | grep \ t\ = | cut -f4 -d" " | cut -f1 -d","`
 t1=`ncdump     -v t ${infile} | grep \ t\ = | cut -f5 -d" " | cut -f1 -d","`
 time_interval=`echo "($t1 - $t0)" |bc -l`
-iwindformat=`ncdump -h ${infile} |grep b3l1 | cut -c16-20`
+iwindformat=`ncdump -h ${infile} |grep b3l1 | cut -f2 -d= | cut -f2 -d\" | tr -s " " | cut -f4 -d' '`
 echo "windtime=$windtime"
 if [ ${iwindformat} -eq 25 ]; then
     windfile="NCEP reanalysis 2.5 degree"
@@ -209,7 +210,11 @@ if [ $1 -eq 0 ] || [ $1 -eq 1 ] || [ $1 -eq 2 ] || [ $1 -eq 3 ] ; then
      #    Fin.Dep (in);  Fin.Dep (mm)
   elif [ $1 -eq 5 ] || [ $1 -eq 6 ] ; then
     t=$((tmax-1))
+    # We need to convert the NaN's to zero to get the lowest contour
+    ${GMTpre[GMTv]} ${GMTrgr[GMTv]} "$infile?area" zero.grd
+    ${GMTpre[GMTv]} grdmath 0.0 zero.grd MUL = zero.grd
     ${GMTpre[GMTv]} ${GMTrgr[GMTv]} "$infile?$var[$t]" var_out_final.grd
+    ${GMTpre[GMTv]} grdmath var_out_final.grd zero.grd AND = var_out_final.grd
      #   depotime;       ash_arrival_time
   elif [ $1 -eq 4 ] || [ $1 -eq 7 ] ; then
     ${GMTpre[GMTv]} ${GMTrgr[GMTv]} "$infile?$var" var_out_final.grd
@@ -225,7 +230,6 @@ lonmax=`echo "$LLLON + $DLON" | bc -l`
 latmax=`echo "$LLLAT + $DLAT" | bc -l`
 echo "lonmin="$lonmin ", lonmax="$lonmax ", latmin="$latmin ", latmax="$latmax
 echo "$lonmin $lonmax $latmin $latmax $VCLON $VCLAT" > map_range.txt
-#echo "$LLLON $URLON $LLLAT $URLAT $VCLON $VCLAT" > map_range.txt
 
 ## Setting up color mapping and contour lines
 CPT=Ash3d_${var}.cpt
@@ -264,14 +268,14 @@ if [ $1 -eq 0 ] || [ $1 -eq 5 ] || [ $1 -eq 6 ] ; then
     # Metric
     echo "0.01   C" > dpm_0.01.lev   #deposit (0.01 mm)
     echo "0.03   C" > dpm_0.03.lev   #deposit (0.03 mm)
-    echo "0.1    C" >  dpm_0.1.lev   #deposit (0.1 mm)
-    echo "0.3    C" >  dpm_0.3.lev   #deposit (0.3 mm)
-    echo "1.0    C" >    dpm_1.lev   #deposit (1 mm)
-    echo "3.0    C" >    dpm_3.lev   #deposit (3 mm)
-    echo "10.0   C" >   dpm_10.lev   #deposit (1 cm)
-    echo "30.0   C" >   dpm_30.lev   #deposit (3 cm)
-    echo "100.0  C" >  dpm_100.lev   #deposit (10cm)
-    echo "300.0  C" >  dpm_300.lev   #deposit (30cm)
+    echo "0.1    C"  > dpm_0.1.lev   #deposit (0.1 mm)
+    echo "0.3    C"  > dpm_0.3.lev   #deposit (0.3 mm)
+    echo "1.0    C"  >   dpm_1.lev   #deposit (1 mm)
+    echo "3.0    C"  >   dpm_3.lev   #deposit (3 mm)
+    echo "10.0   C"  >  dpm_10.lev   #deposit (1 cm)
+    echo "30.0   C"  >  dpm_30.lev   #deposit (3 cm)
+    echo "100.0  C"  > dpm_100.lev   #deposit (10cm)
+    echo "300.0  C"  > dpm_300.lev   #deposit (30cm)
 fi
 
 ######################
@@ -334,17 +338,17 @@ do
     fi
     #set mapping parameters
     AREA="-R$lonmin/$lonmax/$latmin/$latmax"
-    PROJ="-JM${VCLON}/${VCLAT}/20"
+    PROJ="-JM${VCLON}/${VCLAT}/20"      # Mercator projection, with origin at lat & lon of volcano, 20 cm width
     COAST="-G220/220/220 -W"            # RGB values for land areas (220/220/220=light gray)
     BOUNDARIES="-Na"                    # -N=draw political boundaries, a=all national, Am. state & marine b.
     RIVERS="-I1/1p,blue -I2/0.25p,blue" # Perm. large rivers used 1p blue line, other large rivers 0.25p blue line
 
-    mapscale1_x=`echo "$LLLON + 0.6*$DLON" | bc -l`                #x location of km scale bar
-    mapscale1_y=`echo "$LLLAT + 0.07 * ($URLAT - $LLLAT)" | bc -l`      #y location of km scale bar
-    km_symbol=`echo "$mapscale1_y + 0.05 * ($URLAT - $LLLAT)" | bc -l`  #location of km symbol
-    mapscale2_x=`echo "$LLLON + 0.6*$DLON" | bc -l`                #x location of km scale bar
-    mapscale2_y=`echo "$LLLAT + 0.15 * ($URLAT - $LLLAT)" | bc -l`      #y location of km scale bar
-    mile_symbol=`echo "$mapscale2_y + 0.05 * ($URLAT - $LLLAT)" | bc -l`  #location of km symbol
+    mapscale1_x=`echo "$lonmin + 0.6*$DLON" | bc -l`                #x location of km scale bar
+    mapscale1_y=`echo "$latmin + 0.07 * ($latmax - $latmin)" | bc -l`      #y location of km scale bar
+    km_symbol=`echo "$mapscale1_y + 0.05 * ($latmax - $latmin)" | bc -l`  #location of km symbol
+    mapscale2_x=`echo "$lonmin + 0.6*$DLON" | bc -l`                #x location of km scale bar
+    mapscale2_y=`echo "$latmin + 0.15 * ($latmax - $latmin)" | bc -l`      #y location of km scale bar
+    mile_symbol=`echo "$mapscale2_y + 0.05 * ($latmax - $latmin)" | bc -l`  #location of km symbol
     if [ $GMTv -eq 4 ] ; then
         SCALE1="-L${mapscale1_x}/${mapscale1_y}/${km_symbol}/${KMSCALE}+p+f255"  #specs for drawing km scale bar
         SCALE2="-L${mapscale2_x}/${mapscale2_y}/${mile_symbol}/${MISCALE}m+p+f255"  #specs for drawing mile scale bar
@@ -362,9 +366,12 @@ do
     #         ln -s /usr/share/gshhg-gmt-nc4/*nc /usr/share/gmt/coast/
     if [ $1 -eq 4 ] || [ $1 -eq 5 ] || [ $1 -eq 6 ] || [ $1 -eq 7 ] ; then
         #  For final times or non-time-series, plot rivers as well
+        echo "Starting base map for final/non-time-series plot"
         ${GMTpre[GMTv]} pscoast $AREA $PROJ $BASE $DETAIL $COAST $BOUNDARIES $RIVERS -K  > temp.ps
       else
         # For normal time-series variables, assume plot is too big to include rivers
+        echo "Starting base map for time-series plot"
+        echo "${GMTpre[GMTv]} pscoast $AREA $PROJ $BASE $DETAIL $COAST $BOUNDARIES -K  > temp.ps"
         ${GMTpre[GMTv]} pscoast $AREA $PROJ $BASE $DETAIL $COAST $BOUNDARIES -K  > temp.ps
         ${GMTpre[GMTv]} psxy VAAC_Anchorage.xy   $AREA $PROJ -P -A -K -O -W1p,gray -V >> temp.ps
         ${GMTpre[GMTv]} psxy VAAC_Montreal.xy    $AREA $PROJ -P -A -K -O -W1p,gray -V >> temp.ps
@@ -546,60 +553,32 @@ do
     fi
     echo "writing caption.txt"
 
-#    if [ $GMTv -eq 4 ] || [ $GMTv -eq 5 ]; then
-#    cat << EOF > caption.txt
-#> $captionx_UL $captiony_UL 12 0 0 TL 14p 3.0i l
-#
-#   @%1%Volcano: @%0%$volc
-#
-#   @%1%Run date: @%0%$RUNDATE UTC
-#
-#   @%1%Eruption start: @%0%${year} ${month} ${day} ${hour}:${minute} UTC
-#
-#   @%1%Plume height: @%0%$EPlH\n km asl
-#
-#   @%1%Duration: @%0%$EDur\n hours
-#
-#   @%1%Volume: @%0%$EVol km3 DRE (5% airborne) $Threshval
-#
-#   @%1%Wind file: @%0%$windfile
-#EOF
-#      elif [ $GMTv -eq 6 ] ; then
-#    cat << EOF > caption.txt
-#> $captionx_UL $captiony_UL 14p 3.0i j
-#
-#   @%1%Volcano: @%0%$volc
-#
-#   @%1%Run date: @%0%$RUNDATE UTC
-#
-#   @%1%Eruption start: @%0%${year} ${month} ${day} ${hour}:${minute} UTC
-#
-#   @%1%Plume height: @%0%$EPlH\n km asl
-#
-#   @%1%Duration: @%0%$EDur\n hours
-#
-#   @%1%Volume: @%0%$EVol km3 DRE (5% airborne) $Threshval
-#
-#   @%1%Wind file: @%0%$windfile
-#EOF
-#    fi
-    cat << EOF > caption_pgo.txt
+    cat << EOF > caption_pgo1.txt
 <b>Volcano:</b> $volc
 <b>Run date:</b> $RUNDATE UTC
+<b>Wind file:</b> $windfile
+EOF
+convert \
+    -size 230x60 \
+    -pointsize 8 \
+    -font Courier-New \
+    pango:@caption_pgo1.txt legend1.png
+
+    cat << EOF > caption_pgo2.txt
 <b>Eruption start:</b> ${year} ${month} ${day} ${hour}:${minute} UTC
 <b>Plume height:</b> $EPlH km asl
 <b>Duration:</b> $EDur hours
 <b>Volume:</b> $EVol km<sup>3</sup> DRE (5% airborne)
-<b>Wind file:</b> $windfile
 EOF
 convert \
-    -size 215x122 \
+    -size 230x60 \
     -pointsize 8 \
     -font Courier-New \
-    pango:@caption_pgo.txt legend.png
+    pango:@caption_pgo2.txt legend2.png
+    convert +append -background white legend1.png legend2.png ${ASH3DSHARE_PP}/USGSvid.png legend.png
 
-    #Add cities
-    ${ASH3DBINDIR}/citywriter ${LLLON} ${URLON} ${LLLAT} ${URLAT}
+    echo "adding cities"
+    ${ASH3DBINDIR}/citywriter ${lonmin} ${lonmax} ${latmin} ${latmax}
     if test -r cities.xy ; then
         echo "Adding cities to map"
         # Add a condition to plot roads if you'd like
@@ -611,25 +590,53 @@ convert \
         ${GMTpre[GMTv]} pstext cities.xy $AREA $PROJ -D0.1/0.1 -V -O -K >> temp.ps      #Plot names of all airports
     fi
 
-    ${GMTpre[GMTv]} psbasemap $AREA $PROJ $SCALE1 -O -K >> temp.ps                      #add km scale bar in overlay
-    ${GMTpre[GMTv]} psbasemap $AREA $PROJ $SCALE2 -O -K >> temp.ps                      #add mile scale bar in overlay
+    #${GMTpre[GMTv]} psbasemap $AREA $PROJ $SCALE1 -O -K >> temp.ps                      #add km scale bar in overlay
+    #${GMTpre[GMTv]} psbasemap $AREA $PROJ $SCALE2 -O -K >> temp.ps                      #add mile scale bar in overlay
 
-    if [ $1 -eq 3 ] ; then
+    if [ $1 -eq 1 ] ; then
+        # cloud_concentration
+        ${GMTpre[GMTv]} psscale -D1.25i/0.5i/2i/0.15ih -C$CPT -Q -B10f5/:"mg/m^3": -O -K >> temp.ps
+        if [ $GMTv -eq 4 ] ; then
+            echo "writing CC.txt for GMT 4"
+            cat << EOF > CC.txt
+> 0.25 1.25 14 0 4 TL 14p 3i j
+@%1%Ash Cloud Max Concentration
+EOF
+            ${GMTpre[GMTv]} pstext CC.txt -R0/3/0/5 -JX3i -O -K -m -N >> temp.ps
+          elif [ $GMTv -eq 5 ] ; then
+            echo "writing CC.txt for GMT 5"
+            cat << EOF > CC.txt
+> 0.25 1.25 14p 3i j
+@%1%Ash Cloud Max Concentration
+EOF
+            ${GMTpre[GMTv]} pstext CC.txt -R0/3/0/5 -JX3i -F+f14,Times-Roman+jLT -O -K -M -N >> temp.ps
+          else
+            echo "writing CC.txt for GMT 6"
+            cat << EOF > CC.txt
+> 0.25 1.25 14p 3i j
+@%1%Ash Cloud Max Concentration
+EOF
+            ${GMTpre[GMTv]} pstext CL.txt -R0/3/0/5 -JX3i -F+f14,Times-Roman+jLT -O -K -M -N >> temp.ps
+        fi
+      elif [ $1 -eq 3 ] ; then
         # cloud_load
         ${GMTpre[GMTv]} psscale -D1.25i/0.5i/2i/0.15ih -C$CPT -Q -B10f5/:"g/m^2": -O -K >> temp.ps
         if [ $GMTv -eq 4 ] ; then
+            echo "writing CL.txt for GMT 4"
             cat << EOF > CL.txt
 > 0.25 1.25 14 0 4 TL 14p 3i j
 @%1%Ash Cloud Load
 EOF
             ${GMTpre[GMTv]} pstext CL.txt -R0/3/0/5 -JX3i -O -K -m -N >> temp.ps
           elif [ $GMTv -eq 5 ] ; then
+            echo "writing CL.txt for GMT 5"
             cat << EOF > CL.txt
-> 0.25 1.25 14 0 4 TL 14p 3i j
+> 0.25 1.25 14p 3i j
 @%1%Ash Cloud Load
 EOF
             ${GMTpre[GMTv]} pstext CL.txt -R0/3/0/5 -JX3i -F+f14,Times-Roman+jLT -O -K -M -N >> temp.ps
           else
+            echo "writing CL.txt for GMT 6"
             cat << EOF > CL.txt
 > 0.25 1.25 14p 3i j
 @%1%Ash Cloud Load
@@ -656,12 +663,13 @@ EOF
     # Last gmt command is to plot the volcano and close out the ps file
     echo $VCLON $VCLAT '1.0' | ${GMTpre[GMTv]} psxy $AREA $PROJ -St0.1i -Gblack -Wthinnest -O >> temp.ps
 
-    #echo "Writing caption to temp.ps"
-    #if [ $GMTv -eq 4 ] ; then
-    #    ${GMTpre[GMTv]} pstext caption.txt $AREA $PROJ -m -Wwhite,o -N -O >> temp.ps  #-Wwhite,o paints a white recctangle with outline
-    #  else
-    #    ${GMTpre[GMTv]} pstext caption.txt $AREA $PROJ -M -Gwhite -Wblack,. -F+f14,Times-Roman+jLT -N -O >> temp.ps  #-Wwhite,o paints a white recctangle with outline
-    #fi
+## Last gmt command is to write the caption and close out the ps file
+#echo "Writing caption to temp.ps"
+#if [ $GMTv -eq 4 ] ; then
+#    ${GMTpre[GMTv]} pstext caption.txt $AREA $PROJ -m -Wwhite,o -N -O >> temp.ps  #-Wwhite,o paints a white recctangle with outline
+#else
+#    ${GMTpre[GMTv]} pstext caption.txt $AREA $PROJ -M -Gwhite -Wblack,. -F+f14,Times-Roman+jLT -N -O >> temp.ps  #-Wwhite,o paints a white recctangle with outline
+#fi
 
     #  Convert to gif
     echo "Converting temp.ps to temp.gif"
@@ -678,7 +686,10 @@ EOF
     fi
 
     # Adding the ESP legend
-    composite -geometry +30+25 legend.png temp.gif temp.gif
+    #  first insert a bit of white space above the legend
+    convert -append -background white -splice 0x10+0+0 legend.png legend.png
+    #  Now add this padded legend to the bottom of temp.gif
+    convert -gravity center -append -background white temp.gif legend.png temp.gif
 
     # Add data legend for cloud height in feet if needed or deposit runs
     width=`identify temp.gif | cut -f3 -d' ' | cut -f1 -d'x'`
@@ -711,15 +722,14 @@ EOF
 
     convert temp.gif output_t${time}.gif
     if test -r official.txt; then
-        convert -append -background white output_t${time}.gif ${ASH3DSHARE_PP}/caveats_official.png \
-                output_t${time}.gif
+       convert -append -background white output_t${time}.gif \
+	           ${ASH3DSHARE_PP}/caveats_official.png output_t${time}.gif
       else
-        convert -append -background white output_t${time}.gif ${ASH3DSHARE_PP}/caveats_notofficial.png \
-                output_t${time}.gif
+       convert -append -background white output_t${time}.gif \
+	           ${ASH3DSHARE_PP}/caveats_notofficial.png output_t${time}.gif
     fi
-    composite -geometry +${vidx_UL}+${vidy_UL} ${ASH3DSHARE_PP}/USGSvid.png output_t${time}.gif \
-              output_t${time}.gif
-
+    #composite -geometry +${vidx_UL}+${vidy_UL} ${ASH3DSHARE_PP}/USGSvid.png \
+	#           output_t${time}.gif
 done
 # End of time loop
 
@@ -802,11 +812,10 @@ echo "Eruption start time: "$year $month $day $hour
 echo "plume height (km) ="$EPlH
 echo "eruption duration (hrs) ="$EDur
 echo "erupted volume (km3 DRE) ="$EVol
-echo " "
+echo "all done"
 echo "++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
 echo "finished GMT_Ash3d_to_gif.sh $1 $var"
 echo `date`
-#echo `ls -l /data/WindFiles/puff/gfs/`
 echo "++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
 
 echo "exiting GMT_Ash3d_to_gif.sh with status $rc"

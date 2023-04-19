@@ -20,11 +20,11 @@
 
 #      Usage: runAsh3d_ac.sh INPUT_PATH, ZIP_NAME, DASHBOARD_IND (T or F), RUN_ID, JAVA_THREAD_ID
 #       e.g. /data/www/ash3d-api/htdocs/ash3druns/runAsh3d_dp.sh          \
-#               /data/www/ash3d-api/htdocs/ash3druns/ash3d_run_334699/    \
-#               ash3d_Reventador_rutina_dep_20201015-18:47:50z            \
-#               F                                                         \
-#               334699                                                    \
-#               ash3dclient-thread-361
+#               /data/www/ash3d-api/htdocs/ash3druns/ash3d_run_334738/ \
+#               ash3d_test_dep_20201015-19:25:29z                      \
+#               F                                                      \
+#               334738                                                 \
+#               ash3dclient-thread-370
 
 echo "------------------------------------------------------------"
 echo "running runAsh3d_dp.sh with parameters:"
@@ -303,27 +303,31 @@ if test -r ${USGSROOT}/bin/MetTraj_F; then
     rc=$((rc + $?))
     if [[ "$rc" -gt 0 ]] ; then
         echo "Error running runTraj.sh: rc=$rc"
-        exit 1
-    fi
-    # Now post-processing ftraj*.dat
-    # The map information is pulled from 3d_tephra_fall.nc from the preliminary run
-    if [ "$USECONTAINERTRAJ" == "T" ]; then
-        echo "  Running ${CONTAINEREXE} script (GFSVolc_to_gif_ac_traj.sh) to process traj results."
-        ${CONTAINEREXE} run --rm -v ${FULLRUNDIR}:${CONTAINERRUNDIR}:z \
-                        ash3dpp ${ASH3DSCRIPTDIR}/GFSVolc_to_gif_ac_traj.sh 0 ${CONTAINERRUNDIR}
-        rc=$((rc + $?))
-        if [[ "$rc" -gt 0 ]] ; then
-            echo "Error running ${CONTAINEREXE} ash3dpp GFSVolc_to_gif_ac_traj.sh: rc=$rc"
-            exit 1
-        fi
-      else
-        echo "  Running installed script (GFSVolc_to_gif_ac_traj.sh) to process traj results."
-        ${ASH3DSCRIPTDIR}/GFSVolc_to_gif_ac_traj.sh 0
-        rc=$((rc + $?))
-        if [[ "$rc" -gt 0 ]] ; then
-            echo "Error running GFSVolc_to_gif_ac_traj.sh: rc=$rc"
-            exit 1
-        fi
+        echo "Skipping post-processing"
+        #exit 1
+     else
+      # Now post-processing ftraj*.dat
+      # The map information is pulled from 3d_tephra_fall.nc from the preliminary run
+      if [ "$USECONTAINERTRAJ" == "T" ]; then
+          echo "  Running ${CONTAINEREXE} script (GFSVolc_to_gif_ac_traj.sh) to process traj results."
+          ${CONTAINEREXE} run --rm -v ${FULLRUNDIR}:${CONTAINERRUNDIR}:z \
+                          ash3dpp ${ASH3DSCRIPTDIR}/GFSVolc_to_gif_ac_traj.sh 0 ${CONTAINERRUNDIR}
+          rc=$((rc + $?))
+          if [[ "$rc" -gt 0 ]] ; then
+              echo "Error running ${CONTAINEREXE} ash3dpp GFSVolc_to_gif_ac_traj.sh: rc=$rc"
+              echo "No trajectory output produced; continuing with run script"
+              #exit 1
+          fi
+        else
+          echo "  Running installed script (GFSVolc_to_gif_ac_traj.sh) to process traj results."
+          ${ASH3DSCRIPTDIR}/GFSVolc_to_gif_ac_traj.sh 0
+          rc=$((rc + $?))
+          if [[ "$rc" -gt 0 ]] ; then
+              echo "Error running GFSVolc_to_gif_ac_traj.sh: rc=$rc"
+              echo "No trajectory output produced; continuing with run script"
+              #exit 1
+          fi
+      fi
     fi
   else
      echo "${USGSROOT}/bin/MetTraj_F does not exist.  Skipping trajectory runs."
@@ -559,7 +563,9 @@ if test -r ftraj1.dat; then
         rc=$((rc + $?))
         if [[ "$rc" -gt 0 ]] ; then
             echo "Error running ${CONTAINEREXE} ash3dpp GFSVolc_to_gif_ac_traj.sh 1: rc=$rc"
-            exit 1
+            echo "Skipping post-processing"
+            echo "No trajectory output produced; continuing with run script"
+            #exit 1
         fi
       else
         echo "  Running installed script (GFSVolc_to_gif_ac_traj.sh) to process traj results."
@@ -567,7 +573,9 @@ if test -r ftraj1.dat; then
         rc=$((rc + $?))
         if [[ "$rc" -gt 0 ]] ; then
             echo "Error running GFSVolc_to_gif_ac_traj.sh 1: rc=$rc"
-            exit 1
+            echo "Skipping post-processing"
+            echo "No trajectory output produced; continuing with run script"
+            #exit 1
         fi
     fi
   else
@@ -671,7 +679,7 @@ out_files=("${INFILE_MAIN}"         \
 "CloudConcentration.kmz"            \
 "CloudHeight.kmz"                   \
 "CloudLoad.kmz"                     \
-"CloudArrivalTime.kmz"              \
+"cloud_arrivaltime_hours.kmz"              \
 "CloudBottom.kmz"                   \
 "ftraj1.dat")
 

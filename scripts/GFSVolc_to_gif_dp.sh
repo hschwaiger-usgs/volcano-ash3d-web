@@ -85,10 +85,9 @@ if test -r ${infile} ; then
     echo "error: no ${infile} file. Exiting"
     exit 1
 fi
-
 #******************************************************************************
 if [ "$CLEANFILES" == "T" ]; then
-    echo "removing old files"
+    echo "Removing old files"
     rm -f *.xyz *.grd contour_range.txt map_range.txt
 fi
 #GET VARIABLES FROM 3D_tephra-fall.nc
@@ -107,8 +106,6 @@ echo "Processing " $volc " on " $date
 year=`ncdump -h ${infile} | grep ReferenceTime | cut -d\" -f2 | cut -c1-4`
 month=`ncdump -h ${infile} | grep ReferenceTime | cut -d\" -f2 | cut -c5-6`
 day=`ncdump -h ${infile} | grep ReferenceTime | cut -d\" -f2 | cut -c7-8`
-#day=17
-#year=2021
 hour=`ncdump -h ${infile} | grep ReferenceTime | cut -d\" -f2 | cut -c9-10`
 minute=`ncdump -h ${infile} | grep ReferenceTime | cut -d\" -f2 | cut -c12-13`
 hours_real=`echo "$hour + $minute / 60" | bc -l`
@@ -135,9 +132,8 @@ EVol_fl=`ncdump -v er_volume ${infile} | grep er_volume | grep "=" | \
         grep -v ":" | cut -f2 -d"=" | cut -f2 -d" "`
 
 FineAshFrac=0.05
-#FineAshFrac=1.0
 EVol_dec=`${ASH3DBINDIR}/convert_to_decimal $EVol_fl`   #if it's in scientific notation, convert to real
-EVol_ac=`echo "( $EVol_dec / $FineAshFrac)" | bc -l`
+EVol_ac=`echo "($EVol_dec / $FineAshFrac)" | bc -l`
 EVol_dp=$EVol_dec
 
 # Remove the trailing zeros
@@ -164,7 +160,7 @@ tmax=`ncdump     -h ${infile} | grep "t = UNLIMITED" | cut -c22-23` # maximum ti
 t0=`ncdump     -v t ${infile} | grep \ t\ = | cut -f4 -d" " | cut -f1 -d","`
 t1=`ncdump     -v t ${infile} | grep \ t\ = | cut -f5 -d" " | cut -f1 -d","`
 time_interval=`echo "($t1 - $t0)" |bc -l`
-iwindformat=`ncdump -h ${infile} |grep b3l1 | cut -f2 -d= | cut -f2 -d\" | tr -s " " | cut -f3 -d' '`
+iwindformat=`ncdump -h ${infile} |grep b3l1 | cut -f2 -d= | cut -f2 -d\" | tr -s " " | cut -f4 -d' '`
 echo "windtime=$windtime"
 if [ ${iwindformat} -eq 25 ]; then
     windfile="NCEP reanalysis 2.5 degree"
@@ -198,33 +194,6 @@ echo "Extracting ${var} information from ${infile} for each time step."
 #  elif [ $1 -eq 4 ] || [ $1 -eq 7 ] ; then
 #    ${GMTpre[GMTv]} ${GMTrgr[GMTv]} "$infile?$var" var_out_final.grd
 #fi
-
-###############################################################################
-## This section is an alternate branch where the individual depocon slices are
-## extracted and summed
-## Extracting all the deposit info
-#t=$((tmax-1))
-#echo " ${volc} : Generating deposit grids for time = " ${t}
-## Summing over vertical column and grainsizes
-## First make all the grid files
-#for i in `seq 0 $((gsbins-1))`;
-#do
-#    ${GMTpre[GMTv]} ${GMTrgr[GMTv]} "$infile?depocon[$t,$i]" dep_out_t${t}_g${i}.grd
-#done  #end of loop over gsbins
-#
-## Now loop through again and add them up
-#${GMTpre[GMTv]} grdmath 1.0 dep_out_t${t}_g0.grd MUL = dep_tot_out_t${t}.grd
-#for i in `seq 1 $((gsbins-1))`;
-#do
-#    echo "doing grdmath on dep_out_t${t}_g${i}.grd to dep_tot_out_t${t}.grd"
-#    ${GMTpre[GMTv]} grdmath dep_out_t${t}_g${i}.grd dep_tot_out_t${t}.grd ADD = dep_tot_out_t${t}.grd
-#done  # end of loop over gsbins
-#
-## Create the final deposit grid
-#tfinal=$((tmax-1))
-#echo " ${volc} : Generating final deposit grid from dep_tot_out_t${tfinal}.grd"
-#${GMTpre[GMTv]} grdmath 1.0 dep_tot_out_t${tfinal}.grd MUL = dep_tot_out.grd
-#******************************************************************************
 echo "Finished generating all the grd files"
 
 ###############################################################################
@@ -274,14 +243,14 @@ echo "Preparing to make the GMT maps."
     # Metric
     echo "0.01   C" > dpm_0.01.lev   #deposit (0.01 mm)
     echo "0.03   C" > dpm_0.03.lev   #deposit (0.03 mm)
-    echo "0.1    C"  > dpm_0.1.lev    #deposit (0.1 mm)
-    echo "0.3    C"  > dpm_0.3.lev    #deposit (0.3 mm)
-    echo "1.0    C"  >   dpm_1.lev    #deposit (1 mm)
-    echo "3.0    C"  >   dpm_3.lev    #deposit (3 mm)
-    echo "10.0   C"  >  dpm_10.lev    #deposit (1 cm)
-    echo "30.0   C"  >  dpm_30.lev    #deposit (3 cm)
-    echo "100.0  C"  > dpm_100.lev    #deposit (10cm)
-    echo "300.0  C"  > dpm_300.lev    #deposit (30cm)
+    echo "0.1    C"  > dpm_0.1.lev   #deposit (0.1 mm)
+    echo "0.3    C"  > dpm_0.3.lev   #deposit (0.3 mm)
+    echo "1.0    C"  >   dpm_1.lev   #deposit (1 mm)
+    echo "3.0    C"  >   dpm_3.lev   #deposit (3 mm)
+    echo "10.0   C"  >  dpm_10.lev   #deposit (1 cm)
+    echo "30.0   C"  >  dpm_30.lev   #deposit (3 cm)
+    echo "100.0  C"  > dpm_100.lev   #deposit (10cm)
+    echo "300.0  C"  > dpm_300.lev   #deposit (30cm)
 #fi
 
 ######################
@@ -522,12 +491,16 @@ fi
 width=`identify deposit_thickness_inches.gif | cut -f3 -d' ' | cut -f1 -d'x'`
 height=`identify deposit_thickness_inches.gif | cut -f3 -d' ' | cut -f2 -d'x'`
 echo "Figure width=$width, height=$height"
-echo "Eruption start time: $year $month $day $hour"
-echo "plume height (km) =$EPlH"
-echo "eruption duration (hrs) =$EDur"
+echo "Eruption start time: "$year $month $day $hour
+echo "plume height (km) ="$EPlH
+echo "eruption duration (hrs) ="$EDur
 echo "erupted volume (km3 DRE) ="$EVol
 echo "all done"
 echo "++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
 echo "finished GFSVolc_to_gif_dp.sh"
 echo `date`
 echo "++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
+
+echo "exiting GFSVolc_to_gif_dp.sh with status $rc"
+exit $rc
+

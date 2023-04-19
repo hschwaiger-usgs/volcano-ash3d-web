@@ -37,6 +37,8 @@ fi
 if [ $1 -eq 3 ]; then
   echo " 3 = cloud_load"
 fi
+# The optional second command-line argument is used in podman containers
+# to set the run directory
 if [ "$#" -eq 2 ]; then
   echo "Second command line argument detected: setting run directory"
   RUNHOME=$2
@@ -46,7 +48,6 @@ fi
 cd ${RUNHOME}
 echo `date`
 echo "------------------------------------------------------------"
-
 CLEANFILES="T"
 RUNDATE=`date -u "+%D %T"`
 
@@ -98,10 +99,9 @@ if test -r ${infile} ; then
     echo "error: no ${infile} file. Exiting"
     exit 1
 fi
-
 #******************************************************************************
 if [ "$CLEANFILES" == "T" ]; then
-    echo "removing old files"
+    echo "Removing old files"
     rm -f *.xyz *.grd contour_range.txt map_range.txt
 fi
 #GET VARIABLES FROM 3D_tephra-fall.nc
@@ -120,8 +120,6 @@ echo "Processing " $volc " on " $date
 year=`ncdump -h ${infile} | grep ReferenceTime | cut -d\" -f2 | cut -c1-4`
 month=`ncdump -h ${infile} | grep ReferenceTime | cut -d\" -f2 | cut -c5-6`
 day=`ncdump -h ${infile} | grep ReferenceTime | cut -d\" -f2 | cut -c7-8`
-#day=17
-#year=2021
 hour=`ncdump -h ${infile} | grep ReferenceTime | cut -d\" -f2 | cut -c9-10`
 minute=`ncdump -h ${infile} | grep ReferenceTime | cut -d\" -f2 | cut -c12-13`
 hours_real=`echo "$hour + $minute / 60" | bc -l`
@@ -148,9 +146,8 @@ EVol_fl=`ncdump -v er_volume ${infile} | grep er_volume | grep "=" | \
         grep -v ":" | cut -f2 -d"=" | cut -f2 -d" "`
 
 FineAshFrac=0.05
-#FineAshFrac=1.0
 EVol_dec=`${ASH3DBINDIR}/convert_to_decimal $EVol_fl`   #if it's in scientific notation, convert to real
-EVol_ac=`echo "( $EVol_dec / $FineAshFrac)" | bc -l`
+EVol_ac=`echo "($EVol_dec / $FineAshFrac)" | bc -l`
 EVol_dp=$EVol_dec
 
 # Remove the trailing zeros
@@ -177,7 +174,7 @@ tmax=`ncdump     -h ${infile} | grep "t = UNLIMITED" | cut -c22-23` # maximum ti
 t0=`ncdump     -v t ${infile} | grep \ t\ = | cut -f4 -d" " | cut -f1 -d","`
 t1=`ncdump     -v t ${infile} | grep \ t\ = | cut -f5 -d" " | cut -f1 -d","`
 time_interval=`echo "($t1 - $t0)" |bc -l`
-iwindformat=`ncdump -h ${infile} |grep b3l1 | cut -f2 -d= | cut -f2 -d\" | tr -s " " | cut -f3 -d' '`
+iwindformat=`ncdump -h ${infile} |grep b3l1 | cut -f2 -d= | cut -f2 -d\" | tr -s " " | cut -f4 -d' '`
 echo "windtime=$windtime"
 if [ ${iwindformat} -eq 25 ]; then
     windfile="NCEP reanalysis 2.5 degree"
@@ -215,20 +212,7 @@ echo "Finished generating all the grd files"
 
 ###############################################################################
 ##  Now make the maps
-echo "map_range.txt = $LLLON $URLON $LLLAT $URLAT $VCLON $VCLAT"
-echo "$LLLON $URLON $LLLAT $URLAT $VCLON $VCLAT" > map_range.txt
-echo "running legend_placer_ac"
-${ASH3DBINDIR}/legend_placer_ac
-#captionx_UL=`cat legend_positions_ac.txt | grep "legend1x_UL" | awk '{print $2}'`
-#captiony_UL=`cat legend_positions_ac.txt | grep "legend1x_UL" | awk '{print $4}'`
-#legendx_UL=`cat legend_positions_ac.txt  | grep "legend2x_UL" | awk '{print $2}'`
-#legendy_UL=`cat legend_positions_ac.txt  | grep "legend2x_UL" | awk '{print $4}'`
-LLLAT=`cat legend_positions_ac.txt       | grep "latmin="     | awk '{print $2}'`
-URLAT=`cat legend_positions_ac.txt       | grep "latmin="     | awk '{print $4}'`
-DLAT=`echo "$URLAT - $LLLAT" | bc -l`
-echo "captionx_UL=$captionx_UL, captiony_UL=$captiony_UL"
-echo "legendx_UL=$legendx_UL, 'legendy_UL=$legendy_UL"
-echo "LLLAT=$LLLAT, URLAT=$URLAT, DLAT=$DLAT"
+#get latitude & longitude range
 lonmin=$LLLON
 latmin=$LLLAT
 lonmax=`echo "$LLLON + $DLON" | bc -l`
@@ -273,14 +257,14 @@ if [ $1 -eq 0 ] || [ $1 -eq 5 ] || [ $1 -eq 6 ] ; then
     # Metric
     echo "0.01   C" > dpm_0.01.lev   #deposit (0.01 mm)
     echo "0.03   C" > dpm_0.03.lev   #deposit (0.03 mm)
-    echo "0.1    C"  > dpm_0.1.lev    #deposit (0.1 mm)
-    echo "0.3    C"  > dpm_0.3.lev    #deposit (0.3 mm)
-    echo "1.0    C"  >   dpm_1.lev    #deposit (1 mm)
-    echo "3.0    C"  >   dpm_3.lev    #deposit (3 mm)
-    echo "10.0   C"  >  dpm_10.lev    #deposit (1 cm)
-    echo "30.0   C"  >  dpm_30.lev    #deposit (3 cm)
-    echo "100.0  C"  > dpm_100.lev    #deposit (10cm)
-    echo "300.0  C"  > dpm_300.lev    #deposit (30cm)
+    echo "0.1    C"  > dpm_0.1.lev   #deposit (0.1 mm)
+    echo "0.3    C"  > dpm_0.3.lev   #deposit (0.3 mm)
+    echo "1.0    C"  >   dpm_1.lev   #deposit (1 mm)
+    echo "3.0    C"  >   dpm_3.lev   #deposit (3 mm)
+    echo "10.0   C"  >  dpm_10.lev   #deposit (1 cm)
+    echo "30.0   C"  >  dpm_30.lev   #deposit (3 cm)
+    echo "100.0  C"  > dpm_100.lev   #deposit (10cm)
+    echo "300.0  C"  > dpm_300.lev   #deposit (30cm)
 fi
 
 ######################
@@ -311,32 +295,32 @@ do
     #set mapping parameters
     DLON_INT="$(echo $DLON | sed 's/\.[0-9]*//')"  #convert DLON to an integer
     if [ $DLON_INT -le 2 ] ; then
-        BASE="-Ba0.25/a0.25"            # label every 5 degress lat/lon
-        DETAIL="-Dh"                    # high resolution coastlines (-Dc=crude)
+        BASE="-Ba0.25/a0.25"           # label every 5 degress lat/lon
+        DETAIL="-Dh"                   # high resolution coastlines (-Dc=crude)
         KMSCALE="30"
         MISCALE="20"
-     elif [ $DLON_INT -le 5 ] ; then
+      elif [ $DLON_INT -le 5 ] ; then
         BASE="-Ba1/a1"                 # label every 5 degress lat/lon
         DETAIL="-Dh"                   # high resolution coastlines (-Dc=crude)
         KMSCALE="50"
         MISCALE="30"
-     elif [ $DLON_INT -le 10 ] ; then
+      elif [ $DLON_INT -le 10 ] ; then
         BASE="-Ba2/a2"                 # label every 5 degress lat/lon
         DETAIL="-Dh"                   # high resolution coastlines (-Dc=crude)
         KMSCALE="100"
         MISCALE="50"
-     elif [ $DLON_INT -le 20 ] ; then
+      elif [ $DLON_INT -le 20 ] ; then
         BASE="-Ba5/a5"                 # label every 5 degress lat/lon
         DETAIL="-Dh"                   # high resolution coastlines (-Dc=crude)
         KMSCALE="200"
         MISCALE="100"
-     elif [ $DLON_INT -le 40 ] ; then
+      elif [ $DLON_INT -le 40 ] ; then
         BASE="-Ba10/a10"               # label every 10 degrees lat/lon
         DETAIL="-Dl"                   # low resolution coastlines (-Dc=crude)
         KMSCALE="400"
         MISCALE="200"
-     else
-        BASE="-Ba20/a20"               # label every 10 degrees lat/lon
+      else
+        BASE="-Ba20/a20"               # label every 20 degrees lat/lon
         DETAIL="-Dl"                   # low resolution coastlines (-Dc=crude)
         KMSCALE="400"
         MISCALE="200"
@@ -357,7 +341,7 @@ do
     if [ $GMTv -eq 4 ] ; then
         SCALE1="-L${mapscale1_x}/${mapscale1_y}/${km_symbol}/${KMSCALE}+p+f255"  #specs for drawing km scale bar
         SCALE2="-L${mapscale2_x}/${mapscale2_y}/${mile_symbol}/${MISCALE}m+p+f255"  #specs for drawing mile scale bar
-    else
+      else
         SCALE1="-L${mapscale1_x}/${mapscale1_y}/${km_symbol}/${KMSCALE}"  #specs for drawing km scale bar
         SCALE2="-L${mapscale2_x}/${mapscale2_y}/${mile_symbol}/${MISCALE}M+"  #specs for drawing mile scale bar
     fi
@@ -400,20 +384,20 @@ do
         #0=depothick or 5=depothick final (NWS)
        if [ $GMTv -eq 4 ] ; then
            # GMT v4 writes contours with -D[basename] and writes files with [basename][lev][segment]_[e,i].xyz; with e,i for interior or exterior
-           ${GMTpre[GMTv]} grdcontour ${dep_grd}   $AREA $PROJ $BASE -Cdp_0.1.lev -D -A- -W6/255/0/0 -Dcontourfile  -O -K >> temp.ps
-           ${GMTpre[GMTv]} grdcontour ${dep_grd}   $AREA $PROJ $BASE -Cdp_0.8.lev -D -A- -W6/0/0/255     -O -K >> temp.ps
-           ${GMTpre[GMTv]} grdcontour ${dep_grd}   $AREA $PROJ $BASE -Cdp_6.lev   -D -A- -W6/0/183/255   -O -K >> temp.ps
-           ${GMTpre[GMTv]} grdcontour ${dep_grd}   $AREA $PROJ $BASE -Cdp_25.lev  -D -A- -W6/255/0/255   -O -K >> temp.ps
-           ${GMTpre[GMTv]} grdcontour ${dep_grd}   $AREA $PROJ $BASE -Cdp_100.lev -D -A- -W6/0/51/51     -O -K >> temp.ps
+           ${GMTpre[GMTv]} grdcontour ${dep_grd} $AREA $PROJ $BASE -Cdp_0.1.lev -D -A- -W6/255/0/0 -Dcontourfile  -O -K >> temp.ps
+           ${GMTpre[GMTv]} grdcontour ${dep_grd} $AREA $PROJ $BASE -Cdp_0.8.lev -D -A- -W6/0/0/255     -O -K >> temp.ps
+           ${GMTpre[GMTv]} grdcontour ${dep_grd} $AREA $PROJ $BASE -Cdp_6.lev   -D -A- -W6/0/183/255   -O -K >> temp.ps
+           ${GMTpre[GMTv]} grdcontour ${dep_grd} $AREA $PROJ $BASE -Cdp_25.lev  -D -A- -W6/255/0/255   -O -K >> temp.ps
+           ${GMTpre[GMTv]} grdcontour ${dep_grd} $AREA $PROJ $BASE -Cdp_100.lev -D -A- -W6/0/51/51     -O -K >> temp.ps
          else
-           # GMT v5 [GMTv]writes contour files as a separate step from drawing and writes all segments to one file
+           # GMT v5/6 writes contour files as a separate step from drawing and writes all segments to one file
            echo "${GMTpre[GMTv]} grdcontour ${dep_grd}   $AREA $PROJ $BASE -Cdp_0.1.lev -A- -W3,255/0/0   -Dcontourfile_0.1_0_i.xyz"
-           ${GMTpre[GMTv]} grdcontour ${dep_grd}   $AREA $PROJ $BASE -Cdp_0.1.lev -A- -W3,255/0/0   -Dcontourfile_0.1_0_i.xyz
-           ${GMTpre[GMTv]} grdcontour ${dep_grd}   $AREA $PROJ $BASE -Cdp_0.8.lev -A- -W3,0/0/255   -Dcontourfile_0.8_0_i.xyz
-           ${GMTpre[GMTv]} grdcontour ${dep_grd}   $AREA $PROJ $BASE -Cdp_6.lev   -A- -W3,0/183/255 -Dcontourfile_6.0_0_i.xyz
-           ${GMTpre[GMTv]} grdcontour ${dep_grd}   $AREA $PROJ $BASE -Cdp_25.lev  -A- -W3,255/0/255 -Dcontourfile_25_0_i.xyz
-           ${GMTpre[GMTv]} grdcontour ${dep_grd}   $AREA $PROJ $BASE -Cdp_100.lev -A- -W3,0/51/51   -Dcontourfile_100_0_i.xyz
-
+           ${GMTpre[GMTv]} grdcontour ${dep_grd} $AREA $PROJ $BASE -Cdp_0.1.lev -A- -W3,255/0/0   -Dcontourfile_0.1_0_i.xyz
+           ${GMTpre[GMTv]} grdcontour ${dep_grd} $AREA $PROJ $BASE -Cdp_0.8.lev -A- -W3,0/0/255   -Dcontourfile_0.8_0_i.xyz
+           ${GMTpre[GMTv]} grdcontour ${dep_grd} $AREA $PROJ $BASE -Cdp_6.lev   -A- -W3,0/183/255 -Dcontourfile_6.0_0_i.xyz
+           ${GMTpre[GMTv]} grdcontour ${dep_grd} $AREA $PROJ $BASE -Cdp_25.lev  -A- -W3,255/0/255 -Dcontourfile_25_0_i.xyz
+           ${GMTpre[GMTv]} grdcontour ${dep_grd} $AREA $PROJ $BASE -Cdp_100.lev -A- -W3,0/51/51   -Dcontourfile_100_0_i.xyz
+       
            # GMT v5 adds a header line to these files.  First double-check that the header is present, then remove it.
            testchar=`head -1 contourfile_0.1_0_i.xyz | cut -c1`
            if [ $testchar = '>' ] ; then
@@ -428,12 +412,12 @@ do
              tail -n +2 contourfile_100_0_i.xyz > temp.xyz
              mv temp.xyz contourfile_100_0_i.xyz
            fi
-
-           ${GMTpre[GMTv]} grdcontour ${dep_grd}   $AREA $PROJ $BASE -Cdp_0.1.lev -A- -W3,255/0/0     -O -K >> temp.ps
-           ${GMTpre[GMTv]} grdcontour ${dep_grd}   $AREA $PROJ $BASE -Cdp_0.8.lev -A- -W3,0/0/255     -O -K >> temp.ps
-           ${GMTpre[GMTv]} grdcontour ${dep_grd}   $AREA $PROJ $BASE -Cdp_6.lev   -A- -W3,0/183/255   -O -K >> temp.ps
-           ${GMTpre[GMTv]} grdcontour ${dep_grd}   $AREA $PROJ $BASE -Cdp_25.lev  -A- -W3,255/0/255   -O -K >> temp.ps
-           ${GMTpre[GMTv]} grdcontour ${dep_grd}   $AREA $PROJ $BASE -Cdp_100.lev -A- -W3,0/51/51     -O -K >> temp.ps
+         
+           ${GMTpre[GMTv]} grdcontour ${dep_grd} $AREA $PROJ $BASE -Cdp_0.1.lev -A- -W3,255/0/0     -O -K >> temp.ps
+           ${GMTpre[GMTv]} grdcontour ${dep_grd} $AREA $PROJ $BASE -Cdp_0.8.lev -A- -W3,0/0/255     -O -K >> temp.ps
+           ${GMTpre[GMTv]} grdcontour ${dep_grd} $AREA $PROJ $BASE -Cdp_6.lev   -A- -W3,0/183/255   -O -K >> temp.ps
+           ${GMTpre[GMTv]} grdcontour ${dep_grd} $AREA $PROJ $BASE -Cdp_25.lev  -A- -W3,255/0/255   -O -K >> temp.ps
+           ${GMTpre[GMTv]} grdcontour ${dep_grd} $AREA $PROJ $BASE -Cdp_100.lev -A- -W3,0/51/51     -O -K >> temp.ps
        fi
 
          #   ashcon_max;     cloud_load

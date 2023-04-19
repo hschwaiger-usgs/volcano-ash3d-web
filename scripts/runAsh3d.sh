@@ -21,7 +21,7 @@
 #      Usage: runAsh3d_ac.sh INPUT_PATH, ZIP_NAME, DASHBOARD_IND (T or F), RUN_ID, JAVA_THREAD_ID
 #       e.g. /data/www/ash3d-api/htdocs/ash3druns/runAsh3d.sh          \
 #               /data/www/ash3d-api/htdocs/ash3druns/ash3d_run_334738/ \
-#               ash3d_adv_test_adv_20201015-23:07:46z                  \
+#               ash3d_test_adv_20201015-19:25:29z                      \
 #               F                                                      \
 #               334738                                                 \
 #               ash3dclient-thread-370
@@ -616,7 +616,7 @@ out_files=("${INFILE_MAIN}"         \
 "CloudConcentration.kmz"            \
 "CloudHeight.kmz"                   \
 "CloudLoad.kmz"                     \
-"CloudArrivalTime.kmz"              \
+"cloud_arrivaltime_hours.kmz"              \
 "CloudBottom.kmz"                   \
 "ftraj1.dat")
 
