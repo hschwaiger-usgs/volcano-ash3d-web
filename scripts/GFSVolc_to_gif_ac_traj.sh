@@ -157,11 +157,11 @@ echo "legendx_UL=$legendx_UL, 'legendy_UL=$legendy_UL"
 echo "LLLAT=$LLLAT, URLAT=$URLAT, DLAT=$DLAT"
 
 EDur=`ncdump -v er_duration ${infile} | grep er_duration | grep "=" | \
-	grep -v ":" | cut -f2 -d"=" | cut -f2 -d" "`
+      grep -v ":" | cut -f2 -d"=" | cut -f2 -d" "`
 EPlH=`ncdump -v er_plumeheight ${infile} | grep er_plumeheight | grep "=" | \
-	grep -v ":" | cut -f2 -d"=" | cut -f2 -d" "`
+      grep -v ":" | cut -f2 -d"=" | cut -f2 -d" "`
 #EVol3=`ncdump -v er_volume ${infile} | grep er_volume | grep "=" | \
-#	grep -v ":" | cut -f2 -d"=" | cut -f2 -d" "`
+#      grep -v ":" | cut -f2 -d"=" | cut -f2 -d" "`
 #EVol2=`${ASH3DBINDIR}/convert_to_decimal $EVol3`   #if it's in scientific notation, convert to real
 #EVol=`echo "($EVol2 * 20)" |bc -l`
 
@@ -176,7 +176,7 @@ EPlH=`ncdump -v er_plumeheight ${infile} | grep er_plumeheight | grep "=" | \
 #fi
 
 windtime=`ncdump -h ${infile} | grep NWPStartTime | cut -c20-39`
-iwindformat=`ncdump -h ${infile} |grep b3l1 | cut -c16-20`
+iwindformat=`ncdump -h ${infile} |grep b3l1 | cut -f2 -d\" | cut -f1 -d# |  tr -s " " | cut -f3 -d' '`
 if [ ${iwindformat} -eq 25 ]; then
      windfile="NCEP reanalysis 2.5 degree"
   else

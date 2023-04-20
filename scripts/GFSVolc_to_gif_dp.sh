@@ -141,7 +141,7 @@ echo $EVol_ac  | awk ' sub("\\.*0+$","") ' > tmp.txt
 EVol_ac=`cat tmp.txt`
 echo $EVol_dp  | awk ' sub("\\.*0+$","") ' > tmp.txt
 EVol_dp=`cat tmp.txt`
-EVol=$EVol_dp
+EVol=${EVol_dp}
 #If volume equals minimum threshold volume, add annotation
 EVol_int=`echo "$EVol * 10000" | bc -l | sed 's/\.[0-9]*//'`   #convert EVol to an integer
 if [ $EVol_int -eq 1 ] ; then
@@ -160,7 +160,7 @@ tmax=`ncdump     -h ${infile} | grep "t = UNLIMITED" | cut -c22-23` # maximum ti
 t0=`ncdump     -v t ${infile} | grep \ t\ = | cut -f4 -d" " | cut -f1 -d","`
 t1=`ncdump     -v t ${infile} | grep \ t\ = | cut -f5 -d" " | cut -f1 -d","`
 time_interval=`echo "($t1 - $t0)" |bc -l`
-iwindformat=`ncdump -h ${infile} |grep b3l1 | cut -f2 -d= | cut -f2 -d\" | tr -s " " | cut -f4 -d' '`
+iwindformat=`ncdump -h ${infile} |grep b3l1 | cut -f2 -d\" | cut -f1 -d# |  tr -s " " | cut -f3 -d' '`
 echo "windtime=$windtime"
 if [ ${iwindformat} -eq 25 ]; then
     windfile="NCEP reanalysis 2.5 degree"
@@ -194,6 +194,33 @@ echo "Extracting ${var} information from ${infile} for each time step."
 #  elif [ $1 -eq 4 ] || [ $1 -eq 7 ] ; then
 #    ${GMTpre[GMTv]} ${GMTrgr[GMTv]} "$infile?$var" var_out_final.grd
 #fi
+
+###############################################################################
+## This section is an alternate branch where the individual depocon slices are
+## extracted and summed
+## Extracting all the deposit info
+#t=$((tmax-1))
+#echo " ${volc} : Generating deposit grids for time = " ${t}
+## Summing over vertical column and grainsizes
+## First make all the grid files
+#for i in `seq 0 $((gsbins-1))`;
+#do
+#    ${GMTpre[GMTv]} ${GMTrgr[GMTv]} "$infile?depocon[$t,$i]" dep_out_t${t}_g${i}.grd
+#done  #end of loop over gsbins
+#
+## Now loop through again and add them up
+#${GMTpre[GMTv]} grdmath 1.0 dep_out_t${t}_g0.grd MUL = dep_tot_out_t${t}.grd
+#for i in `seq 1 $((gsbins-1))`;
+#do
+#    echo "doing grdmath on dep_out_t${t}_g${i}.grd to dep_tot_out_t${t}.grd"
+#    ${GMTpre[GMTv]} grdmath dep_out_t${t}_g${i}.grd dep_tot_out_t${t}.grd ADD = dep_tot_out_t${t}.grd
+#done  # end of loop over gsbins
+#
+## Create the final deposit grid
+#tfinal=$((tmax-1))
+#echo " ${volc} : Generating final deposit grid from dep_tot_out_t${tfinal}.grd"
+#${GMTpre[GMTv]} grdmath 1.0 dep_tot_out_t${tfinal}.grd MUL = dep_tot_out.grd
+#******************************************************************************
 echo "Finished generating all the grd files"
 
 ###############################################################################
@@ -243,14 +270,14 @@ echo "Preparing to make the GMT maps."
     # Metric
     echo "0.01   C" > dpm_0.01.lev   #deposit (0.01 mm)
     echo "0.03   C" > dpm_0.03.lev   #deposit (0.03 mm)
-    echo "0.1    C"  > dpm_0.1.lev   #deposit (0.1 mm)
-    echo "0.3    C"  > dpm_0.3.lev   #deposit (0.3 mm)
-    echo "1.0    C"  >   dpm_1.lev   #deposit (1 mm)
-    echo "3.0    C"  >   dpm_3.lev   #deposit (3 mm)
-    echo "10.0   C"  >  dpm_10.lev   #deposit (1 cm)
-    echo "30.0   C"  >  dpm_30.lev   #deposit (3 cm)
-    echo "100.0  C"  > dpm_100.lev   #deposit (10cm)
-    echo "300.0  C"  > dpm_300.lev   #deposit (30cm)
+    echo "0.1    C" >  dpm_0.1.lev   #deposit (0.1 mm)
+    echo "0.3    C" >  dpm_0.3.lev   #deposit (0.3 mm)
+    echo "1.0    C" >    dpm_1.lev   #deposit (1 mm)
+    echo "3.0    C" >    dpm_3.lev   #deposit (3 mm)
+    echo "10.0   C" >   dpm_10.lev   #deposit (1 cm)
+    echo "30.0   C" >   dpm_30.lev   #deposit (3 cm)
+    echo "100.0  C" >  dpm_100.lev   #deposit (10cm)
+    echo "300.0  C" >  dpm_300.lev   #deposit (30cm)
 #fi
 
 ######################
@@ -339,7 +366,7 @@ if [ $GMTv -eq 4 ] ; then
     ${GMTpre[GMTv]} grdcontour ${dep_grd} $AREA $PROJ $BASE -Cdp_25.lev  -D -A- -W6/255/0/255   -O -K >> temp.ps
     ${GMTpre[GMTv]} grdcontour ${dep_grd} $AREA $PROJ $BASE -Cdp_100.lev -D -A- -W6/0/51/51     -O -K >> temp.ps
 else    
-    # GMT v5 [GMTv]writes contour files as a separate step from drawing and writes all segments to one file
+    # GMT v5/6 writes contour files as a separate step from drawing and writes all segments to one file
     ${GMTpre[GMTv]} grdcontour ${dep_grd} $AREA $PROJ $BASE -Cdp_0.1.lev -A- -W3,255/0/0   -Dcontourfile_0.1_0_i.xyz
     ${GMTpre[GMTv]} grdcontour ${dep_grd} $AREA $PROJ $BASE -Cdp_0.8.lev -A- -W3,0/0/255   -Dcontourfile_0.8_0_i.xyz
     ${GMTpre[GMTv]} grdcontour ${dep_grd} $AREA $PROJ $BASE -Cdp_6.lev   -A- -W3,0/183/255 -Dcontourfile_6.0_0_i.xyz
@@ -488,14 +515,14 @@ if [ "$CLEANFILES" == "T" ]; then
    rm -f contourfile*xyz
 fi
 
-width=`identify deposit_thickness_inches.gif | cut -f3 -d' ' | cut -f1 -d'x'`
-height=`identify deposit_thickness_inches.gif | cut -f3 -d' ' | cut -f2 -d'x'`
-echo "Figure width=$width, height=$height"
+#width=`identify deposit_thickness_inches.gif | cut -f3 -d' ' | cut -f1 -d'x'`
+#height=`identify deposit_thickness_inches.gif | cut -f3 -d' ' | cut -f2 -d'x'`
+#echo "Figure width=$width, height=$height"
 echo "Eruption start time: "$year $month $day $hour
 echo "plume height (km) ="$EPlH
 echo "eruption duration (hrs) ="$EDur
 echo "erupted volume (km3 DRE) ="$EVol
-echo "all done"
+echo " "
 echo "++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
 echo "finished GFSVolc_to_gif_dp.sh"
 echo `date`

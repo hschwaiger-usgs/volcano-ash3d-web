@@ -38,7 +38,11 @@ echo "------------------------------------------------------------"
 # specify run type here: ADV = Advanced
 #                        DEP = Deposit
 #                        ACL = Ash Cloud
-#RUNTYPE="ACL"
+if [[ -z "${RT}" ]]; then
+  RUNTYPE="ADV"
+else
+  RUNTYPE=${RT}
+fi
 echo "RUNTYPE = ${RUNTYPE}"
 CLEANFILES="F"
 USECONTAINERASH="F"

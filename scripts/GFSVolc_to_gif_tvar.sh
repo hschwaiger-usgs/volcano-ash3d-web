@@ -155,7 +155,11 @@ echo $EVol_ac  | awk ' sub("\\.*0+$","") ' > tmp.txt
 EVol_ac=`cat tmp.txt`
 echo $EVol_dp  | awk ' sub("\\.*0+$","") ' > tmp.txt
 EVol_dp=`cat tmp.txt`
-EVol=$EVol_ac
+if test -r ash3d_input_ac.inp; then
+  EVol=${EVol_ac}
+ else
+  EVol=${EVol_dp}
+fi
 #If volume equals minimum threshold volume, add annotation
 EVol_int=`echo "$EVol * 10000" | bc -l | sed 's/\.[0-9]*//'`   #convert EVol to an integer
 if [ $EVol_int -eq 1 ] ; then
@@ -174,7 +178,7 @@ tmax=`ncdump     -h ${infile} | grep "t = UNLIMITED" | cut -c22-23` # maximum ti
 t0=`ncdump     -v t ${infile} | grep \ t\ = | cut -f4 -d" " | cut -f1 -d","`
 t1=`ncdump     -v t ${infile} | grep \ t\ = | cut -f5 -d" " | cut -f1 -d","`
 time_interval=`echo "($t1 - $t0)" |bc -l`
-iwindformat=`ncdump -h ${infile} |grep b3l1 | cut -f2 -d= | cut -f2 -d\" | tr -s " " | cut -f4 -d' '`
+iwindformat=`ncdump -h ${infile} |grep b3l1 | cut -f2 -d\" | cut -f1 -d# |  tr -s " " | cut -f3 -d' '`
 echo "windtime=$windtime"
 if [ ${iwindformat} -eq 25 ]; then
     windfile="NCEP reanalysis 2.5 degree"
@@ -438,8 +442,8 @@ do
 
     # Figure out if we are processing an ash cloud variable or a deposit variable for legend
     # coordinates
-    #echo "running legend_placer_ac"
-    #${ASH3DBINDIR}/legend_placer_ac
+    echo "running legend_placer_ac"
+    ${ASH3DBINDIR}/legend_placer_ac
     captionx_UL=`cat legend_positions_ac.txt | grep "legend1x_UL" | awk '{print $2}'`
     captiony_UL=`cat legend_positions_ac.txt | grep "legend1x_UL" | awk '{print $4}'`
     legendx_UL=`cat legend_positions_ac.txt  | grep "legend2x_UL" | awk '{print $2}'`
@@ -513,7 +517,8 @@ EOF
         fi
       elif [ $1 -eq 3 ] ; then
         # cloud_load
-        ${GMTpre[GMTv]} psscale -D1.25i/0.5i/2i/0.15ih -C$CPT -Q -B10f5/:"g/m^2": -O -K >> temp.ps
+        #${GMTpre[GMTv]} psscale -D1.25i/0.5i/2i/0.15ih -C$CPT -Q -B10f5/:"g/m^2": -O -K >> temp.ps
+        ${GMTpre[GMTv]} psscale -D0.25i/1.15i/2i/0.15i -C$CPT -Q -B10f5/:"g/m^2": -O -K >> temp.ps
         if [ $GMTv -eq 4 ] ; then
             echo "writing CL.txt for GMT 4"
             cat << EOF > CL.txt
@@ -556,7 +561,6 @@ EOF
     echo $VCLON $VCLAT '1.0' | ${GMTpre[GMTv]} psxy $AREA $PROJ -St0.1i -Gblack -Wthinnest -O >> temp.ps
 
     # Convert to gif
-    echo "Converting temp.ps to temp.gif"
     if [ $GMTv -eq 4 ] ; then
         ps2epsi temp.ps
         epstopdf temp.epsi
@@ -592,13 +596,13 @@ EOF
     convert temp.gif output_t${time}.gif
     if test -r official.txt; then
        convert -append -background white output_t${time}.gif \
-	           ${ASH3DSHARE_PP}/caveats_official.png output_t${time}.gif
+               ${ASH3DSHARE_PP}/caveats_official.png output_t${time}.gif
       else
        convert -append -background white output_t${time}.gif \
-	           ${ASH3DSHARE_PP}/caveats_notofficial.png output_t${time}.gif
+               ${ASH3DSHARE_PP}/caveats_notofficial.png output_t${time}.gif
     fi
     #composite -geometry +${vidx_UL}+${vidy_UL} ${ASH3DSHARE_PP}/USGSvid.png \
-	           output_t${time}.gif
+    #           output_t${time}.gif
 done
 # End of time loop
 
@@ -646,6 +650,9 @@ if [ "$CLEANFILES" == "T" ]; then
    rm -f contourfile*xyz
 fi
 
+#width=`identify deposit_thickness_inches.gif | cut -f3 -d' ' | cut -f1 -d'x'`
+#height=`identify deposit_thickness_inches.gif | cut -f3 -d' ' | cut -f2 -d'x'`
+#echo "Figure width=$width, height=$height"
 echo "Eruption start time: "$year $month $day $hour
 echo "plume height (km) ="$EPlH
 echo "eruption duration (hrs) ="$EDur
@@ -654,7 +661,6 @@ echo " "
 echo "++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
 echo "finished GFSVolc_to_gif_tvar.sh $1 $var"
 echo `date`
-#echo `ls -l /data/WindFiles/puff/gfs/`
 echo "++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
 
 echo "exiting GFSVolc_to_gif_tvar.sh with status $rc"

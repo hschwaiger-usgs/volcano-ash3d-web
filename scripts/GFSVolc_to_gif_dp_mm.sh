@@ -33,6 +33,7 @@ fi
 cd ${RUNHOME}
 echo `date`
 echo "------------------------------------------------------------"
+
 CLEANFILES="T"
 RUNDATE=`date -u "+%D %T"`
 
@@ -87,7 +88,7 @@ fi
 
 #******************************************************************************
 if [ "$CLEANFILES" == "T" ]; then
-    echo "removing old files"
+    echo "Removing old files"
     rm -f *.xyz *.grd contour_range.txt map_range.txt
 fi
 #GET VARIABLES FROM 3D_tephra-fall.nc
@@ -134,9 +135,8 @@ EVol_fl=`ncdump -v er_volume ${infile} | grep er_volume | grep "=" | \
         grep -v ":" | cut -f2 -d"=" | cut -f2 -d" "`
 
 FineAshFrac=0.05
-#FineAshFrac=1.0
 EVol_dec=`${ASH3DBINDIR}/convert_to_decimal $EVol_fl`   #if it's in scientific notation, convert to real
-EVol_ac=`echo "( $EVol_dec / $FineAshFrac)" | bc -l`
+EVol_ac=`echo "($EVol_dec / $FineAshFrac)" | bc -l`
 EVol_dp=$EVol_dec
 
 # Remove the trailing zeros
@@ -144,7 +144,7 @@ echo $EVol_ac  | awk ' sub("\\.*0+$","") ' > tmp.txt
 EVol_ac=`cat tmp.txt`
 echo $EVol_dp  | awk ' sub("\\.*0+$","") ' > tmp.txt
 EVol_dp=`cat tmp.txt`
-EVol=$EVol_dp
+EVol=${EVol_dp}
 #If volume equals minimum threshold volume, add annotation
 EVol_int=`echo "$EVol * 10000" | bc -l | sed 's/\.[0-9]*//'`   #convert EVol to an integer
 if [ $EVol_int -eq 1 ] ; then
@@ -163,7 +163,7 @@ tmax=`ncdump     -h ${infile} | grep "t = UNLIMITED" | cut -c22-23` # maximum ti
 t0=`ncdump     -v t ${infile} | grep \ t\ = | cut -f4 -d" " | cut -f1 -d","`
 t1=`ncdump     -v t ${infile} | grep \ t\ = | cut -f5 -d" " | cut -f1 -d","`
 time_interval=`echo "($t1 - $t0)" |bc -l`
-iwindformat=`ncdump -h ${infile} |grep b3l1 | cut -f2 -d= | cut -f2 -d\" | tr -s " " | cut -f3 -d' '`
+iwindformat=`ncdump -h ${infile} |grep b3l1 | cut -f2 -d\" | cut -f1 -d# |  tr -s " " | cut -f3 -d' '`
 echo "windtime=$windtime"
 if [ ${iwindformat} -eq 25 ]; then
     windfile="NCEP reanalysis 2.5 degree"
@@ -374,7 +374,7 @@ if [ $GMTv -eq 4 ] ; then
     ${GMTpre[GMTv]} grdcontour ${dep_grd} $AREA $PROJ $BASE -Cdpm_100.lev  -D -A- -W6/255/0/0      -O -K >> temp.ps
     ${GMTpre[GMTv]} grdcontour ${dep_grd} $AREA $PROJ $BASE -Cdpm_300.lev  -D -A- -W6/128/0/0      -O -K >> temp.ps
 else
-    # GMT v5 [GMTv]writes contour files as a separate step from drawing and writes all segments to one file
+    # GMT v5/6 writes contour files as a separate step from drawing and writes all segments to one file
     ${GMTpre[GMTv]} grdcontour ${dep_grd} $AREA $PROJ $BASE -Cdpm_0.01.lev -A- -W3,214/222/105 -Dcontourfile_0.01_0_i.xyz
     ${GMTpre[GMTv]} grdcontour ${dep_grd} $AREA $PROJ $BASE -Cdpm_0.03.lev -A- -W3,249/167/113 -Dcontourfile_0.03_0_i.xyz
     ${GMTpre[GMTv]} grdcontour ${dep_grd} $AREA $PROJ $BASE -Cdpm_0.1.lev  -A- -W3,128/0/128   -Dcontourfile_0.1_0_i.xyz
@@ -432,58 +432,6 @@ captiony_UL=`cat legend_positions_dp_mm.txt   | grep "legend1x_UL" | cut -c36-42
 legendx_UL=$((`cat legend_positions_dp_mm.txt | grep "legend2x_UL" | cut -c13-15`))
 legendy_UL=$((`cat legend_positions_dp_mm.txt | grep "legend2x_UL" | cut -c31-33`))
 echo "writing caption.txt"
-#    if [ $GMTv -eq 4 ] || [ $GMTv -eq 5 ]; then
-#    cat << EOF > caption.txt
-#> $captionx_UL $captiony_UL 12 0 0 TL 14p 3.0i l
-#
-#   @%1%Volcano: @%0%$volc
-#
-#   @%1%Run date: @%0%$RUNDATE UTC
-#
-#   @%1%Eruption start: @%0%${year} ${month} ${day} ${hour}:${minute} UTC
-#
-#   @%1%Plume height: @%0%$EPlH\n km asl
-#
-#   @%1%Duration: @%0%$EDur\n hours
-#
-#   @%1%Volume: @%0%$EVol km3 DRE (5% airborne) $Threshval
-#
-#   @%1%Wind file: @%0%$windfile
-#EOF
-#      elif [ $GMTv -eq 6 ] ; then
-#    cat << EOF > caption.txt
-#> $captionx_UL $captiony_UL 14p 3.0i j
-#
-#   @%1%Volcano: @%0%$volc
-#
-#   @%1%Run date: @%0%$RUNDATE UTC
-#
-#   @%1%Eruption start: @%0%${year} ${month} ${day} ${hour}:${minute} UTC
-#
-#   @%1%Plume height: @%0%$EPlH\n km asl
-#
-#   @%1%Duration: @%0%$EDur\n hours
-#
-#   @%1%Volume: @%0%$EVol km3 DRE (5% airborne) $Threshval
-#
-#   @%1%Wind file: @%0%$windfile
-#EOF
-#    fi
-#    cat << EOF > caption_pgo.txt
-#<b>Volcano:</b> $volc
-#<b>Run date:</b> $RUNDATE UTC
-#<b>Eruption start:</b> ${year} ${month} ${day} ${hour}:${minute} UTC
-#<b>Plume height:</b> $EPlH km asl
-#<b>Duration:</b> $EDur hours
-#<b>Volume:</b> $EVol km<sup>3</sup> DRE (5% airborne)
-#<b>Wind file:</b> $windfile
-#EOF
-#convert \
-#    -size 215x122 \
-#    -pointsize 8 \
-#    -font Courier-New \
-#    pango:@caption_pgo.txt legend.png
-
     cat << EOF > caption_pgo1.txt
 <b>Volcano:</b> $volc
 <b>Run date:</b> $RUNDATE UTC
@@ -582,7 +530,6 @@ if [ "$CLEANFILES" == "T" ]; then
     echo "Removing temp files for shapefile generation"
     rm contour*.xyz volc.txt var.txt
 fi
-
 # Clean up more temporary files
 if [ "$CLEANFILES" == "T" ]; then
    echo "End of GFSVolc_to_gif_dp_mm.sh: removing files."
@@ -596,15 +543,19 @@ if [ "$CLEANFILES" == "T" ]; then
    rm -f contourfile*xyz
 fi
 
-width=`identify deposit_thickness_mm.gif | cut -f3 -d' ' | cut -f1 -d'x'`
-height=`identify deposit_thickness_mm.gif | cut -f3 -d' ' | cut -f2 -d'x'`
-echo "Figure width=$width, height=$height"
-echo "Eruption start time: $year $month $day $hour"
-echo "plume height (km) =$EPlH"
-echo "eruption duration (hrs) =$EDur"
+#width=`identify deposit_thickness_inches.gif | cut -f3 -d' ' | cut -f1 -d'x'`
+#height=`identify deposit_thickness_inches.gif | cut -f3 -d' ' | cut -f2 -d'x'`
+#echo "Figure width=$width, height=$height"
+echo "Eruption start time: "$year $month $day $hour
+echo "plume height (km) ="$EPlH
+echo "eruption duration (hrs) ="$EDur
 echo "erupted volume (km3 DRE) ="$EVol
-echo "all done"
+echo " "
 echo "++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
 echo "finished GFSVolc_to_gif_dp_mm.sh"
 echo `date`
 echo "++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
+
+echo "exiting GFSVolc_to_gif_dp_mm.sh with status $rc"
+exit $rc
+

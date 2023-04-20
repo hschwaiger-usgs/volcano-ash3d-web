@@ -164,9 +164,15 @@ EVol_ac=`echo "($EVol_dec / $FineAshFrac)" | bc -l`
 EVol_dp=$EVol_dec
 
 # Remove the trailing zeros
+echo $EVol_ac  | awk ' sub("\\.*0+$","") ' > tmp.txt
+EVol_ac=`cat tmp.txt`
 echo $EVol_dp  | awk ' sub("\\.*0+$","") ' > tmp.txt
-EVol=`cat tmp.txt`
-#EVol=$EVol_dp
+EVol_dp=`cat tmp.txt`
+if test -r ash3d_input_ac.inp; then
+  EVol=${EVol_ac}
+ else
+  EVol=${EVol_dp}
+fi
 #If volume equals minimum threshold volume, add annotation
 EVol_int=`echo "$EVol * 10000" | bc -l | sed 's/\.[0-9]*//'`   #convert EVol to an integer
 if [ $EVol_int -eq 1 ] ; then
@@ -185,7 +191,7 @@ tmax=`ncdump     -h ${infile} | grep "t = UNLIMITED" | cut -c22-23` # maximum ti
 t0=`ncdump     -v t ${infile} | grep \ t\ = | cut -f4 -d" " | cut -f1 -d","`
 t1=`ncdump     -v t ${infile} | grep \ t\ = | cut -f5 -d" " | cut -f1 -d","`
 time_interval=`echo "($t1 - $t0)" |bc -l`
-iwindformat=`ncdump -h ${infile} |grep b3l1 | cut -f2 -d= | cut -f2 -d\" | tr -s " " | cut -f4 -d' '`
+iwindformat=`ncdump -h ${infile} |grep b3l1 | cut -f2 -d\" | cut -f1 -d# |  tr -s " " | cut -f3 -d' '`
 echo "windtime=$windtime"
 if [ ${iwindformat} -eq 25 ]; then
     windfile="NCEP reanalysis 2.5 degree"
@@ -529,9 +535,6 @@ do
         LLLAT=`cat legend_positions_ac.txt       | grep "latmin="     | awk '{print $2}'`
         URLAT=`cat legend_positions_ac.txt       | grep "latmin="     | awk '{print $4}'`
         DLAT=`echo "$URLAT - $LLLAT" | bc -l`
-        echo "captionx_UL=$captionx_UL, captiony_UL=$captiony_UL"
-        echo "legendx_UL=$legendx_UL, 'legendy_UL=$legendy_UL"
-        echo "LLLAT=$LLLAT, URLAT=$URLAT, DLAT=$DLAT"
          # depothick (trans);depotime;     Fin.Dep (in)
       elif [ $1 -eq 0 ] || [ $1 -eq 4 ] || [ $1 -eq 5 ] ; then
         echo "running legend_placer_dp"
@@ -593,6 +596,7 @@ convert \
     #${GMTpre[GMTv]} psbasemap $AREA $PROJ $SCALE1 -O -K >> temp.ps                      #add km scale bar in overlay
     #${GMTpre[GMTv]} psbasemap $AREA $PROJ $SCALE2 -O -K >> temp.ps                      #add mile scale bar in overlay
 
+    # Add scalebar
     if [ $1 -eq 1 ] ; then
         # cloud_concentration
         ${GMTpre[GMTv]} psscale -D1.25i/0.5i/2i/0.15ih -C$CPT -Q -B10f5/:"mg/m^3": -O -K >> temp.ps
@@ -620,7 +624,8 @@ EOF
         fi
       elif [ $1 -eq 3 ] ; then
         # cloud_load
-        ${GMTpre[GMTv]} psscale -D1.25i/0.5i/2i/0.15ih -C$CPT -Q -B10f5/:"g/m^2": -O -K >> temp.ps
+        #${GMTpre[GMTv]} psscale -D1.25i/0.5i/2i/0.15ih -C$CPT -Q -B10f5/:"g/m^2": -O -K >> temp.ps
+        ${GMTpre[GMTv]} psscale -D0.25i/1.15i/2i/0.15i -C$CPT -Q -B10f5/:"g/m^2": -O -K >> temp.ps
         if [ $GMTv -eq 4 ] ; then
             echo "writing CL.txt for GMT 4"
             cat << EOF > CL.txt
@@ -723,13 +728,13 @@ EOF
     convert temp.gif output_t${time}.gif
     if test -r official.txt; then
        convert -append -background white output_t${time}.gif \
-	           ${ASH3DSHARE_PP}/caveats_official.png output_t${time}.gif
+               ${ASH3DSHARE_PP}/caveats_official.png output_t${time}.gif
       else
        convert -append -background white output_t${time}.gif \
-	           ${ASH3DSHARE_PP}/caveats_notofficial.png output_t${time}.gif
+               ${ASH3DSHARE_PP}/caveats_notofficial.png output_t${time}.gif
     fi
     #composite -geometry +${vidx_UL}+${vidy_UL} ${ASH3DSHARE_PP}/USGSvid.png \
-	#           output_t${time}.gif
+    #           output_t${time}.gif
 done
 # End of time loop
 
@@ -812,7 +817,6 @@ echo "Eruption start time: "$year $month $day $hour
 echo "plume height (km) ="$EPlH
 echo "eruption duration (hrs) ="$EDur
 echo "erupted volume (km3 DRE) ="$EVol
-echo "all done"
 echo "++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
 echo "finished GMT_Ash3d_to_gif.sh $1 $var"
 echo `date`
