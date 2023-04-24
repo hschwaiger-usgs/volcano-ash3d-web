@@ -721,7 +721,8 @@ if [ "$CLEANFILES" == "T" ]; then
    echo "End of GMT_Ash3d_to_gif.sh: removing files."
    rm -f *.grd *.lev
    rm -f current_time.txt
-   rm -f caption.txt cities.xy map_range*txt legend_positions*txt
+   rm -f caption*.txt cities.xy map_range*txt legend_positions*txt
+   rm -f legend*png
    rm -f temp.*
    rm -f gmt.conf gmt.history
    rm -f world_cities.txt

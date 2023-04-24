@@ -354,8 +354,9 @@ mv temp.gif Hysplit_trajectory.gif
 
 # Clean up more temporary files
 if [ "$CLEANFILES" == "T" ]; then
-    rm map_range.txt legend_positions_ac.txt
-    rm temp.*
+   rm -f map_range.txt legend_positions_ac.txt
+   rm -f legend*png
+   rm -f temp.*
 fi
 
 echo "Eruption start time: "$year $month $day $hour

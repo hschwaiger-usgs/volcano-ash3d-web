@@ -306,9 +306,10 @@ done
 
 if [ "$CLEANFILES" == "T" ]; then
     # Clean up more temporary files
-    rm map_range.txt legend_positions_ac.txt
-    rm temp.* 
-    rm *.lev
+   rm -f map_range.txt legend_positions_ac.txt
+   rm -f legend*png
+   rm -f temp.* 
+   rm -f *.lev
 fi
 
 echo "combining gifs to  make animation"

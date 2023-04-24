@@ -339,10 +339,11 @@ mv temp.gif trajectory_${SUB}.gif
 # Clean up temporary files
 if [ "$CLEANFILES" == "T" ]; then
    rm -f *.grd *.lev
-   rm -f caption.txt cities.xy map_range*txt legend_positions*txt
+   rm -f caption*.txt cities.xy map_range*txt legend_positions*txt
    rm -f temp.* 
    rm -f gmt.conf gmt.history
    rm -f world_cities.txt
+   rm -f legend*png
 fi
 
 echo "Eruption start time: "$year $month $day $hour

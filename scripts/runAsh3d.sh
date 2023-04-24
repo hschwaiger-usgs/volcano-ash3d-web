@@ -237,17 +237,17 @@ if [[ "$rc" -gt 0 ]] ; then
     exit 1
 fi
 
-echo "zipping up kml files for preliminary Ash3d run"
-if test -r deposit_thickness_mm.kml; then
-    zip deposit_thickness_mm_prelim.kmz deposit_thickness_mm.kml
-fi
-if test -r CloudLoad.kml; then
-    zip CloudLoad_prelim.kmz CloudLoad.kml
-fi
+#echo "zipping up kml files for preliminary Ash3d run"
+#if test -r deposit_thickness_mm.kml; then
+#    zip deposit_thickness_mm_prelim.kmz deposit_thickness_mm.kml
+#fi
+#if test -r CloudLoad.kml; then
+#    zip CloudLoad_prelim.kmz CloudLoad.kml
+#fi
 
 if [ "$CLEANFILES" == "T" ]; then
     echo "removing kml files"
-    rm -f *.kml AshArrivalTimes.txt
+    rm -f *.kml *kmz AshArrivalTimes.txt
 fi
 
 echo "_______________________________________________________________________________"
@@ -360,6 +360,11 @@ else
    zip -r cloud_arrivaltimes_airports.kmz cloud_arrivaltimes_airports.kml
    rm cloud_arrivaltimes_airports.kml
 fi
+rc=$((rc + $?))
+if [[ "$rc" -gt 0 ]] ; then
+    echo "Error zipping output: rc=$rc"
+    exit 1
+fi
 
 #
 # Zip all kml files, make kmz files
@@ -373,11 +378,13 @@ do
     if [[ $? -ne 0 ]]; then
         echo "Error zipping file $file"
         rc=$((rc + 1))
+        exit 1
     fi
     rm "$file"
     if [[ $? -ne 0 ]]; then
         echo "Error removing extra file $file after zip"
         rc=$((rc + 1))
+        exit 1
     fi
 done
 
