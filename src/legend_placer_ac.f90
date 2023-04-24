@@ -44,7 +44,7 @@
       xleft_map       = 31.0_8               !x offset of left side of map
       xright_map      = 631.0_8-598.0_8      !x offset of right side of map from right side of image
       ybottom_map     = 545.0_8-462.0_8      !y offset of base of map from base of image
-      ytop_map        = 22.0_8               !y offset of top of map from top of image
+      ytop_map        = -120.0_8               !y offset of top of map from top of image
       caveats_height  = 91.0_8
 
       !open map_range.txt and read range of latitute, longitude

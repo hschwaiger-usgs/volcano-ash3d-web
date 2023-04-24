@@ -44,31 +44,14 @@ else
   RUNTYPE=${RT}
 fi
 echo "RUNTYPE = ${RUNTYPE}"
-CLEANFILES="F"
+CLEANFILES="T"
 USECONTAINERASH="F"
-USECONTAINERTRAJ="F"
-USECONTAINERHYSP="F"
-USECONTAINERPUFF="F"
-CONTAINEREXE="podman"
-CONTAINERRUNDIR="/run/user/1004/libpod/tmp"
 
 t0=`date -u`                                     # record start time
 rc=0                                             # error message accumulator
 
 HOST=`hostname | cut -c1-9`
 echo "HOST=$HOST"
-if [ "$USECONTAINERASH" == "T" ]; then
-  echo "Post processing scripts for Ash3d results will be run with containers via ${CONTAINEREXE}"
-fi
-if [ "$USECONTAINERTRAJ" == "T" ]; then
-  echo "Post processing scripts for traj results will be run with containers via ${CONTAINEREXE}"
-fi
-if [ "$USECONTAINERHYSP" == "T" ]; then
-  echo "Post processing scripts for Hysplit results will be run with containers via ${CONTAINEREXE}"
-fi
-if [ "$USECONTAINERPUFF" == "T" ]; then
-  echo "Post processing scripts for purr results will be run with containers via ${CONTAINEREXE}"
-fi
 
 USGSROOT="/opt/USGS"
 ASH3DROOT="${USGSROOT}/Ash3d"
@@ -312,26 +295,14 @@ if test -r ${USGSROOT}/bin/MetTraj_F; then
      else
       # Now post-processing ftraj*.dat
       # The map information is pulled from 3d_tephra_fall.nc from the preliminary run
-      if [ "$USECONTAINERTRAJ" == "T" ]; then
-          echo "  Running ${CONTAINEREXE} script (GFSVolc_to_gif_ac_traj.sh) to process traj results."
-          ${CONTAINEREXE} run --rm -v ${FULLRUNDIR}:${CONTAINERRUNDIR}:z \
-                          ash3dpp ${ASH3DSCRIPTDIR}/GFSVolc_to_gif_ac_traj.sh 0 ${CONTAINERRUNDIR}
-          rc=$((rc + $?))
-          if [[ "$rc" -gt 0 ]] ; then
-              echo "Error running ${CONTAINEREXE} ash3dpp GFSVolc_to_gif_ac_traj.sh: rc=$rc"
-              echo "No trajectory output produced; continuing with run script"
-              #exit 1
-          fi
-        else
-          echo "  Running installed script (GFSVolc_to_gif_ac_traj.sh) to process traj results."
-          ${ASH3DSCRIPTDIR}/GFSVolc_to_gif_ac_traj.sh 0
-          rc=$((rc + $?))
-          if [[ "$rc" -gt 0 ]] ; then
-              echo "Error running GFSVolc_to_gif_ac_traj.sh: rc=$rc"
-              echo "No trajectory output produced; continuing with run script"
-              #exit 1
-          fi
-      fi
+        echo "  Running installed script (GFSVolc_to_gif_ac_traj.sh) to process traj results."
+        ${ASH3DSCRIPTDIR}/GFSVolc_to_gif_ac_traj.sh 0
+        rc=$((rc + $?))
+        if [[ "$rc" -gt 0 ]] ; then
+            echo "Error running GFSVolc_to_gif_ac_traj.sh: rc=$rc"
+            echo "No trajectory output produced; continuing with run script"
+            #exit 1
+        fi
     fi
   else
      echo "${USGSROOT}/bin/MetTraj_F does not exist.  Skipping trajectory runs."
@@ -442,6 +413,11 @@ fi
 
 # Get time of completed Ash3d calculations
 t1=`date -u`
+rc=$((rc + $?))
+if [[ "$rc" -gt 0 ]] ; then
+    echo "Error just before post-processing $i: rc=$rc"
+    exit 1
+fi
 
 echo "*******************************************************************************"
 echo "POST-PROCESSING"
@@ -449,33 +425,21 @@ echo "**************************************************************************
 echo "Creating gif images from the standard Ash3d output file."
 for (( i=0;i<${nVARS};i++))
 do
+    # 0=depothick
+    # 1=ashcon_max
+    # 2=cloud_height
+    # 3=cloud_load
+    # 4=depotime
+    # 5=depothick final (inches)
+    # 6=depothick final (mm)
+    # 7=ash_arrival_time
     if [ "${plotvars[i]}" == "1" ]; then
-        if [ "$USECONTAINERASH" == "T" ]; then
-            #echo "  Running ${CONTAINEREXE} script (GFSVolc_to_gif_tvar.sh) to process cloud_load results."
-            #echo "${CONTAINEREXE} run --rm -v ${FULLRUNDIR}:${CONTAINERRUNDIR}:z ash3dpp ${ASH3DSCRIPTDIR}/GFSVolc_to_gif_tvar.sh 3 ${CONTAINERRUNDIR}"
-            #${CONTAINEREXE} run --rm -v ${FULLRUNDIR}:${CONTAINERRUNDIR}:z \
-            #                ash3dpp ${ASH3DSCRIPTDIR}/GFSVolc_to_gif_tvar.sh 3 ${CONTAINERRUNDIR}
-            echo "  Running ${CONTAINEREXE} script (GMT_Ash3d_to_gif.sh) to process ${var_n[i]} results."
-            echo "${CONTAINEREXE} run --rm -v ${FULLRUNDIR}:${CONTAINERRUNDIR}:z ash3dpp ${ASH3DSCRIPTDIR}/GMT_Ash3d_to_gif.sh $i ${CONTAINERRUNDIR}"
-            ${CONTAINEREXE} run --rm -v ${FULLRUNDIR}:${CONTAINERRUNDIR}:z \
-                            ash3dpp ${ASH3DSCRIPTDIR}/GMT_Ash3d_to_gif.sh $i ${CONTAINERRUNDIR}
-            rc=$((rc + $?))
-            if [[ "$rc" -gt 0 ]] ; then
-                #echo "Error running ${CONTAINEREXE} ash3dpp GFSVolc_to_gif_ac_tvar.sh $i: rc=$rc"
-                echo "Error running ${CONTAINEREXE} ash3dpp GMT_Ash3d_to_gif.sh $i: rc=$rc"
-                exit 1
-            fi
-          else
-            #echo "  Running installed script ${ASH3DSCRIPTDIR}/GFSVolc_to_gif_tvar.sh $i"
-            #${ASH3DSCRIPTDIR}/GFSVolc_to_gif_tvar.sh $i
-            echo "  Running installed script ${ASH3DSCRIPTDIR}/GMT_Ash3d_to_gif.sh $i"
-            ${ASH3DSCRIPTDIR}/GMT_Ash3d_to_gif.sh $i
-            rc=$((rc + $?))
-            if [[ "$rc" -gt 0 ]] ; then
-                #echo "Error running GFSVolc_to_gif_tvar.sh $i: rc=$rc"
-                echo "Error running GMT_Ash3d_to_gif.sh $i: rc=$rc"
-                exit 1
-            fi
+        echo "  Running installed script ${ASH3DSCRIPTDIR}/GMT_Ash3d_to_gif.sh $i"
+        ${ASH3DSCRIPTDIR}/GMT_Ash3d_to_gif.sh $i
+        rc=$((rc + $?))
+        if [[ "$rc" -gt 0 ]] ; then
+            echo "Error running GMT_Ash3d_to_gif.sh $i: rc=$rc"
+            exit 1
         fi
     fi
 done
@@ -497,95 +461,18 @@ fi
 # Recreating the trajectory plot (using previously calculated trajecties), but using
 # the consistant basemap
 if test -r ftraj1.dat; then
-    if [ "$USECONTAINERTRAJ" == "T" ]; then
-       echo "  Running ${CONTAINEREXE} script (GFSVolc_to_gif_ac_traj.sh) to process traj results."
-       ${CONTAINEREXE} run --rm -v ${FULLRUNDIR}:${CONTAINERRUNDIR}:z \
-                        ash3dpp ${ASH3DSCRIPTDIR}/GFSVolc_to_gif_ac_traj.sh 1 ${CONTAINERRUNDIR}
-        rc=$((rc + $?))
-        if [[ "$rc" -gt 0 ]] ; then
-            echo "Error running ${CONTAINEREXE} ash3dpp GFSVolc_to_gif_ac_traj.sh 1: rc=$rc"
-            echo "Skipping post-processing"
-            echo "No trajectory output produced; continuing with run script"
-            #exit 1
-        fi
-      else
-        echo "  Running installed script (GFSVolc_to_gif_ac_traj.sh) to process traj results."
-        ${ASH3DSCRIPTDIR}/GFSVolc_to_gif_ac_traj.sh 1
-        rc=$((rc + $?))
-        if [[ "$rc" -gt 0 ]] ; then
-            echo "Error running GFSVolc_to_gif_ac_traj.sh 1: rc=$rc"
-            echo "Skipping post-processing"
-            echo "No trajectory output produced; continuing with run script"
-            #exit 1
-        fi
+    echo "  Running installed script (GFSVolc_to_gif_ac_traj.sh) to process traj results."
+    ${ASH3DSCRIPTDIR}/GFSVolc_to_gif_ac_traj.sh 1
+    rc=$((rc + $?))
+    if [[ "$rc" -gt 0 ]] ; then
+        echo "Error running GFSVolc_to_gif_ac_traj.sh 1: rc=$rc"
+        echo "Skipping post-processing"
+        echo "No trajectory output produced; continuing with run script"
+        #exit 1
     fi
   else
     echo "skipping trajectory plots: no traj files exist in this directory."
 fi
-
-echo "-------------------------------------------------------------------------------"
-echo "Checking if we need to process extra output products for dashboard cases (Hysplit,puff)"
-if [[ $DASHBOARD_RUN == T* ]] ; then
-    echo "Now creating gif images of the hysplit run"
-    if [ "$USECONTAINERHYSP" == "T" ]; then
-        echo "Running ${CONTAINEREXE} image of GFSVolc_to_gif_ac_hysplit.sh"
-        #${CONTAINEREXE} run --rm -v ${FULLRUNDIR}:${CONTAINERRUNDIR}:z \
-        #                ash3dpp /opt/USGS/Ash3d/bin/scripts/GFSVolc_to_gif_ac_hysplit.sh ${CONTAINERRUNDIR}
-        #rc=$((rc + $?))
-        #if [[ "$rc" -gt 0 ]] ; then
-        #    echo "Error running ${CONTAINEREXE} ash3dpp GFSVolc_to_gif_ac_hysplit.sh: rc=$rc"
-        #    exit 1
-        #fi
-      else
-        echo "Running GFSVolc_to_gif_ac_hysplit.sh"
-        #${ASH3DSCRIPTDIR}/GFSVolc_to_gif_ac_hysplit.sh
-        #rc=$((rc + $?))
-        #if [[ "$rc" -gt 0 ]] ; then
-        #    echo "Error running GFSVolc_to_gif_ac_hysplit.sh: rc=$rc"
-        #    exit 1
-        #fi
-    fi
-
-    # HFS: add check here to verify GFS is being used, that
-    #      puff is installed and puff windfiles are available
-    # Run the puff model with the parameters in the simple input file
-    if [ "$USECONTAINERPUFF" == "T" ]; then
-        echo "  Running ${CONTAINEREXE} script (runPuff.sh) for puff" 
-        ${CONTAINEREXE} run --rm -v /data/WindFiles:/home/ash3d/www/html/puff/data:z \
-                                 -v ${FULLRUNDIR}:${CONTAINERRUNDIR}:z \
-                        puffapp ${ASH3DSCRIPTDIR}/runPuff.sh ${CONTAINERRUNDIR}
-        rc=$((rc + $?))
-        if [[ "$rc" -gt 0 ]] ; then
-            echo "Error running ${CONTAINEREXE} puffapp runPuff.sh: rc=$rc"
-            exit 1
-        fi
-        echo "  Running ${CONTAINEREXE} script (GFSVolc_to_gif_ac_puff.sh) for puff results."
-        ${CONTAINEREXE} run --rm -v ${FULLRUNDIR}:${CONTAINERRUNDIR}:z \
-                        ash3dpp ${ASH3DSCRIPTDIR}/GFSVolc_to_gif_ac_puff.sh ${CONTAINERRUNDIR}
-        rc=$((rc + $?))
-        if [[ "$rc" -gt 0 ]] ; then
-            echo "Error running ${CONTAINEREXE} ash3dpp GFSVolc_to_gif_ac_puff.sh: rc=$rc"
-            exit 1
-        fi
-      else
-        echo "Calling runPuff.sh"
-        ${ASH3DSCRIPTDIR}/runPuff.sh
-        rc=$((rc + $?))
-        if [[ "$rc" -gt 0 ]] ; then
-            echo "Error running runPuff.sh: rc=$rc"
-            echo "Reseting error count and moving on"
-            rc=0
-          else
-            echo "Now creating gif images of puff run"
-            ${ASH3DSCRIPTDIR}/GFSVolc_to_gif_ac_puff.sh
-            rc=$((rc + $?))
-            if [[ "$rc" -gt 0 ]] ; then
-                echo "Error running GFSVolc_to_gif_ac_puff.sh: rc=$rc"
-            fi
-        fi
-    fi
-fi
-echo "Finished supplemental output for AVO dashboard, if needed."
 echo "-------------------------------------------------------------------------------"
 
 #

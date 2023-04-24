@@ -57,7 +57,7 @@
       xleft_map       = 31.0_8               !x offset of left side of map
       xright_map      = 631.0_8-598.0_8      !x offset of right side of map from right side of image
       ybottom_map     = 545.0_8-462.0_8      !y offset of base of map from base of image
-      ytop_map        = 22.0_8               !y offset of top of map from top of image
+      ytop_map        = -120.0_8               !y offset of top of map from top of image
       caveats_height  = 91.0_8
 
       !set overlap booleans
@@ -80,7 +80,7 @@
         stop 1
       endif
       open(unit=10,file='map_range.txt')
-      read(10,*) lonmin, lonmax, latmin, latmax, vclon, vclat
+      read(10,*,err=3001) lonmin, lonmax, latmin, latmax, vclon, vclat
       close(10)
       lonmin_rad = lonmin*pi/180.0_8
       lonmax_rad = lonmax*pi/180.0_8
@@ -180,18 +180,20 @@
       open(unit=12,file='contourfile_0.1_0_i.xyz',status='old',err=200)  !file name if it's a closed contour
       write(6,*) '   opening contourfile_0.1_0_i.xyz'
       goto 240
-200   write(6,*) 'Couldnt find   contourfile_0.1_0_i.xyz'
+200   write(6,*) 'Could not find contourfile_0.1_0_i.xyz'
       write(6,*) 'trying to open contourfile_0.1_0.xyz'
       open(unit=12,file='contourfile_0.1_0.xyz',status='old',err=250)    !file name if it's not
       write(6,*) '   opening contourfile_0.1_0.xyz'
-240   do while (Iostatus.ge.0)
+
+240   read(12,'(a80)',IOSTAT=Iostatus) inputline
+      do while (Iostatus.ge.0)
         !Read in latitude & longitude
-        read(12,'(a80)',IOSTAT=Iostatus) inputline
+        !read(12,'(a80)',IOSTAT=Iostatus) inputline
         read(inputline,'(a1)') test_char
         if(test_char.eq.'>')then
           read(12,'(a80)',IOSTAT=Iostatus) inputline
         endif
-        read(inputline,*) lon_now, lat_now
+        read(inputline,*,err=3010) lon_now, lat_now
         !Adjust longitude if the region crosses the antimeridian
         !if ((wrap_lon.eqv..true.).and.(lon_now.lt.0.)) lon_now=lon_now+360.
         if ((lonmax.gt.180.0_8).and.(lon_now.lt.0.0_8)) lon_now=lon_now+360.0_8
@@ -202,6 +204,7 @@
         if  ((lon_now>legend2x_LL_alt) .and.(lat_now>legend2y_LL_alt))  legend2_alt_overlaps =.true.
         if (((lon_now>legend2x_UL_alt2).and.(lat_now<legend2y_UL_alt2)).and. &
             ((lon_now>legend2x_LL_alt2).and.(lat_now>legend2y_LL_alt2)))legend2_alt2_overlaps=.true.
+        read(12,'(a80)',IOSTAT=Iostatus) inputline
       enddo
       close(12)
 
@@ -217,7 +220,7 @@
         if(test_char.eq.'>')then
           read(13,'(a80)',IOSTAT=Iostatus) inputline
         endif
-        read(inputline,*) lon_now, lat_now
+        read(inputline,*,err=3015) lon_now, lat_now
         !Adjust for regions that cross the antimeridian
         !if ((wrap_lon.eqv..true.).and.(lon_now.lt.0.)) lon_now=lon_now+360.
         if ((lonmax.gt.180.0_8).and.(lon_now.lt.0.0_8)) lon_now=lon_now+360.0_8
@@ -242,7 +245,7 @@
         if(test_char.eq.'>')then
           read(14,'(a80)',IOSTAT=Iostatus) inputline
         endif
-        read(inputline,*) lon_now, lat_now
+        read(inputline,*,err=3020) lon_now, lat_now
         !Adjust for regions that cross the antimeridian
         !if ((wrap_lon.eqv..true.).and.(lon_now.lt.0.)) lon_now=lon_now+360.
         if ((lonmax.gt.180.0_8).and.(lon_now.lt.0.0_8)) lon_now=lon_now+360.0_8
@@ -332,6 +335,22 @@
       !error trap if there is no contour_0.1_0_i.xyz file
 250   write(6,*) 'error opening contourfile_0.1_0_i.xyz'
       goto 350
+
+3001  write(6,*) 'error reading map_range.txt'
+      stop 1
+
+3010  write(6,*) 'error reading lat and lon from contour file 1'
+      write(6,*)inputline
+      stop 1
+
+3015  write(6,*) 'error reading lat and lon from contour file 2'
+      write(6,*)inputline
+      stop 1
+
+3020  write(6,*) 'error reading lat and lon from contour file 3'
+      write(6,*)inputline
+      stop 1
+
 
       end program legend_placer_dp
   
