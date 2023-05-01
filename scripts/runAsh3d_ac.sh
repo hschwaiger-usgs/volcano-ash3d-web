@@ -40,7 +40,7 @@ echo "------------------------------------------------------------"
 #                        ACL = Ash Cloud
 RUNTYPE="ACL"
 echo "RUNTYPE = ${RUNTYPE}"
-CLEANFILES="F"
+CLEANFILES="T"
 USECONTAINERASH="F"
 USECONTAINERTRAJ="F"
 USECONTAINERHYSP="F"

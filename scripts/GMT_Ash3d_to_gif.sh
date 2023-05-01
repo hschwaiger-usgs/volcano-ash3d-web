@@ -195,8 +195,9 @@ tmax=`ncdump     -h ${infile} | grep "t = UNLIMITED" | cut -c22-23` # maximum ti
 t0=`ncdump     -v t ${infile} | grep \ t\ = | cut -f4 -d" " | cut -f1 -d","`
 t1=`ncdump     -v t ${infile} | grep \ t\ = | cut -f5 -d" " | cut -f1 -d","`
 time_interval=`echo "($t1 - $t0)" |bc -l`
-iwindformat=`ncdump -h ${infile} |grep b3l1 | cut -f2 -d\" | cut -f1 -d# |  tr -s " " | cut -f3 -d' '`
+iwindformat=`ncdump -h ${infile} |grep b3l1 | cut -f2 -d\" | cut -f1 -d# |  tr -s " " | cut -f2 -d' '`
 echo "windtime=$windtime"
+echo "iwindformat=$iwindformat"
 if [ ${iwindformat} -eq 25 ]; then
     windfile="NCEP reanalysis 2.5 degree"
   else
@@ -230,12 +231,12 @@ if [ $1 -eq 0 ] || [ $1 -eq 1 ] || [ $1 -eq 2 ] || [ $1 -eq 3 ] ; then
     #${GMTpre[GMTv]} grdmath 0.0 zero.grd MUL = zero.grd
     ${GMTpre[GMTv]} ${GMTrgr[GMTv]} "$infile?$var[$t]" var_out_final.grd
     ${GMTpre[GMTv]} grdmath var_out_final.grd zero.grd AND = var_out_final.grd
+
      #   depotime;       ash_arrival_time
   elif [ $1 -eq 4 ] || [ $1 -eq 7 ] ; then
     ${GMTpre[GMTv]} ${GMTrgr[GMTv]} "$infile?$var" var_out_final.grd
 fi
 echo "Finished generating all the grd files"
-
 ###############################################################################
 ##  Now make the maps
 #get latitude & longitude range
@@ -423,7 +424,7 @@ do
          #    depotime;       ash_arrival_time
     elif [ $1 -eq 4 ] || [ $1 -eq 7 ] ; then
         echo "Plotting contours (var = $1) for step = $t"
-        ${GMTpre[GMTv]} grdimage ${GMTnan[GMTv]} var_out_final.grd -C$CPTft $AREA $PROJ $BASE -K -O >> temp.ps
+        ${GMTpre[GMTv]} grdimage ${GMTnan[GMTv]} var_out_final.grd -C$CPT $AREA $PROJ $BASE -K -O >> temp.ps
 
     elif [ $1 -eq 6 ] ; then
         #6=depothick final (mm)

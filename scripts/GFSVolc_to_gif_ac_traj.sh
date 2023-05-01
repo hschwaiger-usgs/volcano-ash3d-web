@@ -176,7 +176,9 @@ EPlH=`ncdump -v er_plumeheight ${infile} | grep er_plumeheight | grep "=" | \
 #fi
 
 windtime=`ncdump -h ${infile} | grep NWPStartTime | cut -c20-39`
-iwindformat=`ncdump -h ${infile} |grep b3l1 | cut -f2 -d\" | cut -f1 -d# |  tr -s " " | cut -f3 -d' '`
+iwindformat=`ncdump -h ${infile} |grep b3l1 | cut -f2 -d\" | cut -f1 -d# |  tr -s " " | cut -f2 -d' '`
+echo "windtime=$windtime"
+echo "iwindformat=$iwindformat"
 if [ ${iwindformat} -eq 25 ]; then
      windfile="NCEP reanalysis 2.5 degree"
   else
