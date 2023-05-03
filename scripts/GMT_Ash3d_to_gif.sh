@@ -74,10 +74,6 @@ if [ $GMTv -eq 4 ] ; then
  else
     GMTv=`gmt --version | cut -c1`
 fi
-GMTpre=("-" "-" "-" "-" " "   "gmt " "gmt ")
-GMTelp=("-" "-" "-" "-" "ELLIPSOID" "PROJ_ELLIPSOID" "PROJ_ELLIPSOID")
-GMTnan=("-" "-" "-" "-" "-Ts" "-Q" "-Q")
-GMTrgr=("-" "-" "-" "-" "grdreformat" "grdconvert" "grdconvert")
 GMTpen=("-" "-" "-" "-" "/" ",")
 echo "GMT version = ${GMTv}"
 
@@ -208,8 +204,8 @@ echo "Finished probing output file for run information"
 
 #******************************************************************************
 #EXTRACT INFORMATION ABOUT THE REQUESTED VARIABLE
-${GMTpre[GMTv]} ${GMTrgr[GMTv]} "$infile?area" zero.grd
-${GMTpre[GMTv]} grdmath 0.0 zero.grd MUL = zero.grd
+gmt grdconvert "$infile?area" zero.grd
+gmt grdmath 0.0 zero.grd MUL = zero.grd
 echo "Extracting ${var} information from ${infile} for each time step."
 # depothick (trans); ashcon_max;     cloud_height;   cloud_load;
 if [ $1 -eq 0 ] || [ $1 -eq 1 ] || [ $1 -eq 2 ] || [ $1 -eq 3 ] ; then
@@ -217,9 +213,9 @@ if [ $1 -eq 0 ] || [ $1 -eq 1 ] || [ $1 -eq 2 ] || [ $1 -eq 3 ] ; then
     do
       time=`echo "${t0} + ${t} * ${time_interval}" | bc -l`
       echo "   ${volc} : Generating ash grids for time = " ${time}
-      ${GMTpre[GMTv]} ${GMTrgr[GMTv]} "$infile?$var[$t]" var_out_t${time}.grd
+      gmt grdconvert "$infile?$var[$t]" var_out_t${time}.grd
       if [ $1 -eq 0 ]; then
-        ${GMTpre[GMTv]} grdmath var_out_t${time}.grd zero.grd AND = var_out_t${time}.grd
+        gmt grdmath var_out_t${time}.grd zero.grd AND = var_out_t${time}.grd
       fi
     done  # end of time loop
 
@@ -227,14 +223,12 @@ if [ $1 -eq 0 ] || [ $1 -eq 1 ] || [ $1 -eq 2 ] || [ $1 -eq 3 ] ; then
   elif [ $1 -eq 5 ] || [ $1 -eq 6 ] ; then
     t=$((tmax-1))
     # We need to convert the NaN's to zero to get the lowest contour
-    #${GMTpre[GMTv]} ${GMTrgr[GMTv]} "$infile?area" zero.grd
-    #${GMTpre[GMTv]} grdmath 0.0 zero.grd MUL = zero.grd
-    ${GMTpre[GMTv]} ${GMTrgr[GMTv]} "$infile?$var[$t]" var_out_final.grd
-    ${GMTpre[GMTv]} grdmath var_out_final.grd zero.grd AND = var_out_final.grd
+    gmt grdconvert "$infile?$var[$t]" var_out_final.grd
+    gmt grdmath var_out_final.grd zero.grd AND = var_out_final.grd
 
      #   depotime;       ash_arrival_time
   elif [ $1 -eq 4 ] || [ $1 -eq 7 ] ; then
-    ${GMTpre[GMTv]} ${GMTrgr[GMTv]} "$infile?$var" var_out_final.grd
+    gmt grdconvert "$infile?$var" var_out_final.grd
 fi
 echo "Finished generating all the grd files"
 ###############################################################################
@@ -295,7 +289,7 @@ do
     # Set up some default values
     # Projected wind data assumes sphere with radius 6371.229 km
     # GMT's sperical ellipsoid assume a radius of    6371.008771 km
-    ${GMTpre[GMTv]} gmtset ${GMTelp[GMTv]} Sphere
+    gmt gmtset PROJ_ELLIPSOID Sphere
 
     #set mapping parameters
     DLON_INT="$(echo $DLON | sed 's/\.[0-9]*//')"  #convert DLON to an integer
@@ -356,17 +350,17 @@ do
     if [ $1 -eq 4 ] || [ $1 -eq 5 ] || [ $1 -eq 6 ] || [ $1 -eq 7 ] ; then
         #  For final times or non-time-series, plot rivers as well
         echo "Starting base map for final/non-time-series plot"
-        ${GMTpre[GMTv]} pscoast $AREA $PROJ $BASE $DETAIL $COAST $BOUNDARIES $RIVERS -K  > temp.ps
+        gmt pscoast $AREA $PROJ $BASE $DETAIL $COAST $BOUNDARIES $RIVERS -K  > temp.ps
       else
         # For normal time-series variables, assume plot is too big to include rivers
         echo "Starting base map for time-series plot"
-        echo "${GMTpre[GMTv]} pscoast $AREA $PROJ $BASE $DETAIL $COAST $BOUNDARIES -K  > temp.ps"
-        ${GMTpre[GMTv]} pscoast $AREA $PROJ $BASE $DETAIL $COAST $BOUNDARIES -K  > temp.ps
-        ${GMTpre[GMTv]} psxy VAAC_Anchorage.xy   $AREA $PROJ -P -A -K -O -W1p,gray -V >> temp.ps
-        ${GMTpre[GMTv]} psxy VAAC_Montreal.xy    $AREA $PROJ -P -A -K -O -W1p,gray -V >> temp.ps
-        ${GMTpre[GMTv]} psxy VAAC_Washington.xy  $AREA $PROJ -P -A -K -O -W1p,gray -V >> temp.ps
-        ${GMTpre[GMTv]} psxy VAAC_Washington.xy  $AREA $PROJ -P -A -K -O -W1p,gray -V >> temp.ps
-        ${GMTpre[GMTv]} psxy VAAC_BuenosAires.xy $AREA $PROJ -P -A -K -O -W1p,gray -V >> temp.ps
+        echo "gmt pscoast $AREA $PROJ $BASE $DETAIL $COAST $BOUNDARIES -K  > temp.ps"
+        gmt pscoast $AREA $PROJ $BASE $DETAIL $COAST $BOUNDARIES -K  > temp.ps
+        gmt psxy VAAC_Anchorage.xy   $AREA $PROJ -P -A -K -O -W1p,gray -V >> temp.ps
+        gmt psxy VAAC_Montreal.xy    $AREA $PROJ -P -A -K -O -W1p,gray -V >> temp.ps
+        gmt psxy VAAC_Washington.xy  $AREA $PROJ -P -A -K -O -W1p,gray -V >> temp.ps
+        gmt psxy VAAC_Washington.xy  $AREA $PROJ -P -A -K -O -W1p,gray -V >> temp.ps
+        gmt psxy VAAC_BuenosAires.xy $AREA $PROJ -P -A -K -O -W1p,gray -V >> temp.ps
     fi
 
     ##################
@@ -383,12 +377,12 @@ do
         echo "Plotting contours (var = $1) for step = $t"
         #0=depothick or 5=depothick final (NWS)
         # GMT v5/6 writes contour files as a separate step from drawing and writes all segments to one file
-        echo "${GMTpre[GMTv]} grdcontour ${dep_grd}   $AREA $PROJ $BASE -Cdp_0.1.lev -A- -W3,255/0/0   -Dcontourfile_0.1_0_i.xyz"
-        ${GMTpre[GMTv]} grdcontour ${dep_grd} $AREA $PROJ $BASE -Cdp_0.1.lev -A- -W3,255/0/0   -Dcontourfile_0.1_0_i.xyz
-        ${GMTpre[GMTv]} grdcontour ${dep_grd} $AREA $PROJ $BASE -Cdp_0.8.lev -A- -W3,0/0/255   -Dcontourfile_0.8_0_i.xyz
-        ${GMTpre[GMTv]} grdcontour ${dep_grd} $AREA $PROJ $BASE -Cdp_6.lev   -A- -W3,0/183/255 -Dcontourfile_6.0_0_i.xyz
-        ${GMTpre[GMTv]} grdcontour ${dep_grd} $AREA $PROJ $BASE -Cdp_25.lev  -A- -W3,255/0/255 -Dcontourfile_25_0_i.xyz
-        ${GMTpre[GMTv]} grdcontour ${dep_grd} $AREA $PROJ $BASE -Cdp_100.lev -A- -W3,0/51/51   -Dcontourfile_100_0_i.xyz
+        echo "gmt grdcontour ${dep_grd}   $AREA $PROJ $BASE -Cdp_0.1.lev -A- -W3,255/0/0   -Dcontourfile_0.1_0_i.xyz"
+        gmt grdcontour ${dep_grd} $AREA $PROJ $BASE -Cdp_0.1.lev -A- -W3,255/0/0   -Dcontourfile_0.1_0_i.xyz
+        gmt grdcontour ${dep_grd} $AREA $PROJ $BASE -Cdp_0.8.lev -A- -W3,0/0/255   -Dcontourfile_0.8_0_i.xyz
+        gmt grdcontour ${dep_grd} $AREA $PROJ $BASE -Cdp_6.lev   -A- -W3,0/183/255 -Dcontourfile_6.0_0_i.xyz
+        gmt grdcontour ${dep_grd} $AREA $PROJ $BASE -Cdp_25.lev  -A- -W3,255/0/255 -Dcontourfile_25_0_i.xyz
+        gmt grdcontour ${dep_grd} $AREA $PROJ $BASE -Cdp_100.lev -A- -W3,0/51/51   -Dcontourfile_100_0_i.xyz
        
         # GMT v5/6 adds a header line to these files.  First double-check that the header is present, then remove it.
         testchar=`head -1 contourfile_0.1_0_i.xyz | cut -c1`
@@ -405,41 +399,41 @@ do
           mv temp.xyz contourfile_100_0_i.xyz
         fi
         
-        ${GMTpre[GMTv]} grdcontour ${dep_grd} $AREA $PROJ $BASE -Cdp_0.1.lev -A- -W3,255/0/0     -O -K >> temp.ps
-        ${GMTpre[GMTv]} grdcontour ${dep_grd} $AREA $PROJ $BASE -Cdp_0.8.lev -A- -W3,0/0/255     -O -K >> temp.ps
-        ${GMTpre[GMTv]} grdcontour ${dep_grd} $AREA $PROJ $BASE -Cdp_6.lev   -A- -W3,0/183/255   -O -K >> temp.ps
-        ${GMTpre[GMTv]} grdcontour ${dep_grd} $AREA $PROJ $BASE -Cdp_25.lev  -A- -W3,255/0/255   -O -K >> temp.ps
-        ${GMTpre[GMTv]} grdcontour ${dep_grd} $AREA $PROJ $BASE -Cdp_100.lev -A- -W3,0/51/51     -O -K >> temp.ps
+        gmt grdcontour ${dep_grd} $AREA $PROJ $BASE -Cdp_0.1.lev -A- -W3,255/0/0     -O -K >> temp.ps
+        gmt grdcontour ${dep_grd} $AREA $PROJ $BASE -Cdp_0.8.lev -A- -W3,0/0/255     -O -K >> temp.ps
+        gmt grdcontour ${dep_grd} $AREA $PROJ $BASE -Cdp_6.lev   -A- -W3,0/183/255   -O -K >> temp.ps
+        gmt grdcontour ${dep_grd} $AREA $PROJ $BASE -Cdp_25.lev  -A- -W3,255/0/255   -O -K >> temp.ps
+        gmt grdcontour ${dep_grd} $AREA $PROJ $BASE -Cdp_100.lev -A- -W3,0/51/51     -O -K >> temp.ps
 
          #   ashcon_max;     cloud_load
     elif [ $1 -eq 1 ] || [ $1 -eq 3 ] ; then
         echo "Plotting contours (var = $1) for step = $t"
-        ${GMTpre[GMTv]} grdimage ${GMTnan[GMTv]} var_out_t${time}.grd -C$CPT $AREA $PROJ $BASE -K -O >> temp.ps
+        gmt grdimage -Q var_out_t${time}.grd -C$CPT $AREA $PROJ $BASE -K -O >> temp.ps
 
          #   cloud_height
     elif [ $1 -eq 2 ] ; then
         echo "Plotting contours (var = $1) for step = $t"
-        ${GMTpre[GMTv]} grdimage ${GMTnan[GMTv]} var_out_t${time}.grd -C$CPTft $AREA $PROJ $BASE -K -O >> temp.ps
+        gmt grdimage -Q var_out_t${time}.grd -C$CPTft $AREA $PROJ $BASE -K -O >> temp.ps
       
          #    depotime;       ash_arrival_time
     elif [ $1 -eq 4 ] || [ $1 -eq 7 ] ; then
         echo "Plotting contours (var = $1) for step = $t"
-        ${GMTpre[GMTv]} grdimage ${GMTnan[GMTv]} var_out_final.grd -C$CPT $AREA $PROJ $BASE -K -O >> temp.ps
+        gmt grdimage -Q var_out_final.grd -C$CPT $AREA $PROJ $BASE -K -O >> temp.ps
 
     elif [ $1 -eq 6 ] ; then
         #6=depothick final (mm)
         echo "Plotting contours (var = $1) for step = $t"
         # GMT v5 [GMTv]writes contour files as a separate step from drawing and writes all segments to one file
-        ${GMTpre[GMTv]} grdcontour ${dep_grd} $AREA $PROJ $BASE -Cdpm_0.01.lev -A- -W3,214/222/105 -Dcontourfile_0.01_0_i.xyz
-        ${GMTpre[GMTv]} grdcontour ${dep_grd} $AREA $PROJ $BASE -Cdpm_0.03.lev -A- -W3,249/167/113 -Dcontourfile_0.03_0_i.xyz
-        ${GMTpre[GMTv]} grdcontour ${dep_grd} $AREA $PROJ $BASE -Cdpm_0.1.lev  -A- -W3,128/0/128   -Dcontourfile_0.1_0_i.xyz
-        ${GMTpre[GMTv]} grdcontour ${dep_grd} $AREA $PROJ $BASE -Cdpm_0.3.lev  -A- -W3,0/0/255     -Dcontourfile_0.3_0_i.xyz
-        ${GMTpre[GMTv]} grdcontour ${dep_grd} $AREA $PROJ $BASE -Cdpm_1.lev    -A- -W3,0/128/255   -Dcontourfile_1_0_i.xyz
-        ${GMTpre[GMTv]} grdcontour ${dep_grd} $AREA $PROJ $BASE -Cdpm_3.lev    -A- -W3,0/255/128   -Dcontourfile_3_0_i.xyz
-        ${GMTpre[GMTv]} grdcontour ${dep_grd} $AREA $PROJ $BASE -Cdpm_10.lev   -A- -W3,195/195/0   -Dcontourfile_10_0_i.xyz
-        ${GMTpre[GMTv]} grdcontour ${dep_grd} $AREA $PROJ $BASE -Cdpm_30.lev   -A- -W3,255/128/0   -Dcontourfile_30_0_i.xyz
-        ${GMTpre[GMTv]} grdcontour ${dep_grd} $AREA $PROJ $BASE -Cdpm_100.lev  -A- -W3,255/0/0     -Dcontourfile_100_0_i.xyz
-        ${GMTpre[GMTv]} grdcontour ${dep_grd} $AREA $PROJ $BASE -Cdpm_300.lev  -A- -W3,128/0/0     -Dcontourfile_3000_0_i.xyz
+        gmt grdcontour ${dep_grd} $AREA $PROJ $BASE -Cdpm_0.01.lev -A- -W3,214/222/105 -Dcontourfile_0.01_0_i.xyz
+        gmt grdcontour ${dep_grd} $AREA $PROJ $BASE -Cdpm_0.03.lev -A- -W3,249/167/113 -Dcontourfile_0.03_0_i.xyz
+        gmt grdcontour ${dep_grd} $AREA $PROJ $BASE -Cdpm_0.1.lev  -A- -W3,128/0/128   -Dcontourfile_0.1_0_i.xyz
+        gmt grdcontour ${dep_grd} $AREA $PROJ $BASE -Cdpm_0.3.lev  -A- -W3,0/0/255     -Dcontourfile_0.3_0_i.xyz
+        gmt grdcontour ${dep_grd} $AREA $PROJ $BASE -Cdpm_1.lev    -A- -W3,0/128/255   -Dcontourfile_1_0_i.xyz
+        gmt grdcontour ${dep_grd} $AREA $PROJ $BASE -Cdpm_3.lev    -A- -W3,0/255/128   -Dcontourfile_3_0_i.xyz
+        gmt grdcontour ${dep_grd} $AREA $PROJ $BASE -Cdpm_10.lev   -A- -W3,195/195/0   -Dcontourfile_10_0_i.xyz
+        gmt grdcontour ${dep_grd} $AREA $PROJ $BASE -Cdpm_30.lev   -A- -W3,255/128/0   -Dcontourfile_30_0_i.xyz
+        gmt grdcontour ${dep_grd} $AREA $PROJ $BASE -Cdpm_100.lev  -A- -W3,255/0/0     -Dcontourfile_100_0_i.xyz
+        gmt grdcontour ${dep_grd} $AREA $PROJ $BASE -Cdpm_300.lev  -A- -W3,128/0/0     -Dcontourfile_3000_0_i.xyz
 
         # GMT v5 adds a header line to these files.  First double-check that the header is present, then remove it.
         testchar=`head -1 contourfile_0.1_0_i.xyz | cut -c1`
@@ -466,16 +460,16 @@ do
           mv temp.xyz contourfile_3000_0_i.xyz
         fi
         
-        ${GMTpre[GMTv]} grdcontour ${dep_grd}   $AREA $PROJ $BASE -Cdpm_0.01.lev -A- -W3,214/222/105   -O -K >> temp.ps
-        ${GMTpre[GMTv]} grdcontour ${dep_grd}   $AREA $PROJ $BASE -Cdpm_0.03.lev -A- -W3,249/167/113   -O -K >> temp.ps
-        ${GMTpre[GMTv]} grdcontour ${dep_grd}   $AREA $PROJ $BASE -Cdpm_0.1.lev  -A- -W3,128/0/128   -O -K >> temp.ps
-        ${GMTpre[GMTv]} grdcontour ${dep_grd}   $AREA $PROJ $BASE -Cdpm_0.3.lev  -A- -W3,0/0/255     -O -K >> temp.ps
-        ${GMTpre[GMTv]} grdcontour ${dep_grd}   $AREA $PROJ $BASE -Cdpm_1.lev    -A- -W3,0/128/255   -O -K >> temp.ps
-        ${GMTpre[GMTv]} grdcontour ${dep_grd}   $AREA $PROJ $BASE -Cdpm_3.lev    -A- -W3,0/255/128   -O -K >> temp.ps
-        ${GMTpre[GMTv]} grdcontour ${dep_grd}   $AREA $PROJ $BASE -Cdpm_10.lev   -A- -W3,195/195/0   -O -K >> temp.ps
-        ${GMTpre[GMTv]} grdcontour ${dep_grd}   $AREA $PROJ $BASE -Cdpm_30.lev   -A- -W3,255/128/0   -O -K >> temp.ps
-        ${GMTpre[GMTv]} grdcontour ${dep_grd}   $AREA $PROJ $BASE -Cdpm_100.lev  -A- -W3,255/0/0     -O -K >> temp.ps
-        ${GMTpre[GMTv]} grdcontour ${dep_grd}   $AREA $PROJ $BASE -Cdpm_300.lev  -A- -W3,128/0/0     -O -K >> temp.ps
+        gmt grdcontour ${dep_grd}   $AREA $PROJ $BASE -Cdpm_0.01.lev -A- -W3,214/222/105   -O -K >> temp.ps
+        gmt grdcontour ${dep_grd}   $AREA $PROJ $BASE -Cdpm_0.03.lev -A- -W3,249/167/113   -O -K >> temp.ps
+        gmt grdcontour ${dep_grd}   $AREA $PROJ $BASE -Cdpm_0.1.lev  -A- -W3,128/0/128   -O -K >> temp.ps
+        gmt grdcontour ${dep_grd}   $AREA $PROJ $BASE -Cdpm_0.3.lev  -A- -W3,0/0/255     -O -K >> temp.ps
+        gmt grdcontour ${dep_grd}   $AREA $PROJ $BASE -Cdpm_1.lev    -A- -W3,0/128/255   -O -K >> temp.ps
+        gmt grdcontour ${dep_grd}   $AREA $PROJ $BASE -Cdpm_3.lev    -A- -W3,0/255/128   -O -K >> temp.ps
+        gmt grdcontour ${dep_grd}   $AREA $PROJ $BASE -Cdpm_10.lev   -A- -W3,195/195/0   -O -K >> temp.ps
+        gmt grdcontour ${dep_grd}   $AREA $PROJ $BASE -Cdpm_30.lev   -A- -W3,255/128/0   -O -K >> temp.ps
+        gmt grdcontour ${dep_grd}   $AREA $PROJ $BASE -Cdpm_100.lev  -A- -W3,255/0/0     -O -K >> temp.ps
+        gmt grdcontour ${dep_grd}   $AREA $PROJ $BASE -Cdpm_300.lev  -A- -W3,128/0/0     -O -K >> temp.ps
     else
         echo $1
         echo "I don't know which variable to plot"
@@ -546,49 +540,49 @@ convert \
         # Add a condition to plot roads if you'd like
         #tstvolc=`ncdump -h ${infile} | grep b1l1 | cut -d\" -f2 | cut -c1-7`
         #if [ "${tstvolc}" = "Kilauea" ] ; then
-        #    ${GMTpre[GMTv]} psxy $AREA $PROJ -m ${ASH3DSHARE_PP}/roadtrl020.gmt -W0.25p,red -O -K >> temp.ps
+        #    gmt psxy $AREA $PROJ -m ${ASH3DSHARE_PP}/roadtrl020.gmt -W0.25p,red -O -K >> temp.ps
         #fi
-        ${GMTpre[GMTv]} psxy cities.xy $AREA $PROJ -Sc0.05i -Gblack -Wthinnest -V -O -K >> temp.ps
-        ${GMTpre[GMTv]} pstext cities.xy $AREA $PROJ -D0.1/0.1 -V -O -K >> temp.ps      #Plot names of all airports
+        gmt  psxy cities.xy $AREA $PROJ -Sc0.05i -Gblack -Wthinnest -V -O -K >> temp.ps
+        gmt pstext cities.xy $AREA $PROJ -D0.1/0.1 -V -O -K >> temp.ps      #Plot names of all airports
     fi
 
     # Add scalebar
     if [ $1 -eq 1 ] ; then
         # cloud_concentration
-        ${GMTpre[GMTv]} psscale -D1.25i/0.5i/2i/0.15ih -C$CPT -Q -B10f5/:"mg/m^3": -O -K >> temp.ps
+        gmt psscale -D1.25i/0.5i/2i/0.15ih -C$CPT -Q -B10f5/:"mg/m^3": -O -K >> temp.ps
         echo "writing CC.txt for GMT 5/6"
         cat << EOF > CC.txt
 > 0.25 1.25 14p 3i j
 @%1%Ash Cloud Max Concentration
 EOF
-        ${GMTpre[GMTv]} pstext CC.txt -R0/3/0/5 -JX3i -F+f14,Times-Roman+jLT -O -K -M -N >> temp.ps
+        gmt pstext CC.txt -R0/3/0/5 -JX3i -F+f14,Times-Roman+jLT -O -K -M -N >> temp.ps
     elif [ $1 -eq 3 ] ; then
         # cloud_load
-        ${GMTpre[GMTv]} psscale -D0.25i/1.15i/2i/0.15i -C$CPT -Q -B10f5/:"g/m^2": -O -K >> temp.ps
+        gmt psscale -D0.25i/1.15i/2i/0.15i -C$CPT -Q -B10f5/:"g/m^2": -O -K >> temp.ps
         echo "writing CL.txt for GMT 5/6"
         cat << EOF > CL.txt
 > 0.25 1.25 14p 3i j
 @%1%Ash Cloud Load
 EOF
-        ${GMTpre[GMTv]} pstext CL.txt -R0/3/0/5 -JX3i -F+f14,Times-Roman+jLT -O -K -M -N >> temp.ps
+        gmt pstext CL.txt -R0/3/0/5 -JX3i -F+f14,Times-Roman+jLT -O -K -M -N >> temp.ps
     elif [ $1 -eq 4 ] ; then
         # 4=depotime
-        ${GMTpre[GMTv]} psscale -D0.25i/1.15i/2i/0.15i -C$CPT -B10f5/:"hours": -O -K >> temp.ps
+        gmt psscale -D0.25i/1.15i/2i/0.15i -C$CPT -B10f5/:"hours": -O -K >> temp.ps
         echo "writing CL.txt for GMT 5/6"
         cat << EOF > CL.txt
 > 0.25 1.25 14p 3i j
 @%1%Dep. Arriv. Time
 EOF
-        ${GMTpre[GMTv]} pstext CL.txt -R0/3/0/5 -JX3i -F+f14,Times-Roman+jLT -O -K -M -N >> temp.ps
+        gmt pstext CL.txt -R0/3/0/5 -JX3i -F+f14,Times-Roman+jLT -O -K -M -N >> temp.ps
     elif [ $1 -eq 7 ] ; then
         # 4=7=ash_arrival_time
-        ${GMTpre[GMTv]} psscale -D0.25i/1.15i/2i/0.15i -C$CPT -B10f5/:"hours": -O -K >> temp.ps
+        gmt psscale -D0.25i/1.15i/2i/0.15i -C$CPT -B10f5/:"hours": -O -K >> temp.ps
         echo "writing CL.txt for GMT 5/6"
         cat << EOF > CL.txt
 > 0.25 1.25 14p 3i j
 @%1%Cloud Arriv. Time
 EOF
-        ${GMTpre[GMTv]} pstext CL.txt -R0/3/0/5 -JX3i -F+f14,Times-Roman+jLT -O -K -M -N >> temp.ps
+        gmt pstext CL.txt -R0/3/0/5 -JX3i -F+f14,Times-Roman+jLT -O -K -M -N >> temp.ps
     fi
 
     # depothick(trans);  ashcon_max;     cloud_height;   cloud_load;
@@ -606,15 +600,14 @@ EOF
     fi
 
     # Last gmt command is to plot the volcano and close out the ps file
-    echo $VCLON $VCLAT '1.0' | ${GMTpre[GMTv]} psxy $AREA $PROJ -St0.1i -Gblack -Wthinnest -O >> temp.ps
+    echo $VCLON $VCLAT '1.0' | gmt psxy $AREA $PROJ -St0.1i -Gblack -Wthinnest -O >> temp.ps
 
     #  Convert to gif
-    echo "Converting temp.ps to temp.gif"
     if [ $GMTv -eq 5 ] ; then
-        ${GMTpre[GMTv]} psconvert temp.ps -A -Tg
+        gmt psconvert temp.ps -A -Tg
         convert -rotate 90 temp.png -resize 630x500 -alpha off temp.gif
       else
-        ${GMTpre[GMTv]} psconvert temp.ps -A -Tg
+        gmt psconvert temp.ps -A -Tg
         convert temp.png -resize 630x500 -alpha off temp.gif
     fi
 

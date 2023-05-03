@@ -420,11 +420,6 @@ fi
 
 # Get time of completed Ash3d calculations
 t1=`date -u`
-rc=$((rc + $?))
-if [[ "$rc" -gt 0 ]] ; then
-    echo "Error just before post-processing $i: rc=$rc"
-    exit 1
-fi
 
 echo "*******************************************************************************"
 echo "POST-PROCESSING"

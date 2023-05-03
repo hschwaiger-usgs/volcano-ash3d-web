@@ -59,12 +59,6 @@ fi
 if [ "$USECONTAINERTRAJ" == "T" ]; then
   echo "Post processing scripts for traj results will be run with containers via ${CONTAINEREXE}"
 fi
-if [ "$USECONTAINERHYSP" == "T" ]; then
-  echo "Post processing scripts for Hysplit results will be run with containers via ${CONTAINEREXE}"
-fi
-if [ "$USECONTAINERPUFF" == "T" ]; then
-  echo "Post processing scripts for purr results will be run with containers via ${CONTAINEREXE}"
-fi
 
 USGSROOT="/opt/USGS"
 ASH3DROOT="${USGSROOT}/Ash3d"
@@ -250,13 +244,13 @@ if [[ "$rc" -gt 0 ]] ; then
     exit 1
 fi
 
-echo "zipping up kml files for preliminary Ash3d run"
-if test -r deposit_thickness_mm.kml; then
-    zip deposit_thickness_mm_prelim.kmz deposit_thickness_mm.kml
-fi
-if test -r CloudLoad.kml; then
-    zip CloudLoad_prelim.kmz CloudLoad.kml
-fi
+#echo "zipping up kml files for preliminary Ash3d run"
+#if test -r deposit_thickness_mm.kml; then
+#    zip deposit_thickness_mm_prelim.kmz deposit_thickness_mm.kml
+#fi
+#if test -r CloudLoad.kml; then
+#    zip CloudLoad_prelim.kmz CloudLoad.kml
+#fi
 
 if [ "$CLEANFILES" == "T" ]; then
     echo "removing kml files"
@@ -308,26 +302,14 @@ if test -r ${USGSROOT}/bin/MetTraj_F; then
      else
       # Now post-processing ftraj*.dat
       # The map information is pulled from 3d_tephra_fall.nc from the preliminary run
-      if [ "$USECONTAINERTRAJ" == "T" ]; then
-          echo "  Running ${CONTAINEREXE} script (GFSVolc_to_gif_ac_traj.sh) to process traj results."
-          ${CONTAINEREXE} run --rm -v ${FULLRUNDIR}:${CONTAINERRUNDIR}:z \
-                          ash3dpp ${ASH3DSCRIPTDIR}/GFSVolc_to_gif_ac_traj.sh 0 ${CONTAINERRUNDIR}
-          rc=$((rc + $?))
-          if [[ "$rc" -gt 0 ]] ; then
-              echo "Error running ${CONTAINEREXE} ash3dpp GFSVolc_to_gif_ac_traj.sh: rc=$rc"
-              echo "No trajectory output produced; continuing with run script"
-              #exit 1
-          fi
-        else
-          echo "  Running installed script (GFSVolc_to_gif_ac_traj.sh) to process traj results."
-          ${ASH3DSCRIPTDIR}/GFSVolc_to_gif_ac_traj.sh 0
-          rc=$((rc + $?))
-          if [[ "$rc" -gt 0 ]] ; then
-              echo "Error running GFSVolc_to_gif_ac_traj.sh: rc=$rc"
-              echo "No trajectory output produced; continuing with run script"
-              #exit 1
-          fi
-      fi
+        echo "  Running installed script (GFSVolc_to_gif_ac_traj.sh) to process traj results."
+        ${ASH3DSCRIPTDIR}/GFSVolc_to_gif_ac_traj.sh 0
+        rc=$((rc + $?))
+        if [[ "$rc" -gt 0 ]] ; then
+            echo "Error running GFSVolc_to_gif_ac_traj.sh: rc=$rc"
+            echo "No trajectory output produced; continuing with run script"
+            #exit 1
+        fi
     fi
   else
      echo "${USGSROOT}/bin/MetTraj_F does not exist.  Skipping trajectory runs."
@@ -385,6 +367,11 @@ else
    zip -r cloud_arrivaltimes_airports.kmz cloud_arrivaltimes_airports.kml
    rm cloud_arrivaltimes_airports.kml
 fi
+rc=$((rc + $?))
+if [[ "$rc" -gt 0 ]] ; then
+    echo "Error zipping output: rc=$rc"
+    exit 1
+fi
 
 #
 # Zip all kml files, make kmz files
@@ -398,11 +385,13 @@ do
     if [[ $? -ne 0 ]]; then
         echo "Error zipping file $file"
         rc=$((rc + 1))
+        exit 1
     fi
     rm "$file"
     if [[ $? -ne 0 ]]; then
         echo "Error removing extra file $file after zip"
         rc=$((rc + 1))
+        exit 1
     fi
 done
 
@@ -581,70 +570,6 @@ if test -r ftraj1.dat; then
   else
     echo "skipping trajectory plots: no traj files exist in this directory."
 fi
-
-echo "-------------------------------------------------------------------------------"
-echo "Checking if we need to process extra output products for dashboard cases (Hysplit,puff)"
-if [[ $DASHBOARD_RUN == T* ]] ; then
-    echo "Now creating gif images of the hysplit run"
-    if [ "$USECONTAINERHYSP" == "T" ]; then
-        echo "Running ${CONTAINEREXE} image of GFSVolc_to_gif_ac_hysplit.sh"
-        #${CONTAINEREXE} run --rm -v ${FULLRUNDIR}:${CONTAINERRUNDIR}:z \
-        #                ash3dpp /opt/USGS/Ash3d/bin/scripts/GFSVolc_to_gif_ac_hysplit.sh ${CONTAINERRUNDIR}
-        #rc=$((rc + $?))
-        #if [[ "$rc" -gt 0 ]] ; then
-        #    echo "Error running ${CONTAINEREXE} ash3dpp GFSVolc_to_gif_ac_hysplit.sh: rc=$rc"
-        #    exit 1
-        #fi
-      else
-        echo "Running GFSVolc_to_gif_ac_hysplit.sh"
-        #${ASH3DSCRIPTDIR}/GFSVolc_to_gif_ac_hysplit.sh
-        #rc=$((rc + $?))
-        #if [[ "$rc" -gt 0 ]] ; then
-        #    echo "Error running GFSVolc_to_gif_ac_hysplit.sh: rc=$rc"
-        #    exit 1
-        #fi
-    fi
-
-    # HFS: add check here to verify GFS is being used, that
-    #      puff is installed and puff windfiles are available
-    # Run the puff model with the parameters in the simple input file
-    if [ "$USECONTAINERPUFF" == "T" ]; then
-        echo "  Running ${CONTAINEREXE} script (runPuff.sh) for puff" 
-        ${CONTAINEREXE} run --rm -v /data/WindFiles:/home/ash3d/www/html/puff/data:z \
-                                 -v ${FULLRUNDIR}:${CONTAINERRUNDIR}:z \
-                        puffapp ${ASH3DSCRIPTDIR}/runPuff.sh ${CONTAINERRUNDIR}
-        rc=$((rc + $?))
-        if [[ "$rc" -gt 0 ]] ; then
-            echo "Error running ${CONTAINEREXE} puffapp runPuff.sh: rc=$rc"
-            exit 1
-        fi
-        echo "  Running ${CONTAINEREXE} script (GFSVolc_to_gif_ac_puff.sh) for puff results."
-        ${CONTAINEREXE} run --rm -v ${FULLRUNDIR}:${CONTAINERRUNDIR}:z \
-                        ash3dpp ${ASH3DSCRIPTDIR}/GFSVolc_to_gif_ac_puff.sh ${CONTAINERRUNDIR}
-        rc=$((rc + $?))
-        if [[ "$rc" -gt 0 ]] ; then
-            echo "Error running ${CONTAINEREXE} ash3dpp GFSVolc_to_gif_ac_puff.sh: rc=$rc"
-            exit 1
-        fi
-      else
-        echo "Calling runPuff.sh"
-        ${ASH3DSCRIPTDIR}/runPuff.sh
-        rc=$((rc + $?))
-        if [[ "$rc" -gt 0 ]] ; then
-            echo "Error running runPuff.sh: rc=$rc"
-            echo "Reseting error count and moving on"
-            rc=0
-          else
-            echo "Now creating gif images of puff run"
-            ${ASH3DSCRIPTDIR}/GFSVolc_to_gif_ac_puff.sh
-            rc=$((rc + $?))
-            if [[ "$rc" -gt 0 ]] ; then
-                echo "Error running GFSVolc_to_gif_ac_puff.sh: rc=$rc"
-            fi
-        fi
-    fi
-fi
-echo "Finished supplemental output for AVO dashboard, if needed."
 echo "-------------------------------------------------------------------------------"
 
 #

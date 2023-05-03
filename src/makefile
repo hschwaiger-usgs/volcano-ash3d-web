@@ -278,8 +278,6 @@ install:
 	install -m 755 ../bin/makeAshArrivalTimes_ac           $(INSTALLDIR)/bin/
 	install -m 755 ../bin/makeAshArrivalTimes_dp           $(INSTALLDIR)/bin/
 	install -m 755 ../bin/ncGFS4_2_pf                      $(INSTALLDIR)/bin/
-	install -m 755 ../scripts/GFSVolc_to_gif_ac_hysplit.sh $(INSTALLDIR)/bin/scripts/
-	install -m 755 ../scripts/GFSVolc_to_gif_ac_puff.sh    $(INSTALLDIR)/bin/scripts/
 	install -m 755 ../scripts/GFSVolc_to_gif_ac_traj.sh    $(INSTALLDIR)/bin/scripts/
 	install -m 755 ../scripts/GFSVolc_to_gif_dp_mm.sh      $(INSTALLDIR)/bin/scripts/
 	install -m 755 ../scripts/GFSVolc_to_gif_dp.sh         $(INSTALLDIR)/bin/scripts/
@@ -290,7 +288,6 @@ install:
 	install -m 755 ../scripts/runAsh3d_ac.sh               $(INSTALLDIR)/bin/scripts/
 	install -m 755 ../scripts/runAsh3d_dp.sh               $(INSTALLDIR)/bin/scripts/
 	install -m 755 ../scripts/runAsh3d.sh                  $(INSTALLDIR)/bin/scripts/
-	install -m 755 ../scripts/runPuff.sh                   $(INSTALLDIR)/bin/scripts/
 	install -m 755 ../scripts/runTraj.sh                   $(INSTALLDIR)/bin/scripts/
 	install -m 755 ../scripts/xyz2shp.py                   $(INSTALLDIR)/bin/scripts/
 	install -m 755 ../scripts/full_2_simp.sh               $(INSTALLDIR)/bin/scripts/
@@ -315,8 +312,6 @@ uninstall:
 	rm -f $(INSTALLDIR)/bin/makeAsh3dinput2_dp
 	rm -f $(INSTALLDIR)/bin/makeAshArrivalTimes_ac
 	rm -f $(INSTALLDIR)/bin/makeAshArrivalTimes_dp
-	rm -f $(INSTALLDIR)/bin/scripts/GFSVolc_to_gif_ac_hysplit.sh
-	rm -f $(INSTALLDIR)/bin/scripts/GFSVolc_to_gif_ac_puff.sh
 	rm -f $(INSTALLDIR)/bin/scripts/GFSVolc_to_gif_ac_traj.sh
 	rm -f $(INSTALLDIR)/bin/scripts/GFSVolc_to_gif_dp_mm.sh
 	rm -f $(INSTALLDIR)/bin/scripts/GFSVolc_to_gif_dp.sh
@@ -327,7 +322,6 @@ uninstall:
 	rm -f $(INSTALLDIR)/bin/scripts/runAsh3d_ac.sh
 	rm -f $(INSTALLDIR)/bin/scripts/runAsh3d_dp.sh
 	rm -f $(INSTALLDIR)/bin/scripts/runAsh3d.sh
-	rm -f $(INSTALLDIR)/bin/scripts/runPuff.sh
 	rm -f $(INSTALLDIR)/bin/scripts/runTraj.sh
 	rm -f $(INSTALLDIR)/bin/scripts/xyz2shp.py
 	rm -f $(INSTALLDIR)/share/post_proc/*png

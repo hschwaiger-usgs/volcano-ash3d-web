@@ -45,13 +45,13 @@ CLEANFILES="T"
 # We need to know if we must prefix all gmt commands with 'gmt', as required by version 5/6
 GMTv=5
 type gmt >/dev/null 2>&1 || { echo >&2 "Command 'gmt' not found.  Assuming GMTv4."; GMTv=4;}
-if [ $GMTv -ne 4 ] ; then
+if [ $GMTv -eq 4 ] ; then
+    echo "GMT 4 is no longer supported."
+    echo "Please update to GMT 5 or 6"
+    exit 1
+ else
     GMTv=`gmt --version | cut -c1`
 fi
-GMTpre=("-" "-" "-" "-" " "   "gmt " "gmt ")
-GMTelp=("-" "-" "-" "-" "ELLIPSOID" "PROJ_ELLIPSOID" "PROJ_ELLIPSOID")
-GMTnan=("-" "-" "-" "-" "-Ts" "-Q" "-Q")
-GMTrgr=("-" "-" "-" "-" "grdreformat" "grdconvert" "grdconvert")
 GMTpen=("-" "-" "-" "-" "/" ",")
 echo "GMT version = ${GMTv}"
 
@@ -190,7 +190,7 @@ echo "time_interval=${time_interval}"
 ##  Now make the maps
 
 t=0
-${GMTpre[GMTv]} gmtset ${GMTelp[GMTv]} Sphere
+gmt gmtset PROJ_ELLIPSOID Sphere
 
 AREA="-R$LLLON/$URLON/$LLLAT/$URLAT"
 #AREA="-Rac_tot_out_t${time}.grd"
@@ -214,7 +214,7 @@ BOUNDARIES="-Na"                    # -N=draw political boundaries, a=all nation
   
 #############################################################################
 ### Plot the base map
-${GMTpre[GMTv]} pscoast $AREA $PROJ $BASE $DETAIL $COAST $BOUNDARIES -K  > temp.ps
+gmt pscoast $AREA $PROJ $BASE $DETAIL $COAST $BOUNDARIES -K  > temp.ps
 # This is the Hysplit-like trajectory plot using the same basemap
 # Trajectories currently (2017-04-11) are:
 #  5000 ft (1.5240 km) Red       (255/0/0)
@@ -224,21 +224,21 @@ ${GMTpre[GMTv]} pscoast $AREA $PROJ $BASE $DETAIL $COAST $BOUNDARIES -K  > temp.
 # 30000 ft (9.1440 km) Magenta   (255/0/255)
 # 40000 ft (12.192 km) Yellow    (255/255/0)
 # 50000 ft (15.240 km) Blue-grey (51/153/204)
-${GMTpre[GMTv]} psxy ftraj1.dat   $AREA $PROJ -P -K -O -W4${GMTpen[GMTv]}255/0/0    -V >> temp.ps
-${GMTpre[GMTv]} psxy ftraj2.dat   $AREA $PROJ -P -K -O -W4${GMTpen[GMTv]}0/0/255    -V >> temp.ps
-${GMTpre[GMTv]} psxy ftraj3.dat   $AREA $PROJ -P -K -O -W4${GMTpen[GMTv]}0/255/0    -V >> temp.ps
-${GMTpre[GMTv]} psxy ftraj4.dat   $AREA $PROJ -P -K -O -W4${GMTpen[GMTv]}0/255/255  -V >> temp.ps
-${GMTpre[GMTv]} psxy ftraj5.dat   $AREA $PROJ -P -K -O -W4${GMTpen[GMTv]}255/0/255  -V >> temp.ps
-${GMTpre[GMTv]} psxy ftraj6.dat   $AREA $PROJ -P -K -O -W4${GMTpen[GMTv]}255/255/0  -V >> temp.ps
-${GMTpre[GMTv]} psxy ftraj7.dat   $AREA $PROJ -P -K -O -W4${GMTpen[GMTv]}51/153/204 -V >> temp.ps
+gmt psxy ftraj1.dat   $AREA $PROJ -P -K -O -W4${GMTpen[GMTv]}255/0/0    -V >> temp.ps
+gmt psxy ftraj2.dat   $AREA $PROJ -P -K -O -W4${GMTpen[GMTv]}0/0/255    -V >> temp.ps
+gmt psxy ftraj3.dat   $AREA $PROJ -P -K -O -W4${GMTpen[GMTv]}0/255/0    -V >> temp.ps
+gmt psxy ftraj4.dat   $AREA $PROJ -P -K -O -W4${GMTpen[GMTv]}0/255/255  -V >> temp.ps
+gmt psxy ftraj5.dat   $AREA $PROJ -P -K -O -W4${GMTpen[GMTv]}255/0/255  -V >> temp.ps
+gmt psxy ftraj6.dat   $AREA $PROJ -P -K -O -W4${GMTpen[GMTv]}255/255/0  -V >> temp.ps
+gmt psxy ftraj7.dat   $AREA $PROJ -P -K -O -W4${GMTpen[GMTv]}51/153/204 -V >> temp.ps
 
-awk '{print $1, $2, 1.0}' ftraj1.dat | ${GMTpre[GMTv]} psxy $AREA $PROJ $BASE -Sc0.10i -W1${GMTpen[GMTv]}0/0/0 -G255/0/0    -O -K >> temp.ps
-awk '{print $1, $2, 1.0}' ftraj2.dat | ${GMTpre[GMTv]} psxy $AREA $PROJ $BASE -Sc0.10i -W1${GMTpen[GMTv]}0/0/0 -G0/0/255    -O -K >> temp.ps
-awk '{print $1, $2, 1.0}' ftraj3.dat | ${GMTpre[GMTv]} psxy $AREA $PROJ $BASE -Sc0.10i -W1${GMTpen[GMTv]}0/0/0 -G0/255/0    -O -K >> temp.ps
-awk '{print $1, $2, 1.0}' ftraj4.dat | ${GMTpre[GMTv]} psxy $AREA $PROJ $BASE -Sc0.10i -W1${GMTpen[GMTv]}0/0/0 -G0/255/255  -O -K >> temp.ps
-awk '{print $1, $2, 1.0}' ftraj5.dat | ${GMTpre[GMTv]} psxy $AREA $PROJ $BASE -Sc0.10i -W1${GMTpen[GMTv]}0/0/0 -G255/0/255  -O -K >> temp.ps
-awk '{print $1, $2, 1.0}' ftraj6.dat | ${GMTpre[GMTv]} psxy $AREA $PROJ $BASE -Sc0.10i -W1${GMTpen[GMTv]}0/0/0 -G255/255/0  -O -K >> temp.ps
-awk '{print $1, $2, 1.0}' ftraj7.dat | ${GMTpre[GMTv]} psxy $AREA $PROJ $BASE -Sc0.10i -W1${GMTpen[GMTv]}0/0/0 -G51/153/204 -O -K >> temp.ps
+awk '{print $1, $2, 1.0}' ftraj1.dat | gmt psxy $AREA $PROJ $BASE -Sc0.10i -W1${GMTpen[GMTv]}0/0/0 -G255/0/0    -O -K >> temp.ps
+awk '{print $1, $2, 1.0}' ftraj2.dat | gmt psxy $AREA $PROJ $BASE -Sc0.10i -W1${GMTpen[GMTv]}0/0/0 -G0/0/255    -O -K >> temp.ps
+awk '{print $1, $2, 1.0}' ftraj3.dat | gmt psxy $AREA $PROJ $BASE -Sc0.10i -W1${GMTpen[GMTv]}0/0/0 -G0/255/0    -O -K >> temp.ps
+awk '{print $1, $2, 1.0}' ftraj4.dat | gmt psxy $AREA $PROJ $BASE -Sc0.10i -W1${GMTpen[GMTv]}0/0/0 -G0/255/255  -O -K >> temp.ps
+awk '{print $1, $2, 1.0}' ftraj5.dat | gmt psxy $AREA $PROJ $BASE -Sc0.10i -W1${GMTpen[GMTv]}0/0/0 -G255/0/255  -O -K >> temp.ps
+awk '{print $1, $2, 1.0}' ftraj6.dat | gmt psxy $AREA $PROJ $BASE -Sc0.10i -W1${GMTpen[GMTv]}0/0/0 -G255/255/0  -O -K >> temp.ps
+awk '{print $1, $2, 1.0}' ftraj7.dat | gmt psxy $AREA $PROJ $BASE -Sc0.10i -W1${GMTpen[GMTv]}0/0/0 -G51/153/204 -O -K >> temp.ps
 echo "Finished plotting trajectory data"
 
 #Add cities
@@ -246,8 +246,8 @@ echo "Finding cities in domain"
 echo "${ASH3DBINDIR}/citywriter ${LLLON} ${URLON} ${LLLAT} ${URLAT}"
 ${ASH3DBINDIR}/citywriter ${LLLON} ${URLON} ${LLLAT} ${URLAT}
 if test -r cities.xy ; then
-    ${GMTpre[GMTv]} psxy cities.xy $AREA $PROJ -Sc0.05i -Gblack -Wthinnest -V -O -K >> temp.ps
-    ${GMTpre[GMTv]} pstext cities.xy $AREA $PROJ -D0.1/0.1 -V -O -K >> temp.ps      #Plot names of all airports
+    gmt psxy cities.xy $AREA $PROJ -Sc0.05i -Gblack -Wthinnest -V -O -K >> temp.ps
+    gmt pstext cities.xy $AREA $PROJ -D0.1/0.1 -V -O -K >> temp.ps      #Plot names of all airports
     echo "Wrote cities to map"
   else
     echo "No cities found in domain"
@@ -291,24 +291,14 @@ convert \
     convert +append -background white legend1.png legend2.png ${ASH3DSHARE_PP}/USGSvid.png legend.png
 
 # Last gmt command is to plot the volcano and close out the ps file
-echo $VCLON $VCLAT '1.0' | ${GMTpre[GMTv]} psxy $AREA $PROJ -St0.1i -Gblack -Wthinnest -O >> temp.ps
-
-#if [ $GMTv -eq 4 ] ; then
-#    ${GMTpre[GMTv]} pstext caption.txt $AREA $PROJ -m -Wwhite,o -N -O >> temp.ps  #-Wwhite,o paints a white recctangle with outline
-#  else
-#    ${GMTpre[GMTv]} pstext caption.txt $AREA $PROJ -M -Gwhite -Wblack,. -N -O >> temp.ps  #-Wwhite,o paints a white recctangle with outline
-#fi
+echo $VCLON $VCLAT '1.0' | gmt psxy $AREA $PROJ -St0.1i -Gblack -Wthinnest -O >> temp.ps
 
 #  Convert to gif
-if [ $GMTv -eq 4 ] ; then
-    ps2epsi temp.ps
-    epstopdf temp.epsi
-    convert -rotate 90 temp.pdf -alpha off temp.gif
-  elif [ $GMTv -eq 5 ] ; then
-    ${GMTpre[GMTv]} psconvert temp.ps -A -Tg
+if [ $GMTv -eq 5 ] ; then
+    gmt psconvert temp.ps -A -Tg
     convert -rotate 90 temp.png -resize 630x500 -alpha off temp.gif
   else
-    ${GMTpre[GMTv]} psconvert temp.ps -A -Tg
+    gmt psconvert temp.ps -A -Tg
     convert temp.png -resize 630x500 -alpha off temp.gif
 fi
 
