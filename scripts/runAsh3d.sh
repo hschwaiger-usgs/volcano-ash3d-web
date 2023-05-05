@@ -156,10 +156,14 @@ if [[ $? -ne 0 ]]; then
     rc=$((rc + 1))
 fi
 if [ "$RUNTYPE" == "ADV"  ] ; then
-    # lobby to have the file written from the webpage be called ash3d_input_adv.inp
-    cp ${INFILE_MAIN} ash3d_input_adv.inp
-    echo "Running full_2_simp.sh"
-    ${ASH3DSCRIPTDIR}/full_2_simp.sh ash3d_input_adv.inp
+    if test -r ash3d_input.inp; then
+      echo "Using ash3d_input.inp"
+    else
+      # lobby to have the file written from the webpage be called ash3d_input_adv.inp
+      cp ${INFILE_MAIN} ash3d_input_adv.inp
+      echo "Running full_2_simp.sh"
+      ${ASH3DSCRIPTDIR}/full_2_simp.sh ash3d_input_adv.inp
+    fi
 fi
 if [ "$CLEANFILES" == "T" ]; then
     echo "removing old input & output files"

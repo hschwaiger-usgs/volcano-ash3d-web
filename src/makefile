@@ -201,8 +201,7 @@ UTIL_SRC=makeAsh3dinput1_ac.f90     \
          legend_placer_dp_mm.f90    \
          legend_placer_ac_traj.f90  \
          convert_to_decimal.f90     \
-         citywriter.f90             \
-         ncGFS4_2_pf.F90
+         citywriter.f90
 UTIL_OBJS=makeAsh3dinput1_ac       \
           makeAsh3dinput1_dp       \
           makeAsh3dinput2_ac       \
@@ -214,8 +213,7 @@ UTIL_OBJS=makeAsh3dinput1_ac       \
           legend_placer_dp_mm      \
           legend_placer_ac_traj    \
           convert_to_decimal       \
-          citywriter               \
-          ncGFS4_2_pf
+          citywriter
 
 all: $(UTIL_OBJS)
 	mkdir -p ../bin
@@ -231,10 +229,7 @@ all: $(UTIL_OBJS)
 	mv legend_placer_ac_traj   ../bin/
 	mv convert_to_decimal      ../bin/
 	mv citywriter              ../bin/
-	mv ncGFS4_2_pf             ../bin/
 
-ncGFS4_2_pf: ncGFS4_2_pf.F90
-	$(FC) $(FFLAGS) $(EXFLAGS) ncGFS4_2_pf.F90 -o ncGFS4_2_pf $(LIBS)
 citywriter: citywriter.f90
 	$(FC) $(FFLAGS) $(EXFLAGS) citywriter.f90 -o citywriter $(LIBS)
 convert_to_decimal: convert_to_decimal.f90
@@ -277,7 +272,6 @@ install:
 	install -m 755 ../bin/makeAsh3dinput2_dp               $(INSTALLDIR)/bin/
 	install -m 755 ../bin/makeAshArrivalTimes_ac           $(INSTALLDIR)/bin/
 	install -m 755 ../bin/makeAshArrivalTimes_dp           $(INSTALLDIR)/bin/
-	install -m 755 ../bin/ncGFS4_2_pf                      $(INSTALLDIR)/bin/
 	install -m 755 ../scripts/GFSVolc_to_gif_ac_traj.sh    $(INSTALLDIR)/bin/scripts/
 	install -m 755 ../scripts/GFSVolc_to_gif_dp_mm.sh      $(INSTALLDIR)/bin/scripts/
 	install -m 755 ../scripts/GFSVolc_to_gif_dp.sh         $(INSTALLDIR)/bin/scripts/
@@ -297,7 +291,6 @@ install:
 	install -m 644 ../share/post_proc/*png                 $(INSTALLDIR)/share/post_proc/
 	install -m 644 ../share/post_proc/*xy                  $(INSTALLDIR)/share/post_proc/
 	install -m 644 ../share/post_proc/world_cities.txt     $(INSTALLDIR)/share/post_proc/
-	install -m 755 ../bin/ncGFS4_2_pf                      $(USGSROOT)/bin/
 
 uninstall:
 	rm -f $(INSTALLDIR)/bin/citywriter
@@ -333,7 +326,6 @@ uninstall:
 	rm -f $(INSTALLDIR)/share/post_proc/*png 
 	rm -f $(INSTALLDIR)/share/post_proc/*xy
 	rm -f $(INSTALLDIR)/share/post_proc/world_cities.txt 
-	rm -f $(INSTALLDIR)/bin/ncGFS4_2_pf
 	rmdir $(INSTALLDIR)/bin/scripts/
 	
 

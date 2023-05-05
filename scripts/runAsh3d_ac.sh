@@ -43,8 +43,6 @@ echo "RUNTYPE = ${RUNTYPE}"
 CLEANFILES="T"
 USECONTAINERASH="F"
 USECONTAINERTRAJ="F"
-USECONTAINERHYSP="F"
-USECONTAINERPUFF="F"
 CONTAINEREXE="podman"
 CONTAINERRUNDIR="/run/user/1004/libpod/tmp"
 
@@ -254,7 +252,7 @@ fi
 
 if [ "$CLEANFILES" == "T" ]; then
     echo "removing kml files"
-    rm -f *.kml AshArrivalTimes.txt
+    rm -f *.kml *kmz AshArrivalTimes.txt
 fi
 
 echo "_______________________________________________________________________________"
@@ -461,8 +459,9 @@ if [ "$RUNTYPE" == "ADV" ] || [ "$RUNTYPE" == "ACL" ]  ; then
             fi
         fi
     fi
-    #    Cloud load is the default, so always run that
+    #    Cloud load is the default, so run that one first
     #      Note:  the animated gif for this variable is copied to "cloud_animation.gif"
+    echo "First process for cloud load results"
     if [ "$USECONTAINERASH" == "T" ]; then
         echo "  Running ${CONTAINEREXE} script (GFSVolc_to_gif_tvar.sh) to process cloud_load results."
         echo "${CONTAINEREXE} run --rm -v ${FULLRUNDIR}:${CONTAINERRUNDIR}:z ash3dpp ${ASH3DSCRIPTDIR}/GFSVolc_to_gif_tvar.sh 3 ${CONTAINERRUNDIR}"

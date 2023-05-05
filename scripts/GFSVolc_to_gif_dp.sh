@@ -259,6 +259,8 @@ echo "Preparing to make the GMT maps."
 
 echo "Preparing to make the GMT maps."
 #  Time loop would go here
+echo " ${volc} : Creating map for time = final"
+echo "Starting base map for final/non-time-series plot"
 
 # Set up some default values
 # Projected wind data assumes sphere with radius 6371.229 km
@@ -322,6 +324,7 @@ gmt pscoast $AREA $PROJ $BASE $DETAIL $COAST $BOUNDARIES $RIVERS -K > temp.ps #P
 # Plot variable
 dep_grd=var_out_final.grd
 # GMT v5/6 writes contour files as a separate step from drawing and writes all segments to one file
+echo "gmt grdcontour ${dep_grd} $AREA $PROJ $BASE -Cdp_0.1.lev -A- -W3,255/0/0   -Dcontourfile_0.1_0_i.xyz"
 gmt grdcontour ${dep_grd} $AREA $PROJ $BASE -Cdp_0.1.lev -A- -W3,255/0/0   -Dcontourfile_0.1_0_i.xyz
 gmt grdcontour ${dep_grd} $AREA $PROJ $BASE -Cdp_0.8.lev -A- -W3,0/0/255   -Dcontourfile_0.8_0_i.xyz
 gmt grdcontour ${dep_grd} $AREA $PROJ $BASE -Cdp_6.lev   -A- -W3,0/183/255 -Dcontourfile_6.0_0_i.xyz

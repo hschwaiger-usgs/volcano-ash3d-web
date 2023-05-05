@@ -43,8 +43,6 @@ echo "RUNTYPE = ${RUNTYPE}"
 CLEANFILES="T"
 USECONTAINERASH="F"
 USECONTAINERTRAJ="F"
-USECONTAINERHYSP="F"
-USECONTAINERPUFF="F"
 CONTAINEREXE="podman"
 CONTAINERRUNDIR="/run/user/1004/libpod/tmp"
 
@@ -254,7 +252,7 @@ fi
 
 if [ "$CLEANFILES" == "T" ]; then
     echo "removing kml files"
-    rm -f *.kml AshArrivalTimes.txt
+    rm -f *.kml *kmz AshArrivalTimes.txt
 fi
 
 echo "_______________________________________________________________________________"
@@ -431,7 +429,7 @@ t1=`date -u`
 echo "*******************************************************************************"
 echo "POST-PROCESSING"
 echo "*******************************************************************************"
-echo "Creating gif images from Ash3d output file."
+echo "Creating gif images from the standard Ash3d output file."
 if [ "$RUNTYPE" == "ADV" ] || [ "$RUNTYPE" == "ACL" ]  ; then
     echo "Creating gif images of ash cloud"
     # Generate gifs for the transient variables

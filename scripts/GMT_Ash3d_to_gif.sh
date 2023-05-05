@@ -224,7 +224,6 @@ echo "Extracting ${var} information from ${infile} for each time step."
 if [ $1 -eq 0 ] || [ $1 -eq 1 ] || [ $1 -eq 2 ] || [ $1 -eq 3 ] ; then
     for t in `seq 0 $((tmax-1))`;
     do
-      echo $t
       time=`echo "${t0} + ${t} * ${time_interval}" | bc -l`
       echo "   ${volc} : Generating ash grids for time = " ${time}
       gmt grdconvert "$infile?$var[$t]" var_out_t${time}.grd
@@ -391,7 +390,7 @@ do
         echo "Plotting contours (var = $1) for step = $t"
         #0=depothick or 5=depothick final (NWS)
         # GMT v5/6 writes contour files as a separate step from drawing and writes all segments to one file
-        echo "gmt grdcontour ${dep_grd}   $AREA $PROJ $BASE -Cdp_0.1.lev -A- -W3,255/0/0   -Dcontourfile_0.1_0_i.xyz"
+        echo "gmt grdcontour ${dep_grd} $AREA $PROJ $BASE -Cdp_0.1.lev -A- -W3,255/0/0   -Dcontourfile_0.1_0_i.xyz"
         gmt grdcontour ${dep_grd} $AREA $PROJ $BASE -Cdp_0.1.lev -A- -W3,255/0/0   -Dcontourfile_0.1_0_i.xyz
         gmt grdcontour ${dep_grd} $AREA $PROJ $BASE -Cdp_0.8.lev -A- -W3,0/0/255   -Dcontourfile_0.8_0_i.xyz
         gmt grdcontour ${dep_grd} $AREA $PROJ $BASE -Cdp_6.lev   -A- -W3,0/183/255 -Dcontourfile_6.0_0_i.xyz
