@@ -23,31 +23,39 @@
 # Parsing command-line arguments
 #  variable code , rundirectory
 echo "------------------------------------------------------------"
+if [ "$#" -eq 0 ]; then
+  echo "No variable code provided."
+  echo "  0 = depothick"
+  echo "  1 = ashcon_max"
+  echo "  2 = cloud_height"
+  echo "  3 = cloud_load"
+  echo "  4 = depotime"
+  echo "  5 = depothick final (inches)"
+  echo "  6 = depothick final (mm)"
+  echo "  7 = ash_arrival_time"
+  exit 1
+fi
 echo "running GMT_Ash3d_to_gif.sh with parameter:"
 echo "  $1"
 if [ $1 -eq 0 ]; then
   echo " 0 = depothick"
-fi
-if [ $1 -eq 1 ]; then
+elif [ $1 -eq 1 ]; then
   echo " 1 = ashcon_max"
-fi
-if [ $1 -eq 2 ]; then
+elif [ $1 -eq 2 ]; then
   echo " 2 = cloud_height"
-fi
-if [ $1 -eq 3 ]; then
+elif [ $1 -eq 3 ]; then
   echo " 3 = cloud_load"
-fi
-if [ $1 -eq 4 ]; then
+elif [ $1 -eq 4 ]; then
   echo " 4 = depotime"
-fi
-if [ $1 -eq 5 ]; then
+elif [ $1 -eq 5 ]; then
   echo " 5 = depothick final (inches)"
-fi
-if [ $1 -eq 6 ]; then
+elif [ $1 -eq 6 ]; then
   echo " 6 = depothick final (mm)"
-fi
-if [ $1 -eq 7 ]; then
+elif [ $1 -eq 7 ]; then
   echo " 7 = ash_arrival_time"
+else
+  echo "Variable code is not between 0 and 7"
+  exit 1
 fi
 
 # The optional second command-line argument is used in podman containers
@@ -187,12 +195,17 @@ echo "getting windfile time"
 windtime=`ncdump -h ${infile} | grep NWPStartTime | cut -c20-39`
 gsbins=`ncdump   -h ${infile} | grep "bn =" | cut -c6-8`        # of grain-size bins
 zbins=`ncdump    -h ${infile} | grep "z ="  | cut -c6-7`        # # of elevation levels
-tmax=`ncdump     -h ${infile} | grep "t = UNLIMITED" | cut -c22-23` # maximum time dimension
+tmax=`ncdump     -h ${infile} | grep "t = UNLIMITED" | grep -v pt | cut -c22-23` # maximum time dimension
 t0=`ncdump     -v t ${infile} | grep \ t\ = | cut -f4 -d" " | cut -f1 -d","`
 t1=`ncdump     -v t ${infile} | grep \ t\ = | cut -f5 -d" " | cut -f1 -d","`
 time_interval=`echo "($t1 - $t0)" |bc -l`
 iwindformat=`ncdump -h ${infile} |grep b3l1 | cut -f2 -d\" | cut -f1 -d# |  tr -s " " | cut -f2 -d' '`
 echo "windtime=$windtime"
+echo "gsbins=$gsbins"
+echo "zbins=$zbins"
+echo "tmax=$tmax"
+echo "t0=$t0"
+echo "t1=$t1"
 echo "iwindformat=$iwindformat"
 if [ ${iwindformat} -eq 25 ]; then
     windfile="NCEP reanalysis 2.5 degree"
@@ -211,6 +224,7 @@ echo "Extracting ${var} information from ${infile} for each time step."
 if [ $1 -eq 0 ] || [ $1 -eq 1 ] || [ $1 -eq 2 ] || [ $1 -eq 3 ] ; then
     for t in `seq 0 $((tmax-1))`;
     do
+      echo $t
       time=`echo "${t0} + ${t} * ${time_interval}" | bc -l`
       echo "   ${volc} : Generating ash grids for time = " ${time}
       gmt grdconvert "$infile?$var[$t]" var_out_t${time}.grd

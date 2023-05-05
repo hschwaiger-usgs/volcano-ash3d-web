@@ -174,7 +174,7 @@ echo "getting windfile time"
 windtime=`ncdump -h ${infile} | grep NWPStartTime | cut -c20-39`
 gsbins=`ncdump   -h ${infile} | grep "bn =" | cut -c6-8`        # of grain-size bins
 zbins=`ncdump    -h ${infile} | grep "z ="  | cut -c6-7`        # # of elevation levels
-tmax=`ncdump     -h ${infile} | grep "t = UNLIMITED" | cut -c22-23` # maximum time dimension
+tmax=`ncdump     -h ${infile} | grep "t = UNLIMITED" | grep -v pt | cut -c22-23` # maximum time dimension
 t0=`ncdump     -v t ${infile} | grep \ t\ = | cut -f4 -d" " | cut -f1 -d","`
 t1=`ncdump     -v t ${infile} | grep \ t\ = | cut -f5 -d" " | cut -f1 -d","`
 time_interval=`echo "($t1 - $t0)" |bc -l`
