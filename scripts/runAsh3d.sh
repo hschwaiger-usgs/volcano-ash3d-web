@@ -440,6 +440,8 @@ do
     # 6=depothick final (mm)
     # 7=ash_arrival_time
     if [ "${plotvars[i]}" == "1" ]; then
+        #PostProcScript=GMT_Ash3d_to_gif.sh
+        #PostProcScript=PP_Ash3d_to_gif.sh
         echo "  Running installed script ${ASH3DSCRIPTDIR}/GMT_Ash3d_to_gif.sh $i"
         ${ASH3DSCRIPTDIR}/GMT_Ash3d_to_gif.sh $i
         rc=$((rc + $?))
