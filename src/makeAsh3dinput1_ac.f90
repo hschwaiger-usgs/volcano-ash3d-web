@@ -70,7 +70,7 @@
       iwindformat=20
       nWindFiles=67
       runtype='now'
-      min_vol = 0.0001_8                                         !minimum erupted volume (km3 DRE)
+      min_vol = 0.001_8                                          !minimum erupted volume (km3 DRE)
       min_duration = 0.1_8                                       !minimum eruption duration (hrs)
       min_SimTime = 3.0_8
       max_SimTime = 120.0_8

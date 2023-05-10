@@ -61,7 +61,7 @@
 
 !     set default values
       iwind=4
-      min_vol = 0.0001_8                                          !minimum erupted volume allowed
+      min_vol = 0.001_8                                           !minimum erupted volume allowed
       min_duration = 0.1_8                                        !minimum eruption duration
       iwindformat=20
       nWindFiles=67
