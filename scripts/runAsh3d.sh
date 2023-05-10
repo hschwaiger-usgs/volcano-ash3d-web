@@ -156,14 +156,15 @@ if [[ $? -ne 0 ]]; then
     rc=$((rc + 1))
 fi
 if [ "$RUNTYPE" == "ADV"  ] ; then
-    if test -r ash3d_input.inp; then
-      echo "Using ash3d_input.inp"
-    else
+    #if test -r ash3d_input.inp; then
+    #  echo "Using ash3d_input.inp"
+    #  cp ash3d_input.inp
+    #else
       # lobby to have the file written from the webpage be called ash3d_input_adv.inp
       cp ${INFILE_MAIN} ash3d_input_adv.inp
       echo "Running full_2_simp.sh"
       ${ASH3DSCRIPTDIR}/full_2_simp.sh ash3d_input_adv.inp
-    fi
+    #fi
 fi
 if [ "$CLEANFILES" == "T" ]; then
     echo "removing old input & output files"
@@ -377,18 +378,20 @@ echo "zipping up kml files"
 for file in *.kml
 do
     IFS='.'
-    array=( $file )
-    zip -r "${array[0]}".kmz "$file"
-    if [[ $? -ne 0 ]]; then
-        echo "Error zipping file $file"
-        rc=$((rc + 1))
-        exit 1
-    fi
-    rm "$file"
-    if [[ $? -ne 0 ]]; then
-        echo "Error removing extra file $file after zip"
-        rc=$((rc + 1))
-        exit 1
+    if test -r $file; then
+      array=( $file )
+      zip -r "${array[0]}".kmz "$file"
+      if [[ $? -ne 0 ]]; then
+          echo "Error zipping file $file"
+          rc=$((rc + 1))
+          exit 1
+      fi
+      rm "$file"
+      if [[ $? -ne 0 ]]; then
+          echo "Error removing extra file $file after zip"
+          rc=$((rc + 1))
+          exit 1
+      fi
     fi
 done
 
@@ -440,8 +443,6 @@ do
     # 6=depothick final (mm)
     # 7=ash_arrival_time
     if [ "${plotvars[i]}" == "1" ]; then
-        #PostProcScript=GMT_Ash3d_to_gif.sh
-        #PostProcScript=PP_Ash3d_to_gif.sh
         echo "  Running installed script ${ASH3DSCRIPTDIR}/GMT_Ash3d_to_gif.sh $i"
         ${ASH3DSCRIPTDIR}/GMT_Ash3d_to_gif.sh $i
         rc=$((rc + $?))
