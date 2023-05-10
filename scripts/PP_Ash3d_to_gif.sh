@@ -69,7 +69,8 @@ cd ${RUNHOME}
 echo `date`
 echo "------------------------------------------------------------"
 CLEANFILES="T"
-RUNDATE=`date -u "+%D %T"`
+# Date of post-processing (may not be run date of simulation)
+PPDATE=`date -u "+%D %T"`
 
 USGSROOT="/opt/USGS"
 ASH3DROOT="${USGSROOT}/Ash3d"
@@ -102,12 +103,22 @@ fi
 #    echo "Removing old files"
 #    rm -f *.xyz *.grd contour_range.txt map_range.txt
 #fi
+echo "Processing " $volc " on " $PPDATE
+#Ash3d run date
+RUNDATE=`ncdump -h ${infile} | grep date | cut -d\" -f2`
+#time of eruption start
+year=`ncdump -h ${infile} | grep ReferenceTime | cut -d\" -f2 | cut -c1-4`
+month=`ncdump -h ${infile} | grep ReferenceTime | cut -d\" -f2 | cut -c5-6`
+day=`ncdump -h ${infile} | grep ReferenceTime | cut -d\" -f2 | cut -c7-8`
+hour=`ncdump -h ${infile} | grep ReferenceTime | cut -d\" -f2 | cut -c9-10`
+minute=`ncdump -h ${infile} | grep ReferenceTime | cut -d\" -f2 | cut -c12-13`
+hours_real=`echo "$hour + $minute / 60" | bc -l`
+
 tmax=`ncdump     -h ${infile} | grep "t = UNLIMITED" | grep -v pt | cut -c22-23` # maximum time dimension
 t0=`ncdump     -v t ${infile} | grep \ t\ = | cut -f4 -d" " | cut -f1 -d","`
 t1=`ncdump     -v t ${infile} | grep \ t\ = | cut -f5 -d" " | cut -f1 -d","`
 time_interval=`echo "($t1 - $t0)" |bc -l`
 echo "Found $tmax time steps with an interval of ${time_interval}"
-#echo "Finished probing output file for run information"
 
 ######################
 # Get the number of time steps we need
@@ -122,46 +133,64 @@ if [ $1 -eq 4 ] || [ $1 -eq 5 ] || [ $1 -eq 6 ] || [ $1 -eq 7 ] ; then
     echo "We are working on a transient variable so set tstart = $tstart"
 fi
 
-echo "Preparing to make the PP maps."
+echo "Preparing to make the Ash3d_PostProc maps."
+ # echo "  0 = depothick"
+ # echo "  1 = ashcon_max"
+ # echo "  2 = cloud_height"
+ # echo "  3 = cloud_load"
+ # echo "  4 = depotime"
+ # echo "  5 = depothick final (inches)"
+ # echo "  6 = depothick final (mm)"
+ # echo "  7 = ash_arrival_time"
+
 #  Time loop
 for (( t=tstart;t<=tmax-1;t++))
 do
     time=`echo "${t0} + ${t} * ${time_interval}" | bc -l` 
-    echo " ${volc} : Creating map for time = ${time}" 
-    if [ $1 -eq 0 ] || [ $1 -eq 5 ] ; then
-        echo "Plotting contours (var = $1) for step = $t"
-        #0=depothick or 5=depothick final (NWS)
-         #   ashcon_max;     cloud_load
-    elif [ $1 -eq 1 ] || [ $1 -eq 3 ] ; then
-        echo "Plotting contours (var = $1) for step = $t"
-         #   cloud_height
-    elif [ $1 -eq 2 ] ; then
-        echo "Plotting contours (var = $1) for step = $t"
-         #    depotime;       ash_arrival_time
-    elif [ $1 -eq 4 ] || [ $1 -eq 7 ] ; then
-        echo "Plotting contours (var = $1) for step = $t"
-    elif [ $1 -eq 6 ] ; then
-        #6=depothick final (mm)
-        echo "Plotting contours (var = $1) for step = $t"
+    echo " Creating map for time = ${time}" 
+    if   [ $1 -eq 0 ] ; then # depothick (time-series)
+        echo "Plotting contours (var = $1) for step = $t from ${infile}"
+        ${ASH3DBINDIR}/Ash3d_PostProc 3d_tephra_fall.nc 3 3 $((t+1))
+    elif [ $1 -eq 1 ] ; then # ashcon_max
+        echo "Plotting contours (var = $1) for step = $t from ${infile}"
+        ${ASH3DBINDIR}/Ash3d_PostProc 3d_tephra_fall.nc 9 3 $((t+1))
+    elif [ $1 -eq 2 ] ; then # cloud_height
+        echo "Plotting contours (var = $1) for step = $t from ${infile}"
+        ${ASH3DBINDIR}/Ash3d_PostProc 3d_tephra_fall.nc 10 3 $((t+1))
+    elif [ $1 -eq 3 ] ; then # cloud_load
+        echo "Plotting contours (var = $1) for step = $t from ${infile}"
+        ${ASH3DBINDIR}/Ash3d_PostProc 3d_tephra_fall.nc 12 3 $((t+1))
+    elif [ $1 -eq 4 ] ; then # depotime
+        echo "Plotting contours (var = $1) (final step) from ${infile}"
+        ${ASH3DBINDIR}/Ash3d_PostProc 3d_tephra_fall.nc 7 3
+    elif [ $1 -eq 5 ] ; then # depothick final (inches)
+        echo "Plotting contours (var = $1) (final step) from ${infile}"
+        ${ASH3DBINDIR}/Ash3d_PostProc 3d_tephra_fall.nc 6 3
+    elif [ $1 -eq 6 ] ; then # depothick final (mm)
+        echo "Plotting contours (var = $1) (final step) from ${infile}"
+        ${ASH3DBINDIR}/Ash3d_PostProc 3d_tephra_fall.nc 5 3
+    elif [ $1 -eq 7 ] ; then # ash_arrival_time
+        echo "Plotting contours (var = $1) (final step) from ${infile}"
+        ${ASH3DBINDIR}/Ash3d_PostProc 3d_tephra_fall.nc 14 3
     else
         echo $1
         echo "I don't know which variable to plot"
         exit
     fi
+    # Get the name of the last png created and convert to gif
+    ofile=`ls -1tr *png | tail -1`
+    convert $ofile temp.gif
 
-# uncomment this
-#    convert temp.gif output_t${time}.gif
-#    if test -r official.txt; then
-#       convert -append -background white output_t${time}.gif \
-#               ${ASH3DSHARE_PP}/caveats_official.png output_t${time}.gif
-#      else
-#       convert -append -background white output_t${time}.gif \
-#               ${ASH3DSHARE_PP}/caveats_notofficial.png output_t${time}.gif
-#    fi
+    convert temp.gif output_t${time}.gif
+    if test -r official.txt; then
+       convert -append -background white output_t${time}.gif \
+               ${ASH3DSHARE_PP}/caveats_official.png output_t${time}.gif
+      else
+       convert -append -background white output_t${time}.gif \
+               ${ASH3DSHARE_PP}/caveats_notofficial.png output_t${time}.gif
+    fi
 done
 # End of time loop
-
-exit
 
 # Finalizing output (animations, shape files, etc.)
 if [ $1 -eq 0 ] || [ $1 -eq 1 ] || [ $1 -eq 2 ] || [ $1 -eq 3 ] ; then
@@ -172,26 +201,32 @@ if [ $1 -eq 0 ] || [ $1 -eq 1 ] || [ $1 -eq 2 ] || [ $1 -eq 3 ] ; then
         cp ${var}_animation.gif cloud_animation.gif
     fi
   elif [ $1 -eq 5 ]; then
-    #Make shapefile
-    rm -f var.txt
-    echo "dp" > var.txt
-    echo "Generating shapefile"
-    rm -f dp.shp dp.prj dp.shx dp.dbf dp_shp.zip
-    python ${ASH3DSCRIPTDIR}/xyz2shp.py
+    # Make shapefile for depothick final (inches)
+    echo "Generating shapefile for depothick final (inches)"
+    rm -f depothik.shx depothik.shp depothik.prj depothik.dbf dp_in_shp.zip
+    ${ASH3DBINDIR}/Ash3d_PostProc 3d_tephra_fall.nc 6 5
+    if test -r depothik.zip ; then
+      mv depothik.zip dp_in_shp.zip
+    else
+      zip dp_in_shp.zip depothik.shx depothik.shp depothik.prj depothik.dbf
+    fi
     if [ "$CLEANFILES" == "T" ]; then
         echo "Removing temp files for shapefile generation"
-        rm contour*.xyz volc.txt var.txt
+        rm depothik.shx depothik.shp depothik.prj depothik.dbf
     fi
   elif [ $1 -eq 6 ]; then
-    rm -f var.txt
-    echo "dp_mm" > var.txt
-    #Make shapefile
-    echo "Generating shapefile"
-    rm -f dp_mm.shp dp_mm.prj dp_mm.shx dp_mm.dbf dp_mm_shp.zip
-    python ${ASH3DSCRIPTDIR}/xyz2shp.py
+    # Make shapefile for depothick final (mm)
+    echo "Generating shapefile for depothick final (mm)"
+    rm -f depothik.shx depothik.shp depothik.prj depothik.dbf dp_mm_shp.zip
+    ${ASH3DBINDIR}/Ash3d_PostProc 3d_tephra_fall.nc 5 5
+    if test -r depothik.zip ; then
+      mv depothik.zip dp_mm_shp.zip
+    else
+      zip dp_mm_shp.zip depothik.shx depothik.shp depothik.prj depothik.dbf
+    fi
     if [ "$CLEANFILES" == "T" ]; then
         echo "Removing temp files for shapefile generation"
-        rm contour*.xyz volc.txt var.txt
+        rm depothik.shx depothik.shp depothik.prj depothik.dbf
     fi
 fi
 
@@ -214,39 +249,22 @@ do
         cp output_t${time}.gif deposit_thickness_mm.gif
     fi
     mv output_t${time}.gif ${filename}_${var}.gif
-    # Advancing to the next time step
-    if [ $time_interval = "1" ]; then
-        t=$(($t+3))
-      elif [ $time_interval = "2" ]; then
-        t=$(($t+3))
-      else
-        t=$(($t+1))
-    fi
+    t=$(($t+1))
 done
 
 # Clean up more temporary files
 if [ "$CLEANFILES" == "T" ]; then
-   echo "End of GMT_Ash3d_to_gif.sh: removing files."
-   rm -f *.grd *.lev
-   rm -f current_time.txt
-   rm -f caption*.txt cities.xy map_range*txt legend_positions*txt
-   rm -f legend*png
-   rm -f temp.*
-   rm -f gmt.conf gmt.history
-   rm -f world_cities.txt
-   rm -f VAAC_*.xy *cpt
-   rm -f contourfile*xyz
+   echo "End of PP_Ash3d_to_gif.sh: removing files."
+   rm -f volc.dat volc.txt
+   rm -f outvar.* cities.xy
+   rm -f *png temp.gif Ash3d_pp.log
 fi
 
-echo "Eruption start time: "$year $month $day $hour
-echo "plume height (km) ="$EPlH
-echo "eruption duration (hrs) ="$EDur
-echo "erupted volume (km3 DRE) ="$EVol
 echo "++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
-echo "finished GMT_Ash3d_to_gif.sh $1 $var"
+echo "finished PP_Ash3d_to_gif.sh $1 $var"
 echo `date`
 echo "++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
 
-echo "exiting GMT_Ash3d_to_gif.sh with status $rc"
+echo "exiting PP_Ash3d_to_gif.sh with status $rc"
 exit $rc
 

@@ -35,7 +35,8 @@ echo `date`
 echo "------------------------------------------------------------"
 
 CLEANFILES="T"
-RUNDATE=`date -u "+%D %T"`
+# Date of post-processing (may not be run date of simulation)
+PPDATE=`date -u "+%D %T"`
 
 # We need to know if we must prefix all gmt commands with 'gmt', as required by version 5/6
 GMTv=5
@@ -99,10 +100,12 @@ if [[ "$rc" -gt 0 ]] ; then
     exit 1
 fi
 echo $volc > volc.txt
-date=`ncdump -h ${infile} | grep Date | cut -d\" -f2 | cut -c 1-10`
+#date=`ncdump -h ${infile} | grep Date | cut -d\" -f2 | cut -c 1-10`
 rm -f var.txt
 echo "dp_mm" > var.txt
-echo "Processing " $volc " on " $date
+echo "Processing " $volc " on " $PPDATE
+#Ash3d run date
+RUNDATE=`ncdump -h ${infile} | grep date | cut -d\" -f2`
 #time of eruption start
 year=`ncdump -h ${infile} | grep ReferenceTime | cut -d\" -f2 | cut -c1-4`
 month=`ncdump -h ${infile} | grep ReferenceTime | cut -d\" -f2 | cut -c5-6`

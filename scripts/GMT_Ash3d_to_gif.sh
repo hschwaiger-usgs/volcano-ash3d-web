@@ -70,7 +70,8 @@ cd ${RUNHOME}
 echo `date`
 echo "------------------------------------------------------------"
 CLEANFILES="T"
-RUNDATE=`date -u "+%D %T"`
+# Date of post-processing (may not be run date of simulation)
+PPDATE=`date -u "+%D %T"`
 
 # We need to know if we must prefix all gmt commands with 'gmt', as required by version 5/6
 GMTv=5
@@ -133,10 +134,11 @@ if [[ "$rc" -gt 0 ]] ; then
     exit 1
 fi
 echo $volc > volc.txt
-date=`ncdump -h ${infile} | grep Date | cut -d\" -f2 | cut -c 1-10`
+#date=`ncdump -h ${infile} | grep Date | cut -d\" -f2 | cut -c 1-10`
 
-
-echo "Processing " $volc " on " $date
+echo "Processing " $volc " on " $PPDATE
+#Ash3d run date
+RUNDATE=`ncdump -h ${infile} | grep date | cut -d\" -f2`
 #time of eruption start
 year=`ncdump -h ${infile} | grep ReferenceTime | cut -d\" -f2 | cut -c1-4`
 month=`ncdump -h ${infile} | grep ReferenceTime | cut -d\" -f2 | cut -c5-6`
@@ -236,7 +238,8 @@ if [ $1 -eq 0 ] || [ $1 -eq 1 ] || [ $1 -eq 2 ] || [ $1 -eq 3 ] ; then
   elif [ $1 -eq 5 ] || [ $1 -eq 6 ] ; then
     t=$((tmax-1))
     # We need to convert the NaN's to zero to get the lowest contour
-    gmt grdconvert "$infile?$var[$t]" var_out_final.grd
+    #gmt grdconvert "$infile?$var[$t]" var_out_final.grd
+    gmt grdconvert "$infile?depothickFin" var_out_final.grd
     gmt grdmath var_out_final.grd zero.grd AND = var_out_final.grd
 
      #   depotime;       ash_arrival_time
@@ -706,21 +709,14 @@ do
     hours_now=`echo "$hours_real + $time" | bc -l`
     hours_since=`${USGSROOT}/bin/HoursSince1900 $year $month $day $hours_now`
     filename=`${USGSROOT}/bin/yyyymmddhh_since_1900 $hours_since`
-    echo "moving file output_t${time}.gif to ${filename}_${var}.gif"
+    echo "moving file $t of $tmax output_t${time}.gif to ${filename}_${var}.gif"
     if [ $1 -eq 5 ]; then
         cp output_t${time}.gif deposit_thickness_inches.gif
       elif [ $1 -eq 6 ]; then
         cp output_t${time}.gif deposit_thickness_mm.gif
     fi
     mv output_t${time}.gif ${filename}_${var}.gif
-    # Advancing to the next time step
-    if [ $time_interval = "1" ]; then
-        t=$(($t+3))
-      elif [ $time_interval = "2" ]; then
-        t=$(($t+3))
-      else
-        t=$(($t+1))
-    fi
+    t=$(($t+1))
 done
 
 # Clean up more temporary files
@@ -728,9 +724,9 @@ if [ "$CLEANFILES" == "T" ]; then
    echo "End of GMT_Ash3d_to_gif.sh: removing files."
    rm -f *.grd *.lev
    rm -f current_time.txt
-   rm -f caption*.txt cities.xy map_range*txt legend_positions*txt
+   rm -f caption*.txt cities.xy map_range*txt legend_positions*txt CC.txt CL.txt
    rm -f legend*png
-   rm -f temp.*
+   rm -f temp.* tmp.txt volc.txt
    rm -f gmt.conf gmt.history
    rm -f world_cities.txt
    rm -f VAAC_*.xy *cpt
