@@ -238,8 +238,13 @@ if [ $1 -eq 0 ] || [ $1 -eq 1 ] || [ $1 -eq 2 ] || [ $1 -eq 3 ] ; then
   elif [ $1 -eq 5 ] || [ $1 -eq 6 ] ; then
     t=$((tmax-1))
     # We need to convert the NaN's to zero to get the lowest contour
-    #gmt grdconvert "$infile?$var[$t]" var_out_final.grd
-    gmt grdconvert "$infile?depothickFin" var_out_final.grd
+    # When the web servers are running updated Ash3d executables, we can just use
+    # the final deposit thickness variable depothickFin
+    #gmt grdconvert "$infile?depothickFin" var_out_final.grd
+    # Until then, use the last time step of the transient deposit variable which
+    # might not account for the last bit at the tail of the simulation
+    gmt grdconvert "$infile?$var[$t]" var_out_final.grd
+
     gmt grdmath var_out_final.grd zero.grd AND = var_out_final.grd
 
      #   depotime;       ash_arrival_time
