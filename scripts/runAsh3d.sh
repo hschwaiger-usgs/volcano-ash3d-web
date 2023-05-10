@@ -156,15 +156,11 @@ if [[ $? -ne 0 ]]; then
     rc=$((rc + 1))
 fi
 if [ "$RUNTYPE" == "ADV"  ] ; then
-    #if test -r ash3d_input.inp; then
-    #  echo "Using ash3d_input.inp"
-    #  cp ash3d_input.inp
-    #else
-      # lobby to have the file written from the webpage be called ash3d_input_adv.inp
-      cp ${INFILE_MAIN} ash3d_input_adv.inp
-      echo "Running full_2_simp.sh"
-      ${ASH3DSCRIPTDIR}/full_2_simp.sh ash3d_input_adv.inp
-    #fi
+    # lobby to have the file written from the webpage be called ash3d_input_adv.inp
+    cp ${INFILE_MAIN} ash3d_input_adv.inp
+    # Note that we only need a 'simple' input file since the trajectory code expects that
+    echo "Running full_2_simp.sh"
+    ${ASH3DSCRIPTDIR}/full_2_simp.sh ash3d_input_adv.inp
 fi
 if [ "$CLEANFILES" == "T" ]; then
     echo "removing old input & output files"
@@ -198,61 +194,55 @@ echo "__________________________________________________________________________
 echo ">>>>>>>>>>>>>>>>>          Setting up preliminary run           <<<<<<<<<<<<<<<"
 echo "_______________________________________________________________________________"
 # First, generate the full input file based on the mini-web-version, if needed
-echo "running ${MAKEINPUT1} ${INFILE_SIMPLE} ${INFILE_PRELIM}"
-if test -r ${ASH3DBINDIR}/${MAKEINPUT1} ; then
-    ${ASH3DBINDIR}/${MAKEINPUT1} ${INFILE_SIMPLE} ${INFILE_PRELIM} \
-                                 ${LAST_DOWNLOADED}
-  else
-    echo "Error: ${ASH3DBINDIR}/${MAKEINPUT1} doesn't exist"
-    exit 1
-fi
-rc=$((rc + $?))
-if [[ "$rc" -gt 0 ]] ; then
-    echo "Error running ${MAKEINPUT1}: rc=$rc"
-    exit 1
-fi
+if [ "$RUNTYPE" == "ADV"  ] ; then
+    echo "Advanced run: skipping preliminary Ash3d run"
+ else
+    echo "running ${MAKEINPUT1} ${INFILE_SIMPLE} ${INFILE_PRELIM}"
+    if test -r ${ASH3DBINDIR}/${MAKEINPUT1} ; then
+        ${ASH3DBINDIR}/${MAKEINPUT1} ${INFILE_SIMPLE} ${INFILE_PRELIM} \
+                                     ${LAST_DOWNLOADED}
+      else
+        echo "Error: ${ASH3DBINDIR}/${MAKEINPUT1} doesn't exist"
+        exit 1
+    fi
+    rc=$((rc + $?))
+    if [[ "$rc" -gt 0 ]] ; then
+        echo "Error running ${MAKEINPUT1}: rc=$rc"
+        exit 1
+    fi
+   if test -r ${INFILE_PRELIM} ; then
+       echo "${INFILE_PRELIM} created okay"
+     else
+       echo "Error: ${INFILE_PRELIM} not created"
+       exit 1
+   fi
 
-if test -r ${INFILE_PRELIM} ; then
-    echo "${INFILE_PRELIM} created okay"
-  else
-    echo "Error: ${INFILE_PRELIM} not created"
-    exit 1
-fi
-
-echo "*******************************************************************************"
-echo "*******************************************************************************"
-echo "**********                  Preliminary Ash3d run                    **********"
-echo "*******************************************************************************"
-echo "*******************************************************************************"
-# The default log file writen by Ash3d is Ash3d.lst, but we will capture all stdout to
-# an alternative log file.  This initial 10x10 run will produce output files that will
-# be processed to determine the geometry of the subsequent full run.
-# For deposit runs, ${INFILE_PRELIM} and DepositFile_____final.dat are needed.
-# For cloud runs, ${INFILE_PRELIM} and CloudLoad_*hrs.dat are needed.
-echo "   Running :: ${ASH3DEXEC} ${INFILE_PRELIM} | tee ashlog_prelim.txt"
-${ASH3DEXEC} ${INFILE_PRELIM} | tee ashlog_prelim.txt
-echo "-------------------------------------------------------------------------------"
-echo "-------------------------------------------------------------------------------"
-echo "----------             Completed  Preliminary Ash3d run              ----------"
-echo "-------------------------------------------------------------------------------"
-echo "-------------------------------------------------------------------------------"
-rc=$((rc + $?))
-if [[ "$rc" -gt 0 ]] ; then
-    echo "Error running Preliminary Ash3d run: rc=$rc"
-    exit 1
-fi
-
-#echo "zipping up kml files for preliminary Ash3d run"
-#if test -r deposit_thickness_mm.kml; then
-#    zip deposit_thickness_mm_prelim.kmz deposit_thickness_mm.kml
-#fi
-#if test -r CloudLoad.kml; then
-#    zip CloudLoad_prelim.kmz CloudLoad.kml
-#fi
-
-if [ "$CLEANFILES" == "T" ]; then
-    echo "removing kml files"
-    rm -f *.kml *kmz AshArrivalTimes.txt
+   echo "*******************************************************************************"
+   echo "*******************************************************************************"
+   echo "**********                  Preliminary Ash3d run                    **********"
+   echo "*******************************************************************************"
+   echo "*******************************************************************************"
+   # The default log file writen by Ash3d is Ash3d.lst, but we will capture all stdout to
+   # an alternative log file.  This initial 10x10 run will produce output files that will
+   # be processed to determine the geometry of the subsequent full run.
+   # For deposit runs, ${INFILE_PRELIM} and DepositFile_____final.dat are needed.
+   # For cloud runs, ${INFILE_PRELIM} and CloudLoad_*hrs.dat are needed.
+   echo "   Running :: ${ASH3DEXEC} ${INFILE_PRELIM} | tee ashlog_prelim.txt"
+   ${ASH3DEXEC} ${INFILE_PRELIM} | tee ashlog_prelim.txt
+   echo "-------------------------------------------------------------------------------"
+   echo "-------------------------------------------------------------------------------"
+   echo "----------             Completed  Preliminary Ash3d run              ----------"
+   echo "-------------------------------------------------------------------------------"
+   echo "-------------------------------------------------------------------------------"
+   rc=$((rc + $?))
+   if [[ "$rc" -gt 0 ]] ; then
+       echo "Error running Preliminary Ash3d run: rc=$rc"
+       exit 1
+   fi
+   if [ "$CLEANFILES" == "T" ]; then
+       echo "removing kml files"
+       rm -f *.kml *kmz AshArrivalTimes.txt
+   fi
 fi
 
 echo "_______________________________________________________________________________"
