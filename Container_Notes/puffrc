@@ -1,5 +1,0 @@
-model=gfs mask=YYYYMMDDHH_gfs.nc var=u varUname=u path=/home/ash3d/www/html/puff/data/puff/gfs
-model=gfs mask=YYYYMMDDHH_gfs.nc var=v varVname=v path=/home/ash3d/www/html/puff/data/puff/gfs
-model=ncep mask=uwnd.YYYY.nc var=u varUname=uwnd path=/home/ash3d/www/html/puff/data/puff/ncep
-model=ncep mask=vwnd.YYYY.nc var=v varVname=vwnd path=/home/ash3d/www/html/puff/data/puff/ncep
-dem=gtopo30 path=/home/ash3d/www/html/puff/data/gtopo30

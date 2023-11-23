@@ -2,7 +2,7 @@
 
 # $1 will be the java thread id, ash3d client runs have ash3dclient-thread-{thread_id} as a parameter to the run.
 
-LOGFILE=/webdata/int-vsc-ash.wr.usgs.gov/runs/killrun.log
+LOGFILE=/var/www/html/ash3d-api/htdocs/ash3druns/killrun.log
 rc=0
 
 cat /dev/null > $LOGFILE

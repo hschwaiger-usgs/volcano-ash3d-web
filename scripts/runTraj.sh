@@ -23,10 +23,15 @@ echo "running runTraj.sh"
 echo `date`
 echo "------------------------------------------------------------"
 rc=0                                             # error message accumulator
+if [ -z ${WINDROOT} ];then
+ # Standard Linux location
+ WINDROOT="/data/WindFiles"
+ # Mac
+ #WINDROOT="/opt/data/WindFiles"
+fi
 
 USGSROOT="/opt/USGS"
 ASH3DROOT="${USGSROOT}/Ash3d"
-WINDROOT="/data/WindFiles"
 
 ASH3DBINDIR="${ASH3DROOT}/bin"
 GFSDATAHOME="${WINDROOT}/gfs"

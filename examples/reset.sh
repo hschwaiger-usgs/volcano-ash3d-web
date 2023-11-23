@@ -1,6 +1,6 @@
 #!/bin/bash
 
-#WRKDIR=/home/ash3d/Programs/GIT/Ash3d_web/examples
+#WRKDIR=/home/ash3d/Programs/GIT/volcano-ash3d-web/examples
 WRKDIR=$PWD
 
 if [ -d "$WRKDIR" ] 

@@ -124,25 +124,20 @@ ifeq ($(SYSTEM), gfortran)
 # Debugging flags
 ifeq ($(RUN), DEBUG)
     FFLAGS =  -O0 -g3 -Wall -fbounds-check -pedantic -fbacktrace -fimplicit-none -Wunderflow -Wuninitialized -ffpe-trap=invalid,zero,overflow -fdefault-real-8
-    ASH3DEXEC=Ash3d_debug
 endif
 ifeq ($(RUN), DEBUGOMP)
     FFLAGS =  -g3 -pg -Wall -fbounds-check -pedantic -fimplicit-none -Wunderflow -Wuninitialized -Wmaybe-uninitialized -ffpe-trap=invalid,zero,overflow -fdefault-real-8 -fopenmp -lgomp
-    ASH3DEXEC=Ash3d_debugOMP
 endif
 # Profiling flags
 ifeq ($(RUN), PROF)
     FFLAGS = -g -pg -w -fno-math-errno -funsafe-math-optimizations -fno-trapping-math -fno-signaling-nans -fcx-limited-range -fno-rounding-math -fdefault-real-8
-    ASH3DEXEC=Ash3d_prof
 endif
 # Production run flags
 ifeq ($(RUN), OPT)
     FFLAGS = -O3 -w -fno-math-errno -funsafe-math-optimizations -fno-trapping-math -fno-signaling-nans -fcx-limited-range -fno-rounding-math -fdefault-real-8
-    ASH3DEXEC=Ash3d
 endif
 ifeq ($(RUN), OMPOPT)
     FFLAGS = -O3 -w -ffast-math -fdefault-real-8 -fopenmp -lgomp
-    ASH3DEXEC=Ash3d_omp
 endif
 
       # Preprocessing flags
@@ -162,25 +157,20 @@ ifeq ($(SYSTEM), ifort)
 # Debugging flags
 ifeq ($(RUN), DEBUG)
     FFLAGS = -g2 -pg -warn all -check all -real-size 64 -check uninit -traceback
-    ASH3DEXEC=Ash3d_debug
 endif
 ifeq ($(RUN), DEBUGOMP)
     FFLAGS = -g2 -pg -warn all -check all -real-size 64 -check uninit -openmp
-    ASH3DEXEC=Ash3d_debugOMP
 endif
 # Profiling flags
 ifeq ($(RUN), PROF)
     FFLAGS = -g2 -pg
-    ASH3DEXEC=Ash3d_prof
 endif
 # Production run flags
 ifeq ($(RUN), OPT)
     FFLAGS = -O3 -ftz -w -ipo
-    ASH3DEXEC=Ash3d
 endif
 ifeq ($(RUN), OMPOPT)
     FFLAGS = -O3 -ftz -w -ipo -openmp
-    ASH3DEXEC=Ash3d_omp
 endif
 
       # Preprocessing flags

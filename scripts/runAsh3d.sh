@@ -19,12 +19,19 @@
 #      technical support to users of this software.
 
 #      Usage: runAsh3d_ac.sh INPUT_PATH, ZIP_NAME, DASHBOARD_IND (T or F), RUN_ID, JAVA_THREAD_ID
-#       e.g. /data/www/ash3d-api/htdocs/ash3druns/runAsh3d.sh          \
-#               /data/www/ash3d-api/htdocs/ash3druns/ash3d_run_334738/ \
+#       e.g. /var/www/ash3d-api/htdocs/ash3druns/runAsh3d.sh          \
+#               /var/www/ash3d-api/htdocs/ash3druns/ash3d_run_334738/ \
 #               ash3d_test_adv_20201015-19:25:29z                      \
 #               F                                                      \
 #               334738                                                 \
 #               ash3dclient-thread-370
+
+if [ -z ${WINDROOT} ];then
+ # Standard Linux location
+ WINDROOT="/data/WindFiles"
+ # Mac
+ #WINDROOT="/opt/data/WindFiles"
+fi
 
 echo "------------------------------------------------------------"
 echo "running runAsh3d.sh with parameters:"
@@ -55,7 +62,6 @@ echo "HOST=$HOST"
 
 USGSROOT="/opt/USGS"
 ASH3DROOT="${USGSROOT}/Ash3d"
-WINDROOT="/data/WindFiles"
 GFSDATAHOME="${WINDROOT}/gfs"
 
 ASH3DBINDIR="${ASH3DROOT}/bin"
