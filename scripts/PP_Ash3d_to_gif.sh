@@ -28,43 +28,37 @@ if [ -z $1 ] ; then
     exit 1
 fi
 
+
+pp=3
+ASH3DPLOT=$p
 #  variable code , rundirectory
 echo "------------------------------------------------------------"
 echo "running PP_Ash3d_to_gif.sh with parameter:"
 echo "  $1"
 if [ $1 -eq 0 ]; then
   echo " 0 = depothick"
-fi
-if [ $1 -eq 1 ]; then
+elif [ $1 -eq 1 ]; then
   echo " 1 = ashcon_max"
-fi
-if [ $1 -eq 2 ]; then
+elif [ $1 -eq 2 ]; then
   echo " 2 = cloud_height"
-fi
-if [ $1 -eq 3 ]; then
+elif [ $1 -eq 3 ]; then
   echo " 3 = cloud_load"
-fi
-if [ $1 -eq 4 ]; then
+elif [ $1 -eq 4 ]; then
   echo " 4 = depotime"
-fi
-if [ $1 -eq 5 ]; then
+elif [ $1 -eq 5 ]; then
   echo " 5 = depothick final (inches)"
-fi
-if [ $1 -eq 6 ]; then
+elif [ $1 -eq 6 ]; then
   echo " 6 = depothick final (mm)"
-fi
-if [ $1 -eq 7 ]; then
+elif [ $1 -eq 7 ]; then
   echo " 7 = ash_arrival_time"
 fi
 
-# The optional second command-line argument is used in podman containers
-# to set the run directory
-if [ "$#" -eq 2 ]; then
-  echo "Second command line argument detected: setting run directory"
-  RUNHOME=$2
-  else
+#if [ "$#" -eq 2 ]; then
+#  echo "Second command line argument detected: setting run directory"
+#  RUNHOME=$2
+#  else
   RUNHOME=`pwd`
-fi
+#fi
 cd ${RUNHOME}
 echo `date`
 echo "------------------------------------------------------------"
@@ -150,28 +144,28 @@ do
     echo " Creating map for time = ${time}" 
     if   [ $1 -eq 0 ] ; then # depothick (time-series)
         echo "Plotting contours (var = $1) for step = $t from ${infile}"
-        ${ASH3DBINDIR}/Ash3d_PostProc 3d_tephra_fall.nc 3 3 $((t+1))
+        ASH3DPLOT=$p ${ASH3DBINDIR}/Ash3d_PostProc 3d_tephra_fall.nc 3 3 $((t+1))
     elif [ $1 -eq 1 ] ; then # ashcon_max
         echo "Plotting contours (var = $1) for step = $t from ${infile}"
-        ${ASH3DBINDIR}/Ash3d_PostProc 3d_tephra_fall.nc 9 3 $((t+1))
+        ASH3DPLOT=$p ${ASH3DBINDIR}/Ash3d_PostProc 3d_tephra_fall.nc 9 3 $((t+1))
     elif [ $1 -eq 2 ] ; then # cloud_height
         echo "Plotting contours (var = $1) for step = $t from ${infile}"
-        ${ASH3DBINDIR}/Ash3d_PostProc 3d_tephra_fall.nc 10 3 $((t+1))
+        ASH3DPLOT=$p ${ASH3DBINDIR}/Ash3d_PostProc 3d_tephra_fall.nc 10 3 $((t+1))
     elif [ $1 -eq 3 ] ; then # cloud_load
         echo "Plotting contours (var = $1) for step = $t from ${infile}"
-        ${ASH3DBINDIR}/Ash3d_PostProc 3d_tephra_fall.nc 12 3 $((t+1))
+        ASH3DPLOT=$p ${ASH3DBINDIR}/Ash3d_PostProc 3d_tephra_fall.nc 12 3 $((t+1))
     elif [ $1 -eq 4 ] ; then # depotime
         echo "Plotting contours (var = $1) (final step) from ${infile}"
-        ${ASH3DBINDIR}/Ash3d_PostProc 3d_tephra_fall.nc 7 3
+        ASH3DPLOT=$p ${ASH3DBINDIR}/Ash3d_PostProc 3d_tephra_fall.nc 7 3
     elif [ $1 -eq 5 ] ; then # depothick final (inches)
         echo "Plotting contours (var = $1) (final step) from ${infile}"
-        ${ASH3DBINDIR}/Ash3d_PostProc 3d_tephra_fall.nc 6 3
+        ASH3DPLOT=$p ${ASH3DBINDIR}/Ash3d_PostProc 3d_tephra_fall.nc 6 3
     elif [ $1 -eq 6 ] ; then # depothick final (mm)
         echo "Plotting contours (var = $1) (final step) from ${infile}"
-        ${ASH3DBINDIR}/Ash3d_PostProc 3d_tephra_fall.nc 5 3
+        ASH3DPLOT=$p ${ASH3DBINDIR}/Ash3d_PostProc 3d_tephra_fall.nc 5 3
     elif [ $1 -eq 7 ] ; then # ash_arrival_time
         echo "Plotting contours (var = $1) (final step) from ${infile}"
-        ${ASH3DBINDIR}/Ash3d_PostProc 3d_tephra_fall.nc 14 3
+        ASH3DPLOT=$p ${ASH3DBINDIR}/Ash3d_PostProc 3d_tephra_fall.nc 14 3
     else
         echo $1
         echo "I don't know which variable to plot"

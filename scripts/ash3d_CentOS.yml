@@ -135,7 +135,7 @@
         user: ash3d
         hour: '01'
         minute: '01'
-        day: '06'
+        weekday: '06'
         job: /opt/USGS/bin/autorun_scripts/autorun_NCEP_50YearReanalysis.sh   > /home/ash3d/cron_logs/NCEP_50yr_log   2>&1
       become_user: ash3d
     - name: Create directory for gfs data
