@@ -228,9 +228,17 @@ if [ $1 -eq 0 ] || [ $1 -eq 1 ] || [ $1 -eq 2 ] || [ $1 -eq 3 ] ; then
     do
       time=`echo "${t0} + ${t} * ${time_interval}" | bc -l`
       echo "   ${volc} : Generating ash grids for time = " ${time}
+       # Make a cloud mask
+      gmt grdconvert "$infile?cloud_mask[$t]" tmp1.grd
+      gmt grdmath 0 tmp1.grd NAN = tmp2.grd
+      gmt grdmath 1 tmp2.grd ADD = cloud.grd
       gmt grdconvert "$infile?$var[$t]" var_out_t${time}.grd
       if [ $1 -eq 0 ]; then
+        # transient deposit
         gmt grdmath var_out_t${time}.grd zero.grd AND = var_out_t${time}.grd
+      else
+        # masking out non-cloud bits for the transient cloud (needed for flooded contours)
+        gmt grdmath cloud.grd var_out_t${time}.grd MUL = var_out_t${time}.grd
       fi
     done  # end of time loop
 

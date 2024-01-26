@@ -199,7 +199,12 @@ for t in `seq 0 $((tmax-1))`;
 do
     time=`echo "${t0} + ${t} * ${time_interval}" | bc -l`
     echo "   ${volc} : Generating ash grids for time = " ${time}
-    gmt grdconvert "$infile?$var[$t]" var_out_t${time}.grd
+
+    gmt grdconvert "$infile?cloud_mask[$t]" tmp1.grd
+    gmt grdmath 0 tmp1.grd NAN = tmp2.grd
+    gmt grdmath 1 tmp2.grd ADD = cloud.grd
+    gmt grdconvert "$infile?$var[$t]" var.grd
+    gmt grdmath cloud.grd var.grd MUL = var_out_t${time}.grd
 done  # end of time loop
 echo "Finished generating all the grd files"
 
