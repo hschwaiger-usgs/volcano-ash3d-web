@@ -444,12 +444,14 @@ composite -geometry +${legendx_UL}+${legendy_UL} ${ASH3DSHARE_PP}/legend_dep_nws
 # Finalizing output (animations, shape files, etc.)
 #Make shapefile
 echo "Generating shapefile"
-rm -f dp.shp dp.prj dp.shx dp.dbf dp_shp.zip
-python ${ASH3DSCRIPTDIR}/xyz2shp.py
-if [ "$CLEANFILES" == "T" ]; then
-    echo "Removing temp files for shapefile generation"
-    rm contour*.xyz volc.txt var.txt
-fi
+#rm -f dp.shp dp.prj dp.shx dp.dbf dp_shp.zip
+#python ${ASH3DSCRIPTDIR}/xyz2shp.py
+#if [ "$CLEANFILES" == "T" ]; then
+#    echo "Removing temp files for shapefile generation"
+#    rm contour*.xyz volc.txt var.txt
+#fi
+${ASH3DBINDIR}/Ash3d_PostProc 3d_tephra_fall.nc 5 5
+mv depothik.zip dp_shp.zip
 # Clean up more temporary files
 if [ "$CLEANFILES" == "T" ]; then
    echo "End of GFSVolc_to_gif_dp.sh: removing files."
