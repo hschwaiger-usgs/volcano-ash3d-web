@@ -690,24 +690,16 @@ if [ $1 -eq 0 ] || [ $1 -eq 1 ] || [ $1 -eq 2 ] || [ $1 -eq 3 ] ; then
     #Make shapefile
     rm -f var.txt
     echo "dp" > var.txt
-    echo "Generating shapefile"
-    rm -f dp.shp dp.prj dp.shx dp.dbf dp_shp.zip
-    python ${ASH3DSCRIPTDIR}/xyz2shp.py
-    if [ "$CLEANFILES" == "T" ]; then
-        echo "Removing temp files for shapefile generation"
-        rm contour*.xyz volc.txt var.txt
-    fi
+    echo "Generating shapefile with Ash3d_PostProc 3d_tephra_fall.nc 6 5"
+    ${ASH3DBINDIR}/Ash3d_PostProc 3d_tephra_fall.nc 6 5
+    mv depothik.zip dp_shp.zip
   elif [ $1 -eq 6 ]; then
     rm -f var.txt
     echo "dp_mm" > var.txt
     #Make shapefile
-    echo "Generating shapefile"
-    rm -f dp_mm.shp dp_mm.prj dp_mm.shx dp_mm.dbf dp_mm_shp.zip
-    python ${ASH3DSCRIPTDIR}/xyz2shp.py
-    if [ "$CLEANFILES" == "T" ]; then
-        echo "Removing temp files for shapefile generation"
-        rm contour*.xyz volc.txt var.txt
-    fi
+    echo "Generating shapefile with Ash3d_PostProc 3d_tephra_fall.nc 5 5"
+    ${ASH3DBINDIR}/Ash3d_PostProc 3d_tephra_fall.nc 5 5
+    mv depothik.zip dp_mm_shp.zip
 fi
 
 echo "Renaming gif images"
