@@ -1,12 +1,21 @@
-### Execute: ansible-playbook ash3d_CentOS.yml -K
-# This is tested with CentOS 8/9, Rocky 8/9, RHEL 8/9
+### Execute: ansible-playbook ash3d_Ubuntu.yml -K
+# This is tested with Ubuntu 22/24
+#
+## Make sure user 'ash3d' is on the sudo list
+#
+## Update system
+# sudo apt-get update
+#
+## Add whatever certificate your network needs
+# sudo apt-get install ca-certificates
+#
+## Install ansible so we can run this playbook
+# sudo apt-get install ansible
 #
 # Re-runs will do very little. If needing to force reloads of all content 
 # delete these directories/files on the target server: 
-#
-#     /opt/USGS
-#     /home/ash3d/Programs
-#
+# If you are pushing to remote hosts, update your local hosts file and make suer
+# the server tag is changed below.
 # hosts are listed in /etc/ansible/hosts
 ---
 
@@ -34,38 +43,27 @@
     ### Ash3d                                                                ###
     ############################################################################
 
-    # sudo dnf config-manager --set-enabled crb
-
-    - name: Enable epel
-      yum:
-        name: epel-release
-        state: latest
 
     - name: Install build distribution software
-      yum:
-        name: git, gcc, gcc-gfortran, gcc-c++, make, lapack, lapack-devel, blas, blas-devel
+      apt:
+        name: build-essential, gfortran, liblapack64-3, liblapack64-dev, libblas64-3, libblas64-dev
         state: latest
 
     - name: Install netcdf and eccodes distribution software
-      yum:
-        name: netcdf, netcdf-devel, netcdf-fortran, netcdf-fortran-devel, eccodes, eccodes-devel
+      apt:
+        name: libnetcdf-c++4, libnetcdf-dev, libnetcdff-dev, libeccodes0, libeccodes-dev
         state: latest
 
     - name: Install postproc distribution software for maps
-      yum:
-        name: bc, zip, perl, nco, GMT, GMT-common, gshhg-gmt*, unix2dos, ImageMagick, gifsicle, ghostscript, java
+      apt:
+        name: bc, zip, perl, nco, gmt, gmt-common, gmt-gshhg*, gmt-dcw, tofrodos, imagemagick, gifsicle, ghostscript
         state: latest
 
     - name: Install software needed for Ash3d_PostProc
-      yum:
-        name: proj, plplot, plplot-devel, plplot-fortran-devel, gnuplot
+      apt:
+        name:  libplplot-dev, plplotfortran0, gnuplot, octave
         state: latest
 
-      # CentOS7 uses package gdal-python, but 8/9 use gdal-python-tools
-    - name: Install postproc distribution software for shapefiles (used by python script)
-      yum:
-        name: gdal, gdal-devel, gdal-pyth*
-        state: latest
 
     - name: Clone volcano-ash3d-hourssince git repository.
       git:

@@ -1,12 +1,21 @@
 ### Execute: ansible-playbook ash3d_CentOS.yml -K
 # This is tested with CentOS 8/9, Rocky 8/9, RHEL 8/9
 #
+## Make sure user 'ash3d' is on the sudo list
+#
+## Update system
+# sudo dnf config-manager --set-enabled crb
+# sudo yum update
+#
+## Add whatever certificate your network needs
+# sudo yum install ca-certificates
+#
+# sudo apt-get install ansible
+#
 # Re-runs will do very little. If needing to force reloads of all content 
 # delete these directories/files on the target server: 
-#
-#     /opt/USGS
-#     /home/ash3d/Programs
-#
+# If you are pushing to remote hosts, update your local hosts file and make suer
+# the server tag is changed below.
 # hosts are listed in /etc/ansible/hosts
 ---
 
@@ -34,7 +43,6 @@
     ### Ash3d                                                                ###
     ############################################################################
 
-    # sudo dnf config-manager --set-enabled crb
 
     - name: Enable epel
       yum:
@@ -58,14 +66,9 @@
 
     - name: Install software needed for Ash3d_PostProc
       yum:
-        name: proj, plplot, plplot-devel, plplot-fortran-devel, gnuplot
+        name: proj, plplot, plplot-devel, plplot-fortran-devel, gnuplot, octave
         state: latest
 
-      # CentOS7 uses package gdal-python, but 8/9 use gdal-python-tools
-    - name: Install postproc distribution software for shapefiles (used by python script)
-      yum:
-        name: gdal, gdal-devel, gdal-pyth*
-        state: latest
 
     - name: Clone volcano-ash3d-hourssince git repository.
       git:
