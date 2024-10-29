@@ -1,4 +1,4 @@
-### Execute: ansible-playbook ash3d_CentOS.yml -K
+### Execute: ansible-playbook ash3d_Redhat.yml -K
 # This is tested with CentOS 8/9, Rocky 8/9, RHEL 8/9
 #
 ## Make sure user 'ash3d' is on the sudo list
@@ -10,7 +10,7 @@
 ## Add whatever certificate your network needs
 # sudo yum install ca-certificates
 #
-# sudo apt-get install ansible
+# sudo yum install ansible
 #
 # Re-runs will do very little. If needing to force reloads of all content 
 # delete these directories/files on the target server: 
@@ -197,6 +197,7 @@
 #./INSTALL
 ###############################
 #
+###  git clone https://code.usgs.gov/vsc/ash3d/volcano-ash3d.git
 #    - name: Clone volcano-ash3d git repository
 #      git:
 ##        repo: 'https://github.com/DOI-USGS/volcano-ash3d.git'
@@ -205,13 +206,14 @@
 #        accept_hostkey: yes
 #        force: yes
 #        become_user: ash3d
-#    - name: Building Ash3d
-#      command: 'make all chdir=/home/ash3d/Programs/GIT/volcano-ash3d/src/'
-#    - name: Building Ash3d_PostProc
-#      command: 'make postproc chdir=/home/ash3d/Programs/GIT/volcano-ash3d/src/'
-#    - name: Installing Ash3d
-#      command: 'make install chdir=/home/ash3d/Programs/GIT/volcano-ash3d/src/'
+    - name: Building Ash3d
+      command: 'make all chdir=/home/ash3d/Programs/GIT/volcano-ash3d/src/'
+    - name: Building Ash3d_PostProc
+      command: 'make postproc chdir=/home/ash3d/Programs/GIT/volcano-ash3d/src/'
+    - name: Installing Ash3d
+      command: 'make install chdir=/home/ash3d/Programs/GIT/volcano-ash3d/src/'
 
+### git clone https://code.usgs.gov/vsc/ash3d/volcano-ash3d-web.git
 #    - name: Clone volcano-ash3d_web git repository.
 #      git:
 ##        repo: 'https://github.com/DOI-USGS/volcano-ash3d-web.git'
@@ -220,9 +222,9 @@
 #        accept_hostkey: yes
 #        force: yes
 #      become_user: ash3d
-#    - name: Building Ash3d_web-master
-#      command: 'make all chdir=/home/ash3d/Programs/GIT/volcano-ash3d-web/src/'
-#    - name: Installing Ash3d_web
-#      command: 'make install chdir=/home/ash3d/Programs/GIT/volcano-ash3d-web/src/'
+    - name: Building Ash3d_web-master
+      command: 'make all chdir=/home/ash3d/Programs/GIT/volcano-ash3d-web/src/'
+    - name: Installing Ash3d_web
+      command: 'make install chdir=/home/ash3d/Programs/GIT/volcano-ash3d-web/src/'
 
     ########
