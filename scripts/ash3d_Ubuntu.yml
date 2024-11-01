@@ -8,6 +8,8 @@
 #
 ## Add whatever certificate your network needs
 # sudo apt-get install ca-certificates
+# cp DOIRootCA2.cer /usr/local/share/ca-certificates/
+# sudo update-ca-certificates
 #
 ## Install ansible so we can run this playbook
 # sudo apt-get install ansible
@@ -46,12 +48,12 @@
 
     - name: Install build distribution software
       apt:
-        name: build-essential, gfortran, liblapack64-3, liblapack64-dev, libblas64-3, libblas64-dev
+        name: build-essential, gfortran, liblapack*, libblas*
         state: latest
 
     - name: Install netcdf and eccodes distribution software
       apt:
-        name: libnetcdf-c++4, libnetcdf-dev, libnetcdff-dev, libeccodes0, libeccodes-dev
+        name: libnetcdf*, libeccodes*
         state: latest
 
     - name: Install postproc distribution software for maps
@@ -61,13 +63,15 @@
 
     - name: Install software needed for Ash3d_PostProc
       apt:
-        name:  libplplot-dev, plplotfortran0, gnuplot, octave
+        name:  proj, libplplot-dev, gnuplot, octave
         state: latest
+      #plplotfortran0
 
-
+    # git clone https://code.usgs.gov/vsc/ash3d/volcano-ash3d-hourssince.git
     - name: Clone volcano-ash3d-hourssince git repository.
       git:
-        repo: 'https://github.com/DOI-USGS/volcano-ash3d-hourssince.git'
+        #repo: 'https://github.com/DOI-USGS/volcano-ash3d-hourssince.git'
+        repo: 'https://code.usgs.gov/vsc/ash3d/volcano-ash3d-hourssince.git'
         dest: /home/ash3d/Programs/GIT/volcano-ash3d-hourssince
         accept_hostkey: yes
         force: yes
@@ -77,9 +81,11 @@
     - name: Installing libhourssince
       command: 'make install chdir=/home/ash3d/Programs/GIT/volcano-ash3d-hourssince/'
 
+    # git clone https://code.usgs.gov/vsc/ash3d/volcano-ash3d-projection.git
     - name: Clone volcano-ash3d-projection git repository.
       git:
-        repo: 'https://github.com/DOI-USGS/volcano-ash3d-projection.git'
+        #repo: 'https://github.com/DOI-USGS/volcano-ash3d-projection.git'
+        repo: 'https://code.usgs.gov/vsc/ash3d/volcano-ash3d-projection.git'
         dest: /home/ash3d/Programs/GIT/volcano-ash3d-projection
         accept_hostkey: yes
         force: yes
@@ -89,9 +95,11 @@
     - name: Installing libprojection
       command: 'make install chdir=/home/ash3d/Programs/GIT/volcano-ash3d-projection/'
 
+    # git clone https://code.usgs.gov/vsc/ash3d/volcano-ash3d-metreader.git
     - name: Clone volcano-ash3d-metreader git repository.
       git:
-        repo: 'https://github.com/DOI-USGS/volcano-ash3d-metreader.git'
+        #repo: 'https://github.com/DOI-USGS/volcano-ash3d-metreader.git'
+        repo: 'https://code.usgs.gov/vsc/ash3d/volcano-ash3d-metreader.git'
         dest: /home/ash3d/Programs/GIT/volcano-ash3d-metreader
         accept_hostkey: yes
         force: yes
@@ -192,32 +200,34 @@
 #./INSTALL
 ###############################
 #
-#    - name: Clone volcano-ash3d git repository
-#      git:
-##        repo: 'https://github.com/DOI-USGS/volcano-ash3d.git'
-#        repo: 'https://code.usgs.gov/vsc/ash3d/volcano-ash3d.git'
-#        dest: /home/ash3d/Programs/GIT/volcano-ash3d
-#        accept_hostkey: yes
-#        force: yes
-#        become_user: ash3d
-#    - name: Building Ash3d
-#      command: 'make all chdir=/home/ash3d/Programs/GIT/volcano-ash3d/src/'
-#    - name: Building Ash3d_PostProc
-#      command: 'make postproc chdir=/home/ash3d/Programs/GIT/volcano-ash3d/src/'
-#    - name: Installing Ash3d
-#      command: 'make install chdir=/home/ash3d/Programs/GIT/volcano-ash3d/src/'
+#    git clone https://code.usgs.gov/vsc/ash3d/volcano-ash3d.git
+    - name: Clone volcano-ash3d git repository
+      git:
+        #repo: 'https://github.com/DOI-USGS/volcano-ash3d.git'
+        repo: 'https://code.usgs.gov/vsc/ash3d/volcano-ash3d.git'
+        dest: /home/ash3d/Programs/GIT/volcano-ash3d
+        accept_hostkey: yes
+        force: yes
+        become_user: ash3d
+    - name: Building Ash3d
+      command: 'make all chdir=/home/ash3d/Programs/GIT/volcano-ash3d/src/'
+    - name: Building Ash3d_PostProc
+      command: 'make postproc chdir=/home/ash3d/Programs/GIT/volcano-ash3d/src/'
+    - name: Installing Ash3d
+      command: 'make install chdir=/home/ash3d/Programs/GIT/volcano-ash3d/src/'
 
-#    - name: Clone volcano-ash3d_web git repository.
-#      git:
-##        repo: 'https://github.com/DOI-USGS/volcano-ash3d-web.git'
-#        repo: 'https://code.usgs.gov/vsc/ash3d/volcano-ash3d-web.git'
-#        dest: /home/ash3d/Programs/GIT/volcano-ash3d-web
-#        accept_hostkey: yes
-#        force: yes
-#      become_user: ash3d
-#    - name: Building Ash3d_web-master
-#      command: 'make all chdir=/home/ash3d/Programs/GIT/volcano-ash3d-web/src/'
-#    - name: Installing Ash3d_web
-#      command: 'make install chdir=/home/ash3d/Programs/GIT/volcano-ash3d-web/src/'
+#    git clone https://code.usgs.gov/vsc/ash3d/volcano-ash3d-web.git
+    - name: Clone volcano-ash3d-web git repository.
+      git:
+        #repo: 'https://github.com/DOI-USGS/volcano-ash3d-web.git'
+        repo: 'https://code.usgs.gov/vsc/ash3d/volcano-ash3d-web.git'
+        dest: /home/ash3d/Programs/GIT/volcano-ash3d-web
+        accept_hostkey: yes
+        force: yes
+      become_user: ash3d
+    - name: Building Ash3d_web-master
+      command: 'make all chdir=/home/ash3d/Programs/GIT/volcano-ash3d-web/src/'
+    - name: Installing Ash3d_web
+      command: 'make install chdir=/home/ash3d/Programs/GIT/volcano-ash3d-web/src/'
 
     ########
