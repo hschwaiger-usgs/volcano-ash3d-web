@@ -4,7 +4,7 @@ Ash3d_web
 This repository contains a collection of tools and data files useful for automatic Ash3d runs
 using GFS forecast data or NCEP 50-year reanalysis data.  
 
-To build the tools and install to the expected location (`/opt/USGS/Ash3d/), type, from
+To build the tools and install to the expected location (`/opt/USGS/Ash3d/`), type, from
 `volcano-ash3d-web/src`:  
 
 `make all`  
