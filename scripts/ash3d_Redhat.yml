@@ -8,11 +8,6 @@
 # sudo yum update
 #
 ## Add whatever certificate your network needs
-# sudo yum install ca-certificates
-#update-ca-trust force-enable
-#wget http://sslhelp.doi.net/docs/DOIRootCA2.cer
-#cp DOIRootCA2.cer /etc/pki/ca-trust/source/anchors/
-#update-ca-trust extract
 #
 # sudo yum install ansible
 #

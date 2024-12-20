@@ -7,9 +7,6 @@
 # sudo apt-get update
 #
 ## Add whatever certificate your network needs
-# sudo apt-get install ca-certificates
-# cp DOIRootCA2.cer /usr/local/share/ca-certificates/
-# sudo update-ca-certificates
 #
 ## Install ansible so we can run this playbook
 # sudo apt-get install ansible
