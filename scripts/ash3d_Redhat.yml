@@ -47,32 +47,61 @@
     ### Ash3d                                                                ###
     ############################################################################
 
+    # sudo dnf config-manager --set-enabled crb
 
     - name: Enable epel
       yum:
         name: epel-release
         state: latest
 
+    # git is needed to pull the software
+    # gcc-fortran is needed to build the software, with gcc and gcc-c++ needed for pre-processing
+    # make controls the build
+    # lapack and blas are needed for the diffusion solver. Only lapack and lapack-devel are normally
+    #  needed, but some distros have slightly different names so will install the glob
     - name: Install build distribution software
       yum:
         name: git, gcc, gcc-gfortran, gcc-c++, make, lapack*, blas*
         state: latest
 
+    # netcdf is needed to read windfiles and write output. eccodes is needed to read grib files
     - name: Install netcdf and eccodes distribution software
       yum:
         name: netcdf, netcdf-devel, netcdf-fortran, netcdf-fortran-devel, eccodes, eccodes-devel
         state: latest
 
+    # bc is a desk calculator used in post-processing scripts
+    # zip is needed for bundeling output and converting kml to kmz files
+    # perl is used in some post-processing scripts
+    # nco is a netcdf manipulation package used in post-processing (mainly ncks)
+    # GMT is the primary mapping package used in post-processing scripts (also in Ash3d_Post_Proc)
+    # unix2dos is used in post-processing to strip control characters from text files
+    # ImageMagick is used to assemble final images with legends/disclaimers/banners.
+    # gifsicle produces animated gifs
+    # ghostscript is used to convert ps,eps,pdf files
+    # java is needed run the script the uses netcdf-java to convert grib to netcdf files
     - name: Install postproc distribution software for maps
       yum:
         name: bc, zip, perl, nco, GMT, GMT-common, gshhg-gmt*, unix2dos, ImageMagick, gifsicle, ghostscript, java
         state: latest
 
+    # proj is needed to run the test cases (make check) for volcano-ash3d-projection
+    # plplot is used for producing png images with Ash3d_Post_Proc
+    # gnuplot is used for the accumulation plots at airports and for Ash3d_Post_Proc
+    # octave is only used by volcano-ash3d-optionalmodules for convergence testing
     - name: Install software needed for Ash3d_PostProc
       yum:
         name: proj, plplot, plplot-devel, plplot-fortran-devel, gnuplot, octave
         state: latest
 
+#       CentOS7 uses package gdal-python, but 8/9 use gdal-python-tools
+#       Note that gdal tool are only needed if you plan to use GFSVolc_to_gif_tvar.sh for dp dp_mm
+#       or GFSVolc_to_gif_dp[_mm].sh which uses xyz2shp.py to generate the shapefiles. If you use
+#       PP_Ash3d_to_gif.sh, then shapefiles are written directly from Ash3d_Post_proc
+#    - name: Install postproc distribution software for shapefiles (used by python script)
+#      yum:
+#        name: gdal, gdal-devel, gdal-pyth*
+#        state: latest
 
     # git clone https://code.usgs.gov/vsc/ash3d/volcano-ash3d-hourssince.git
     - name: Clone volcano-ash3d-hourssince git repository.
