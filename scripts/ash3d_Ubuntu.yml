@@ -46,21 +46,41 @@
     ############################################################################
 
 
+    # git is needed to pull the software
+    # gcc-fortran is needed to build the software, with gcc and gcc-c++ needed for pre-processing
+    # make controls the build
+    # lapack and blas are needed for the diffusion solver. Only lapack and lapack-devel are normally
+    #  needed, but some distros have slightly different names so will install the glob
     - name: Install build distribution software
       apt:
         name: build-essential, gfortran, liblapack*, libblas*
         state: latest
 
+    # netcdf is needed to read windfiles and write output. eccodes is needed to read grib files
     - name: Install netcdf and eccodes distribution software
       apt:
         name: libnetcdf*, libeccodes*
         state: latest
 
+    # bc is a desk calculator used in post-processing scripts
+    # zip is needed for bundeling output and converting kml to kmz files
+    # perl is used in some post-processing scripts
+    # nco is a netcdf manipulation package used in post-processing (mainly ncks)
+    # gmt is the primary mapping package used in post-processing scripts (also in Ash3d_Post_Proc)
+    # tofrodos is used in post-processing to strip control characters from text files
+    # imagemagick is used to assemble final images with legends/disclaimers/banners.
+    # gifsicle produces animated gifs
+    # ghostscript is used to convert ps,eps,pdf files
+    # java is needed run the script the uses netcdf-java to convert grib to netcdf files
     - name: Install postproc distribution software for maps
       apt:
-        name: bc, zip, perl, nco, gmt, gmt-common, gmt-gshhg*, gmt-dcw, tofrodos, imagemagick, gifsicle, ghostscript
+        name: bc, zip, perl, nco, gmt, gmt-common, gmt-gshhg*, gmt-dcw, tofrodos, imagemagick, gifsicle, ghostscript, java
         state: latest
 
+    # proj is needed to run the test cases (make check) for volcano-ash3d-projection
+    # plplot is used for producing png images with Ash3d_Post_Proc
+    # gnuplot is used for the accumulation plots at airports and for Ash3d_Post_Proc
+    # octave is only used by volcano-ash3d-optionalmodules for convergence testing
     - name: Install software needed for Ash3d_PostProc
       apt:
         name:  proj, libplplot-dev, gnuplot, octave

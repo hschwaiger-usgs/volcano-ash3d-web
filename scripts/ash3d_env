@@ -1,3 +1,7 @@
 #!/bin/bash
-TOPO=/data/TOPO/ETOPO1/ETOPO1_Ice_c_gmt4.nc
-
+ASH3DHOME=/opt/USGS/Ash3d
+#ASH3DCFL=0.8
+#ASH3DVERB=3
+#ASH3DPLOT=3
+#TOPO=/data/Topo/ETOPO1/ETOPO1_Ice_c_gmt4.nc
+#TOPO=/data/Topo/GEBCO/GEBCO_23/GEBCO_2023.nc
