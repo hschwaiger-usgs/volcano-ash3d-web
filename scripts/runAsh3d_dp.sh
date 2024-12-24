@@ -303,6 +303,7 @@ if test -r ${USGSROOT}/bin/MetTraj_F; then
         echo "Error running runTraj.sh: rc=$rc"
         echo "Skipping post-processing"
         #exit 1
+        rc=0
      else
       # Now post-processing ftraj*.dat
       # The map information is pulled from 3d_tephra_fall.nc from the preliminary run
@@ -313,6 +314,7 @@ if test -r ${USGSROOT}/bin/MetTraj_F; then
             echo "Error running GFSVolc_to_gif_ac_traj.sh: rc=$rc"
             echo "No trajectory output produced; continuing with run script"
             #exit 1
+            rc=0
         fi
     fi
   else
