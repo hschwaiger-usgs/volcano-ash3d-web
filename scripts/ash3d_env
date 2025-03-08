@@ -5,3 +5,8 @@ ASH3DHOME=/opt/USGS/Ash3d
 #ASH3DPLOT=3
 WINDROOT=/data/WindFiles
 TOPOROOT=/data/Topo
+
+export ASH3DHOME
+export WINDROOT
+export TOPOROOT
+
