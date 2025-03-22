@@ -36,9 +36,8 @@ if [ -z ${TOPOROOT} ];then
  # Standard Linux location
  TOPOROOT="/data/Topo"
  # Mac
- #TOPOROOT="/opt/data/WindFiles"
+ #TOPOROOT="/opt/data/Topo"
 fi
-
 
 echo "------------------------------------------------------------"
 echo "running runAsh3d_dp.sh with parameters:"
@@ -208,11 +207,12 @@ if [[ "$rc" -gt 0 ]] ; then
 fi
 
 echo "creating soft links to topo file"
+echo "creating soft links to topo file"
 rm -f GEBCO_2023.nc
-ln -s  ${TOPOROOT}/GEBCO/GEBCO_2023.nc GEBCO_2023.nc
+ln -s ${TOPOROOT}/GEBCO/GEBCO_2023.nc GEBCO_2023.nc
 rc=$((rc + $?))
 if [[ "$rc" -gt 0 ]] ; then
-    echo "Error linking ${TOPOROOT}: rc=$rc"
+    echo "Error linking GEBCO_2023.nc: rc=$rc"
     exit 1
 fi
 

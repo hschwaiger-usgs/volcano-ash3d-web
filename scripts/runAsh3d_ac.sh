@@ -32,6 +32,12 @@ if [ -z ${WINDROOT} ];then
  # Mac
  #WINDROOT="/opt/data/WindFiles"
 fi
+if [ -z ${TOPOROOT} ];then
+ # Standard Linux location
+ TOPOROOT="/data/Topo"
+ # Mac
+ #TOPOROOT="/opt/data/Topo"
+fi
 
 echo "------------------------------------------------------------"
 echo "running runAsh3d_ac.sh with parameters:"
@@ -199,6 +205,15 @@ if [[ "$rc" -gt 0 ]] ; then
     echo "Error linking ${WINDROOT}: rc=$rc"
     exit 1
 fi
+
+#echo "creating soft links to topo file"
+#rm -f GEBCO_2023.nc
+#ln -s ${TOPOROOT}/GEBCO/GEBCO_2023.nc .
+#rc=$((rc + $?))
+#if [[ "$rc" -gt 0 ]] ; then
+#    echo "Error linking GEBCO_2023.nc: rc=$rc"
+#    exit 1
+#fi
 
 echo "_______________________________________________________________________________"
 echo ">>>>>>>>>>>>>>>>>          Setting up preliminary run           <<<<<<<<<<<<<<<"
