@@ -207,7 +207,6 @@ if [[ "$rc" -gt 0 ]] ; then
 fi
 
 echo "creating soft links to topo file"
-echo "creating soft links to topo file"
 rm -f GEBCO_2023.nc
 ln -s ${TOPOROOT}/GEBCO/GEBCO_2023.nc GEBCO_2023.nc
 rc=$((rc + $?))
@@ -461,52 +460,6 @@ if [ "$RUNTYPE" == "ADV" ] || [ "$RUNTYPE" == "ACL" ]  ; then
     #  1 = ashcon_max
     #  2 = cloud_height
     #  3 = cloud_load
-    #    Cloud load is the default, so run that one first
-    #      Note:  the animated gif for this variable is copied to "cloud_animation.gif"
-    echo "First process for cloud load results"
-    if [ "$USECONTAINERASH" == "T" ]; then
-        echo "  Running ${CONTAINEREXE} script (GFSVolc_to_gif_tvar.sh) to process cloud_load results."
-        echo "${CONTAINEREXE} run --rm -v ${FULLRUNDIR}:${CONTAINERRUNDIR}:z ash3dpp ${ASH3DSCRIPTDIR}/GFSVolc_to_gif_tvar.sh 3 ${CONTAINERRUNDIR}"
-        ${CONTAINEREXE} run --rm -v ${FULLRUNDIR}:${CONTAINERRUNDIR}:z \
-                        ash3dpp ${ASH3DSCRIPTDIR}/GFSVolc_to_gif_tvar.sh 3 ${CONTAINERRUNDIR}
-        rc=$((rc + $?))
-        if [[ "$rc" -gt 0 ]] ; then
-            echo "Error running ${CONTAINEREXE} ash3dpp GFSVolc_to_gif_ac_tvar.sh 3: rc=$rc"
-            exit 1
-        fi
-      else
-        echo "  Running installed script ${ASH3DSCRIPTDIR}/GFSVolc_to_gif_tvar.sh 3"
-        ${ASH3DSCRIPTDIR}/GFSVolc_to_gif_tvar.sh 3
-        rc=$((rc + $?))
-        if [[ "$rc" -gt 0 ]] ; then
-            echo "Error running GFSVolc_to_gif_tvar.sh 3: rc=$rc"
-            exit 1
-        fi
-    fi
-    echo "Finished processing for cloud load results"
-    
-    if [[ $DASHBOARD_RUN == T* ]] ; then
-        echo "Since we are exporting to the AVO dashboard, post-process for cloud_height"
-        #    Now run it for cloud_height
-        if [ "$USECONTAINERASH" == "T" ]; then
-            echo "  Running ${CONTAINEREXE} script (GFSVolc_to_gif_tvar.sh) to process cloud_height results."
-            ${CONTAINEREXE} run --rm -v ${FULLRUNDIR}:${CONTAINERRUNDIR}:z \
-                            ash3dpp ${ASH3DSCRIPTDIR}/GFSVolc_to_gif_tvar.sh 2 ${CONTAINERRUNDIR}
-            rc=$((rc + $?))
-            if [[ "$rc" -gt 0 ]] ; then
-                echo "Error running ${CONTAINEREXE} ash3dpp GFSVolc_to_gif_ac_traj.sh 2: rc=$rc"
-                exit 1
-            fi
-          else
-            echo "Calling GFSVolc_to_gif_tvar.sh 2"
-            ${ASH3DSCRIPTDIR}/GFSVolc_to_gif_tvar.sh 2
-            rc=$((rc + $?))
-            if [[ "$rc" -gt 0 ]] ; then
-                echo "Error running GFSVolc_to_gif_ac_traj.sh 2: rc=$rc"
-                exit 1
-            fi
-        fi
-    fi
     
   elif [ "$RUNTYPE" == "ADV" ] || [ "$RUNTYPE" == "DEP" ]  ; then
     echo "Creating gif images of deposit"

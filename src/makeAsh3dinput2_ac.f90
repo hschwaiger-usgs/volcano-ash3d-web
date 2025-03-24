@@ -61,7 +61,7 @@
       character         :: testkey
       character(len=5)  :: dum_str
       character(len=80) :: infile, outfile
-      character(len=30) :: volcano_name
+      character(len=25) :: volcano_name
       character(len=133):: inputlines(400)
       logical           :: IsThere
 
@@ -88,7 +88,7 @@
         write(error_unit,*) 'You have specified ',nargs, ' input arguments.'
         write(error_unit,*) 'program stopped'
         stop 1
-      end if
+      endif
       write(output_unit,*) 'Command-line arguments parsed as:'
       write(output_unit,*) '  infile  = ', infile
       write(output_unit,*) '  outfile = ', outfile
@@ -120,7 +120,7 @@
       close(fid_ctrin_prelim)
 
       ! Reading BLOCK 1 of the preliminary control file
-      read(inputlines(block_linestart(1)  ),'(a30)') volcano_name
+      read(inputlines(block_linestart(1)  ),'(a25)') volcano_name
       read(inputlines(block_linestart(1)+2),*) lonLL_old, latLL_old
       read(inputlines(block_linestart(1)+3),*) width_old, height_old
       read(inputlines(block_linestart(1)+4),*) v_lon, v_lat, v_elevation
@@ -306,18 +306,6 @@
       latUR_new  = latLL_new + height_new
       lonUR_new  = lonLL_new + width_new
 
-      write(output_unit,*) 'volcano name : ', volcano_name
-      write(output_unit,*) 'Start time (year, month, day, hour):',iyear, imonth, iday, real(StartTime,kind=4)
-      write(output_unit,*) 'i_volcano_old=', i_volcano_old, ',   j_volcano_old=', j_volcano_old
-      write(output_unit,*) 'CloudLoad_thresh = ',real(CloudLoad_thresh,kind=4)
-      write(output_unit,*) 'ifirst=',ifirst, ', ilast=', ilast
-      write(output_unit,*) 'jfirst=',jfirst, ', jlast=', jlast
-      write(output_unit,*) 'lonLL:  old = ',real(lonLL_old,kind=4),   ', new = ',real(lonLL_new,kind=4)
-      write(output_unit,*) 'latLL:  old = ',real(latLL_old,kind=4),   ', new = ',real(latLL_new,kind=4)
-      write(output_unit,*) 'width:  old = ',real(width_old,kind=4),   ', new = ',real(width_new,kind=4)
-      write(output_unit,*) 'height: old = ',real(height_old,kind=4),  ', new = ',real(height_new,kind=4)
-      write(output_unit,*)
-
       !Adjust model boundaries to maintain the specified aspect ratio
       lat_mean = latLL_new + height_new/2.0_8
       height_km=height_new*109.0_8
@@ -329,7 +317,7 @@
          height_new = height_new2
          latUR_new  = latLL_new+height_new
          dy_new = height_new/resolution
-         if ((latUR_new+dy_new).gt.89.5_8) then  !make sure top of model boundary doesn't cross the N pole
+         if ((latUR_new+dy_new).gt.89.5_8) then  ! Make sure top of model boundary doesn't cross the N pole
              write(output_unit,*) 'adjusting N model boundary so that it doesnt cross the north pole'
              latUR_new = 89.5_8-dy_new
              height_new = latUR_new-latLL_new
@@ -348,19 +336,28 @@
          write(output_unit,*) 'width_new=', width_new
       end if
 
-      write(output_unit,*) 'width:      old = ',real(width_old,kind=4),      ', new = ', real(width_new,kind=4)
-      write(output_unit,*) 'height:     old = ',real(height_old,kind=4),     ', new = ', real(height_new,kind=4)
+      write(output_unit,*) 'Volcano name : ', volcano_name
+      write(output_unit,*) 'Start time (year, month, day, hour):',iyear, imonth, iday, real(StartTime,kind=4)
+      write(output_unit,*) ' i_volcano_old=', i_volcano_old, ',   j_volcano_old=', j_volcano_old
+      write(output_unit,*) ' CloudLoad_thresh = ',real(CloudLoad_thresh,kind=4)
+      write(output_unit,*) ' ifirst=',ifirst, ', ilast=', ilast
+      write(output_unit,*) ' jfirst=',jfirst, ', jlast=', jlast
+      write(output_unit,*)
+      write(output_unit,*) 'Model parameters:'
+      write(output_unit,*) ' lonLL:  old = ',real(lonLL_old,kind=4),   ', new = ',real(lonLL_new,kind=4)
+      write(output_unit,*) ' latLL:  old = ',real(latLL_old,kind=4),   ', new = ',real(latLL_new,kind=4)
+      write(output_unit,*) ' width:  old = ',real(width_old,kind=4),   ', new = ',real(width_new,kind=4)
+      write(output_unit,*) ' height: old = ',real(height_old,kind=4),  ', new = ',real(height_new,kind=4)
       dx_new = width_new/resolution
       dy_new = height_new/resolution
-      write(output_unit,*) 'dx:         old = ',real(dx_old,kind=4),         ', new = ', real(dx_new,kind=4)
-      write(output_unit,*) 'dy:         old = ',real(dy_old,kind=4),         ', new = ', real(dy_new,kind=4)
-
-      !read boundaries
+      write(output_unit,*) ' dx:     old = ',real(dx_old,kind=4),      ', new = ', real(dx_new,kind=4)
+      write(output_unit,*) ' dy:     old = ',real(dy_old,kind=4),      ', new = ', real(dy_new,kind=4)
+      write(output_unit,*)
 
       write(output_unit,*) 'Eruption ESP for ash cloud:'
       write(output_unit,*) ' Duration = ',real(Duration,kind=4), &
-                             ', pHeight= ',real(pHeight,kind=4),&
-                             ', e_volume = ',real(e_volume,kind=4)
+                           ', pHeight= ',real(pHeight,kind=4),&
+                           ', e_volume = ',real(e_volume,kind=4)
       write(output_unit,*)
       write(output_unit,*) 'writing full control file for full Ash3d run: ', outfile
 
@@ -387,7 +384,7 @@
       do i=block_linestart(5)-1,ilines
         write(fid_ctrout_full,4) inputlines(i)
 4       format(a100)
-      end do
+      enddo
 
       close(fid_ctrout_full)
 
@@ -402,7 +399,7 @@
       write(error_unit,*) 'Program stopped'
       stop 1
       
-     ! Output control file format statements
+      ! Output control file format statements
 2010  format( &
       '# Input file generated by web application. ',/, &
       '# Webapp site: vsc-ash.wr.usgs.gov',/, &
@@ -482,19 +479,19 @@
       '# Line 9 : number of pulses to be read in BLOCK 2 ')
 2011  format( &
       '******************* BLOCK 1 ***************************************************  ',/, &
-      a30,'                 # Volcano name (character*30) (52.894N 170.054W)  ',/, &
+      a25,'       # Volcano name (character*30) (52.894N 170.054W)  ',/, &
       '1 1 -135.0 90.0 0.933 6371.229  # Proj flags and params  ',/, &
       2f13.3,                   '      # x, y of LL corner of grid (km, or deg. if latlongflag=1)  ',/, &
       2f13.3,                   '      # grid width and height (km, or deg. if latlonflag=1)  ',/, &
-      3f10.3,                      '   # vent location         (km, or deg. if latlonflag=1)  ',/, &
+      3f10.3,                     '   # vent location         (km, or deg. if latlonflag=1)  ',/, &
       2f13.3,                   '      # DX, DY of grid cells  (km, or deg.)  ',/, &
       f8.3,   '                        # DZ of grid cells      (always km)  ',/, &
       '000.      4.                    # diffusion coefficient (m2/s), Suzuki constant  ',/, &
       '1                               # neruptions, number of eruptions or pulses')
 2020  format( &
       '******************************************************************************* ',/, &
-      '#ERUPTION LINES (number = neruptions) ',/, &
-      '#In the following line, each line represents one eruptive pulse.   ',/, &
+      '# ERUPTION LINES (number = neruptions) ',/, &
+      '# In the following line, each line represents one eruptive pulse.   ',/, &
       '# Parameters are (1-4) start time (yyyy mm dd h.hh (UT)); (5) duration (hrs);',/, &
       '#                  (6) plume height;                      (7) erupted volume (km3 DRE)',/, &
       '# If neruptions=1 and the year is 0, then the model run in forecast mode where mm dd h.hh are',/, &

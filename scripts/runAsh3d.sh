@@ -19,8 +19,8 @@
 #      technical support to users of this software.
 
 #      Usage: runAsh3d_ac.sh INPUT_PATH, ZIP_NAME, DASHBOARD_IND (T or F), RUN_ID, JAVA_THREAD_ID
-#       e.g. /var/www/ash3d-api/htdocs/ash3druns/runAsh3d.sh          \
-#               /var/www/ash3d-api/htdocs/ash3druns/ash3d_run_334738/ \
+#       e.g. /var/www/html/ash3d-api/htdocs/ash3druns/runAsh3d.sh          \
+#               /var/www/html/ash3d-api/htdocs/ash3druns/ash3d_run_334738/ \
 #               ash3d_test_adv_20201015-19:25:29z                      \
 #               F                                                      \
 #               334738                                                 \
@@ -31,6 +31,12 @@ if [ -z ${WINDROOT} ];then
  WINDROOT="/data/WindFiles"
  # Mac
  #WINDROOT="/opt/data/WindFiles"
+fi
+if [ -z ${TOPOROOT} ];then
+ # Standard Linux location
+ TOPOROOT="/data/Topo"
+ # Mac
+ #TOPOROOT="/opt/data/Topo"
 fi
 
 echo "------------------------------------------------------------"
@@ -193,6 +199,15 @@ ln -s  ${WINDROOT} Wind_nc
 rc=$((rc + $?))
 if [[ "$rc" -gt 0 ]] ; then
     echo "Error linking ${WINDROOT}: rc=$rc"
+    exit 1
+fi
+
+echo "creating soft links to topo file"
+rm -f GEBCO_2023.nc
+ln -s ${TOPOROOT}/GEBCO/GEBCO_2023.nc .
+rc=$((rc + $?))
+if [[ "$rc" -gt 0 ]] ; then
+    echo "Error linking GEBCO_2023.nc: rc=$rc"
     exit 1
 fi
 
