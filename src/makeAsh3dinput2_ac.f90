@@ -596,8 +596,8 @@
       'no      # Write out        KML deposit files at specified times?                  ',/, &
       'no      # Write out ESRI ASCII files of ash-cloud concentration?                  ',/, &
       'no      # Write out        KML files of ash-cloud concentration ?                 ',/, &
-      'no      # Write out ESRI ASCII files of ash-cloud height?                        ',/, &
-      'no      # Write out        KML files of ash-cloud height?                        ',/, &
+      'yes     # Write out ESRI ASCII files of ash-cloud height?                        ',/, &
+      'yes     # Write out        KML files of ash-cloud height?                        ',/, &
       'yes     # Write out ESRI ASCII files of ash-cloud load (T/km2) at specified times?  ',/, &
       'yes     # Write out        KML files of ash-cloud load (T/km2) at specified times?  ',/, &
       'no      # Write out ESRI ASCII file of deposit arrival times?  ',/, &
