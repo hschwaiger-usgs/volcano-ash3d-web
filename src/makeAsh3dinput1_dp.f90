@@ -149,7 +149,7 @@
       end if
       go to 120
       ! If not, then VolumeInput remains .false.
-100   read(linebuffer,*) pHeight, Duration, SimTime
+100   read(linebuffer,*) pHeight, Duration
 120   read(fid_ctrin_mini,*) iyear, imonth, iday, StartTime
       close(fid_ctrin_mini)
       

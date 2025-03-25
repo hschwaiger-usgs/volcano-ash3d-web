@@ -549,16 +549,16 @@
       '******************* BLOCK 4 *************************************************** ',/, &
       'yes     # Write out ESRI ASCII file of final deposit thickness?                    ',/, &
       'yes     # Write out        KML file of final deposit thickness?                   ',/, &
-      'no      # Write out ESRI ASCII deposit files at specified times?                  ',/, &
-      'no      # Write out        KML deposit files at specified times?                  ',/, &
+      'yes     # Write out ESRI ASCII deposit files at specified times?                  ',/, &
+      'yes     # Write out        KML deposit files at specified times?                  ',/, &
       'no      # Write out ESRI ASCII files of ash-cloud concentration?                  ',/, &
       'no      # Write out        KML files of ash-cloud concentration ?                 ',/, &
       'no      # Write out ESRI ASCII files of ash-cloud height?                        ',/, &
       'no      # Write out        KML files of ash-cloud height?                        ',/, &
       'no      # Write out ESRI ASCII files of ash-cloud load (T/km2) at specified times?  ',/, &
       'no      # Write out        KML files of ash-cloud load (T/km2) at specified times?  ',/, &
-      'no      # Write out ESRI ASCII file of deposit arrival times?  ',/, &
-      'no      # Write out        KML file of deposit arrival times?  ',/, &
+      'yes     # Write out ESRI ASCII file of deposit arrival times?  ',/, &
+      'yes     # Write out        KML file of deposit arrival times?  ',/, &
       'no      # Write out ESRI ASCII file of cloud arrival times?  ',/, &
       'no      # Write out        KML file of cloud arrival times?  ',/, &
       'yes     # Write out 3-D ash concentration at specified times? / [output code: 1=2d+concen,2=2d only]',/, &
@@ -695,7 +695,7 @@
 2101  format( &
       '******************* BLOCK 10+ *************************************************',/, &
       'OPTMOD=TOPO',/, &
-      'yes 2                           # use topography?; z-mod (0=none,1=shift,2=sigma)',/, &
+      'no  0                           # use topography?; z-mod (0=none,1=shift,2=sigma)',/, &
       '1 20.0                          # Topofile format, smoothing radius',/, &
       'GEBCO_2023.nc                   # topofile name',/, &
       '*******************************************************************************')
