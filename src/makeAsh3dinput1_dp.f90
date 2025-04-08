@@ -26,6 +26,21 @@
 !     are read by makeAsh3dinput2_ac, which adjusts the limits
 !     of the model domain and creates a new Ash3d input file that can
 !     be used for a standard run.
+!
+!     This program takes three command-line arguments:
+!       input file (simplified) generated from web client
+!       input file (full) to be written by makeAsh3dinput1_dp
+!       The last forcast package downloaded in YYYYMMDDHH
+!
+!   makeAsh3dinput1_dp ash3d_input_dp.inp out.inp 2025040712
+!
+!     Where the simplified input file as the following format:
+!
+!   Popocatépetl                   # Volcano name
+!   -98.622 19.023                 # Longitude, Latitude
+!   5426.0                         # Elevation (m)
+!   8.0 1.0                        # Plume height (km), duration (hrs), optional volume (km3 DRE)
+!   2024 11 07 12.6666666666666666 # Start time (year, month, day, hour UTC)
 
       ! This module requires Fortran 2003 or later
       use iso_fortran_env, only : &
@@ -37,19 +52,19 @@
       integer,parameter :: fid_ctrout_full = 11
       integer,parameter :: GFS_Archive_Days = 14
 
-      real(kind=8)     :: aspect_ratio, dx, dy, dz, e_volume
-      real(kind=8)     :: lonLL, latLL, lonUR, latUR 
-      real(kind=8)     :: Duration, Height, HourNow, Hours1900Erupt, Hours1900Now
-      real(kind=8)     :: Hours1900Wind
-      real(kind=8)     :: hours_since_1900, min_duration, min_vol, pHeight
-      real(kind=8)     :: SimTime, StartTime
-      real(kind=8)     :: v_lon, v_lat, v_elevation, width
-      real(kind=8)     :: windhour, WriteInterval
-      integer          :: i,iday,imonth,imonthdays(12),iyear,iwind,iwindformat
-      integer          :: nargs
-      integer          :: status
-      integer          :: nWindFiles
-      integer          :: windyear,windmonth,windday
+      real(kind=8)      :: aspect_ratio, dx, dy, dz, e_volume
+      real(kind=8)      :: lonLL, latLL, lonUR, latUR 
+      real(kind=8)      :: Duration, Height, HourNow, Hours1900Erupt, Hours1900Now
+      real(kind=8)      :: Hours1900Wind
+      real(kind=8)      :: hours_since_1900, min_duration, min_vol, pHeight
+      real(kind=8)      :: SimTime, StartTime
+      real(kind=8)      :: v_lon, v_lat, v_elevation, width
+      real(kind=8)      :: windhour, WriteInterval
+      integer           :: i,iday,imonth,imonthdays(12),iyear,iwind,iwindformat
+      integer           :: nargs
+      integer           :: status
+      integer           :: nWindFiles
+      integer           :: windyear,windmonth,windday
       character(len=80) :: linebuffer, infile, outfile
       character(len=25) :: volcano_name
       character(len=80) :: Windfile
@@ -62,6 +77,8 @@
       integer           :: timediff                       ! time difference (local-UTC, minutes)
       logical           :: VolumeInput                    ! boolean set to true if volume is specified
       logical           :: IsThere
+
+      data imonthdays/31,29,31,30,31,30,31,31,30,31,30,31/
 
       write(output_unit,*) ' '
       write(output_unit,*) '---------------------------------------------------'
@@ -178,6 +195,7 @@
         if ((iday.lt.0).or.(iday.gt.imonthdays(imonth))) then
           write(error_unit,*) 'ERROR: Eruption start day must be less than the number of days'
           write(error_unit,*) 'in that month.  The month you entered is:',imonth
+          write(error_unit,*) 'The number of days in this month is:',imonthdays(imonth)
           write(error_unit,*) 'the day in that month you entered is:',iday
           write(error_unit,*) 'Program stopped'
           stop 1
@@ -641,7 +659,7 @@
 2071  format( &
       '******************* BLOCK 7 *************************************************** ',/, &
       '12                           #Number of settling velocity groups',/, &
-      '2        0.06118	800     0.44',/, &
+      '2        0.06118 800     0.44',/, &
       '1        0.07098 1040    0.44',/, &
       '0.5      0.22701 1280    0.44',/, &
       '0.25     0.21868 1520    0.44',/, &

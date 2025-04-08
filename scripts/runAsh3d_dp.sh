@@ -19,11 +19,11 @@
 #      technical support to users of this software.
 
 #      Usage: runAsh3d_ac.sh INPUT_PATH, ZIP_NAME, DASHBOARD_IND (T or F), RUN_ID, JAVA_THREAD_ID
-#       e.g. /var/www/ash3d-api/htdocs/ash3druns/runAsh3d_dp.sh          \
-#               /var/www/ash3d-api/htdocs/ash3druns/ash3d_run_334738/ \
-#               ash3d_test_dep_20201015-19:25:29z                      \
-#               F                                                      \
-#               334738                                                 \
+#       e.g. /var/www/html/ash3d-api/htdocs/ash3druns/runAsh3d_dp.sh          \
+#               /var/www/html/ash3d-api/htdocs/ash3druns/ash3d_run_334738/    \
+#               ash3d_test_dep_20201015-19:25:29z                         \
+#               F                                                         \
+#               334738                                                    \
 #               ash3dclient-thread-370
 
 if [ -z ${WINDROOT} ];then
@@ -219,7 +219,7 @@ echo "__________________________________________________________________________
 echo ">>>>>>>>>>>>>>>>>          Setting up preliminary run           <<<<<<<<<<<<<<<"
 echo "_______________________________________________________________________________"
 # First, generate the full input file based on the mini-web-version, if needed
-echo "running ${MAKEINPUT1} ${INFILE_SIMPLE} ${INFILE_PRELIM}"
+echo "running ${MAKEINPUT1} ${INFILE_SIMPLE} ${INFILE_PRELIM} ${LAST_DOWNLOADED}"
 if test -r ${ASH3DBINDIR}/${MAKEINPUT1} ; then
     ${ASH3DBINDIR}/${MAKEINPUT1} ${INFILE_SIMPLE} ${INFILE_PRELIM} \
                                  ${LAST_DOWNLOADED}
@@ -531,6 +531,7 @@ if test -r ftraj1.dat; then
             echo "No trajectory output produced; continuing with run script"
             #exit 1
         fi
+         ${ASH3DBINDIR}/Ash3d_PostProc 3d_tephra_fall.nc 7 5
       else
         echo "  Running installed script (GFSVolc_to_gif_ac_traj.sh) to process traj results."
         ${ASH3DSCRIPTDIR}/GFSVolc_to_gif_ac_traj.sh 1

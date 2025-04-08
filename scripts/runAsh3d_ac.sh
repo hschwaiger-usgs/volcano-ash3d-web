@@ -219,7 +219,7 @@ echo "__________________________________________________________________________
 echo ">>>>>>>>>>>>>>>>>          Setting up preliminary run           <<<<<<<<<<<<<<<"
 echo "_______________________________________________________________________________"
 # First, generate the full input file based on the mini-web-version, if needed
-echo "running ${MAKEINPUT1} ${INFILE_SIMPLE} ${INFILE_PRELIM}"
+echo "running ${MAKEINPUT1} ${INFILE_SIMPLE} ${INFILE_PRELIM} ${LAST_DOWNLOADED}"
 if test -r ${ASH3DBINDIR}/${MAKEINPUT1} ; then
     ${ASH3DBINDIR}/${MAKEINPUT1} ${INFILE_SIMPLE} ${INFILE_PRELIM} \
                                  ${LAST_DOWNLOADED}

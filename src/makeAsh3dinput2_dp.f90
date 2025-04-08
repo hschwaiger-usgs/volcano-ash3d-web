@@ -22,6 +22,10 @@
 !     program that reads the ASCII deposit file from a preliminary run of 10x10 nodes
 !     horizontally and generates an input file for a second run
 !     whose model domain has been adjusted for the location of the deposit
+!
+!     This program takes two command-line arguments:
+!       input file (full) written by makeAsh3dinput1_dp and used for the preliminary run
+!       input file to be written by makeAsh3dinput2_dp and used for the full run
 
       ! This module requires Fortran 2003 or later
       use iso_fortran_env, only : &
@@ -342,6 +346,10 @@
 !      write(fid_ctrout_full,2091)
       write(fid_ctrout_full,2100) ! write block 10 header, then content (Topography)
       write(fid_ctrout_full,2101)
+      write(fid_ctrout_full,2200) ! write block 10+ header, then content (Reset Params)
+      write(fid_ctrout_full,2201)'Analysis    '
+      !write(fid_ctrout_full,2201)'Hypothetical'
+      !write(fid_ctrout_full,2201)'Forecast    '
 
       close(fid_ctrout_full)
 
@@ -699,5 +707,13 @@
       '1 20.0                          # Topofile format, smoothing radius',/, &
       'GEBCO_2023.nc                   # topofile name',/, &
       '*******************************************************************************')
+2200  format( &
+      '***********************',/, &
+      '# Reset parameters',/, &
+      '***********************')
+2201  format( &
+      'OPTMOD=RESETPARAMS',/, &
+      'cdf_run_class        = ',a12)
+
 
       end program makeAsh3dinput2_dp

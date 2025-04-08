@@ -1,10 +1,10 @@
 #!/bin/bash
 INFILE_FULL=$1
 INFILE_SIMPLE="ash3d_input_simp.inp"
-LNname=3
-LNcoord=7
-LNerup=13
-LNemtime=18    # This assumues 1 eruption
+LNname=78
+LNcoord=80
+LNerup=100
+LNemtime=164    # This assumues 1 eruption
 VLC=`sed -n ${LNname}p  ${INFILE_FULL} | cut -c1-15`
 LON=`sed -n ${LNcoord}p ${INFILE_FULL} | cut -d' ' -f1`
 LAT=`sed -n ${LNcoord}p ${INFILE_FULL} | cut -d' ' -f2`

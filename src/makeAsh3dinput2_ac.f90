@@ -22,6 +22,10 @@
 !     program that reads the ASCII CloudLoad file from a preliminary run of 10x10 nodes
 !     horizontally and generates an input file for a second run
 !     whose model domain has been adjusted for the location of the CloudLoad
+!
+!     This program takes two command-line arguments:
+!       input file (full) written by makeAsh3dinput1_ac and used for the preliminary run
+!       input file to be written by makeAsh3dinput2_ac and used for the full run
 
       ! This module requires Fortran 2003 or later
       use iso_fortran_env, only : &
