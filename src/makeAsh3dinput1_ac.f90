@@ -222,9 +222,13 @@
       read(linebuffer,*,iostat=iostatus) iyear, imonth, iday, StartTime
       ! Successfully read 4 values, try for 5
       read(linebuffer,*,iostat=iostatus)iyear, imonth, iday, StartTime, Erup
-      if(iostatus.ne.0.or.(Erup.ne.0.and.Erup.ne.1))then
+      if(iostatus.ne.0)then
         write(output_unit,*) 'WARNING: Could not read volcano actual eruption flag.'
         write(output_unit,*) '         Setting to 0.'
+        Erup = 0
+      endif
+      if(Erup.ne.1)then
+        ! If Erup is anything other than 1, the turn it off
         Erup = 0
       endif
 
@@ -472,11 +476,11 @@
       write(fid_ctrout_full,2090) ! write block 9 header, then content  (NetCDF info)
       write(fid_ctrout_full,2091)
       write(fid_ctrout_full,2100) ! write block 10+ header, then content (Reset Params)
-      if(Erup.eq.1)then
+      if(RunClass.eq.1)then
         write(fid_ctrout_full,2101)'Analysis    '
-      elseif(Erup.eq.2)then
+      elseif(RunClass.eq.2)then
         write(fid_ctrout_full,2101)'Hypothetical'
-      elseif(Erup.eq.3)then
+      elseif(RunClass.eq.3)then
         write(fid_ctrout_full,2101)'Forecast    '
       endif
       !write(fid_ctrout_full,2200) ! write block 10+ header, then content (Topography)

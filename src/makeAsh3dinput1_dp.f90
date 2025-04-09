@@ -216,9 +216,13 @@
       read(linebuffer,*,iostat=iostatus) iyear, imonth, iday, StartTime
       ! Successfully read 4 values, try for 5
       read(linebuffer,*,iostat=iostatus)iyear, imonth, iday, StartTime, Erup
-      if(iostatus.ne.0.or.(Erup.ne.0.and.Erup.ne.1))then
+      if(iostatus.ne.0)then
         write(output_unit,*) 'WARNING: Could not read volcano actual eruption flag.'
         write(output_unit,*) '         Setting to 0.'
+        Erup = 0
+      endif
+      if(Erup.ne.1)then
+        ! If Erup is anything other than 1, the turn it off
         Erup = 0
       endif
 
@@ -294,14 +298,14 @@
             RunClass = 1  ! Analysis
           endif
           write(output_unit,*) 'Using archived gfs wind files'
-          if (StartTime.lt.12.0) then                          !before 1200 UTC
+          if (StartTime.lt.12.0) then                        ! before 1200 UTC
             write(WindFile,1002) iyear, imonth, iday, iyear, imonth, iday
 1002        format('Wind_nc/gfs/gfs.',i4,i2.2,i2.2,'00','/',i4,i2.2,i2.2,'00.f')
-          else                                               !after 1200 UTC
+          else                                               ! after 1200 UTC
             write(WindFile,1003) iyear, imonth, iday, iyear, imonth, iday
 1003        format('Wind_nc/gfs/gfs.',i4,i2.2,i2.2,'12','/',i4,i2.2,i2.2,'12.f')
           endif
-        elseif (iyear.ge.1948) then                            !If we're using NCEP reanalysis
+        elseif (iyear.ge.1948) then                            ! If we're using NCEP reanalysis
           runtype='old'
           if(Erup.eq.1)then
             ! We should not have an actual eruption with NCEP data
@@ -318,7 +322,7 @@
           nWindFiles=1
           write(WindFile,1004)
 1004      format('Wind_nc/NCEP')
-        elseif (iyear.lt.1948) then                            !if before 1948 (error)
+        elseif (iyear.lt.1948) then                            ! if before 1948 (error)
           write(error_unit,*) 'ERROR.  You entered a year earlier than 1948.'
           write(error_unit,*) 'Wind files do not exist for this earlier time period.'
           stop 1
@@ -326,7 +330,7 @@
           write(error_unit,*) 'Unknown error in identifying appropriate wind files.'
           stop 1
         endif
-      else                     !If this is a normal forecast run
+      else                     ! If this is a normal forecast run
         write(output_unit,*) 'Using current windfiles'
         write(Windfile,1005)
 1005    format('Wind_nc/gfs/latest/latest.f')
@@ -348,7 +352,7 @@
       endif
 
       ! Calculate eruptive volume, model domain, resolution
-      if (VolumeInput.eqv..false.) then             !erupted volume (km3)
+      if (VolumeInput.eqv..false.) then             ! erupted volume (km3)
         ! Calculate total erupted volume from the Mastin relation
         e_volume=((pHeight-v_elevation/1000.0_8)/2.0_8)** (1.0_8/0.241_8)*3600.0_8*Duration/1.0e09_8
         if (e_volume.lt.min_vol) e_volume = min_vol
@@ -364,7 +368,7 @@
       dx      = width/20.1_8
       dy      = height/20.1_8
       dz      = pHeight/10.0_8
-      if (((pHeight-(v_elevation/1000.0_8))/dz).lt.5.0_8) then       !Added to ensure enough nodes for low plumes
+      if (((pHeight-(v_elevation/1000.0_8))/dz).lt.5.0_8) then       ! Added to ensure enough nodes for low plumes
         dz = (pHeight-(v_elevation/1000.0_8))/5.0_8
       endif
 
@@ -391,8 +395,8 @@
 
       write(output_unit,*) 'Eruption ESP for ash cloud:'
       write(output_unit,*) ' Duration = ',real(Duration,kind=4), &
-                             ', pHeight= ',real(pHeight,kind=4),&
-                             ', e_volume = ',real(e_volume,kind=4)
+                           ', pHeight= ',real(pHeight,kind=4),&
+                           ', e_volume = ',real(e_volume,kind=4)
       write(output_unit,*) 'Model parameters:'
       write(output_unit,*) ' height   = ',real(height,kind=4),    ', width  = ',real(width,kind=4)
       write(output_unit,*) ' v_lon    = ',real(v_lon,kind=4),     ', v_lat  = ',real(v_lat,kind=4)
@@ -445,11 +449,11 @@
       write(fid_ctrout_full,2090) ! write block 9 header, then content  (NetCDF info)
       write(fid_ctrout_full,2091)
       write(fid_ctrout_full,2100) ! write block 10+ header, then content (Reset Params)
-      if(Erup.eq.1)then
+      if(RunClass.eq.1)then
         write(fid_ctrout_full,2101)'Analysis    '
-      elseif(Erup.eq.2)then
+      elseif(RunClass.eq.2)then
         write(fid_ctrout_full,2101)'Hypothetical'
-      elseif(Erup.eq.3)then
+      elseif(RunClass.eq.3)then
         write(fid_ctrout_full,2101)'Forecast    '
       endif
       ! Here we neglect to write the topography block, but we might add this later in the full run
@@ -462,7 +466,7 @@
       write(output_unit,*) 'Successfully finished makeAsh3dinput1_dp'
       write(output_unit,*) '---------------------------------------------------'
       write(output_unit,*) ' '
-      
+
       stop 0
 
       ! Output control file format statements
@@ -699,9 +703,9 @@
       '# the input specification https://code.usgs.gov/vsc/ash3d/volcano-ash3d-metreader.')
 2051  format( &
       '******************* BLOCK 5 ***************************************************')
-2052  format(a27,i3.3,'.nc')                          !for forecast winds       Wind_nc/gfs/latest/latest.f**.nc
-2053  format(a39,i3.3,'.nc')                          !for archived gfs winds   Wind_nc/gfs/gfs.2012052300/2012052300.f**.nc
-2054  format(a12)                                      !for NCEP reanalyis winds Wind_nc/NCEP
+2052  format(a27,i3.3,'.nc')                          ! for forecast winds       Wind_nc/gfs/latest/latest.f**.nc
+2053  format(a39,i3.3,'.nc')                          ! for archived gfs winds   Wind_nc/gfs/gfs.2012052300/2012052300.f**.nc
+2054  format(a12)                                     ! for NCEP reanalyis winds Wind_nc/NCEP
 2060  format( &
       '*******************************************************************************',/, & 
       '# AIRPORT LOCATION FILE ',/, &
