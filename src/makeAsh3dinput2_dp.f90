@@ -341,7 +341,7 @@
       write(output_unit,*) 'Successfully finished makeAsh3dinput2_dp'
       write(output_unit,*) '---------------------------------------------------'
       write(output_unit,*) ' '
-      
+
       stop 0
 
 1900  write(error_unit,*) 'ERROR: DepositFile_____final.dat files do not exist.'
@@ -674,7 +674,7 @@
 !      '***********************')
 !2101  format( &
 !      'OPTMOD=RESETPARAMS',/, &
-!      'cdf_run_class        = ',a12)
+!      'cdf_run_class        = ',i3)
 2200  format( &
       '*******************************************************************************',/, &
       '# Topography',/, &

@@ -272,8 +272,8 @@
         ! Calculate eruption time before present
         Hours1900Erupt = hours_since_1900(iyear,imonth,iday,StartTime)
         Hours1900Wind  = hours_since_1900(windyear,windmonth,windday,windhour)
-        RunClass = 1
-        if ((Hours1900Erupt+SimTime).gt.(Hours1900Wind+198.0_8)) then             !if the time is in the future
+        RunClass = 1  ! Set default class as Analysis
+        if ((Hours1900Erupt+SimTime).gt.(Hours1900Wind+198.0_8)) then             ! if the time is in the future
           write(error_unit,*) 'ERROR.  You entered an eruption start time'
           write(error_unit,*) 'that extends beyond the last currently available'
           write(error_unit,*) 'wind file.  the last currently available wind file'
@@ -281,7 +281,7 @@
           write(error_unit,*) 'Please adjust your start time or'
           write(error_unit,*) 'simulation time.'
           stop 1
-        elseif (Hours1900Erupt.gt.Hours1900Wind) then      !if the start time is within the last wind file
+        elseif (Hours1900Erupt.gt.Hours1900Wind) then      ! if the start time is within the last wind file
           runtype = 'now'
           if(Erup.eq.1)then
             RunClass = 3  ! Forecast (actual eruption)
@@ -313,7 +313,7 @@
           runtype='old'
           if(Erup.eq.1)then
             ! We should not have an actual eruption with NCEP data
-            write(output_unit,*) 'Looks like the Actual Eruption flag is set, but with a start time > 14 ago.'
+            write(output_unit,*) 'Looks like the Actual Eruption flag is set, but with a start time > 14 days ago.'
             write(output_unit,*) 'Switching runclass to Analysis.'
             RunClass = 1  ! Analysis
           else
@@ -458,13 +458,7 @@
       write(fid_ctrout_full,2090) ! write block 9 header, then content  (NetCDF info)
       write(fid_ctrout_full,2091)
       write(fid_ctrout_full,2100) ! write block 10+ header, then content (Reset Params)
-      if(RunClass.eq.1)then
-        write(fid_ctrout_full,2101)'Analysis    '
-      elseif(RunClass.eq.2)then
-        write(fid_ctrout_full,2101)'Hypothetical'
-      elseif(RunClass.eq.3)then
-        write(fid_ctrout_full,2101)'Forecast    '
-      endif
+      write(fid_ctrout_full,2101)RunClass
       ! Here we neglect to write the topography block, but we might add this later in the full run
       !write(fid_ctrout_full,2200) ! write block 10+ header, then content (Topography)
       !write(fid_ctrout_full,2201)
@@ -803,7 +797,7 @@
       '******************************************************************************* ')
 2101  format( &
       'OPTMOD=RESETPARAMS',/, &
-      'cdf_run_class        = ',a12)
+      'cdf_run_class        = ',i3)
 !2200  format( &
 !      '*******************************************************************************',/, &
 !      '# Topography',/, &

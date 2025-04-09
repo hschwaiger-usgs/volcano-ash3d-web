@@ -360,6 +360,9 @@
         write(fid_ctrout_full,4) inputlines(i)
 4       format(a100)
       enddo
+      ! We neglect the topography block for airborne runs
+      !write(fid_ctrout_full,2200) ! write block 10+ header, then content (Topography)
+      !write(fid_ctrout_full,2201)
 
       close(fid_ctrout_full)
 
@@ -608,5 +611,121 @@
       '# the input specification https://code.usgs.gov/vsc/ash3d/volcano-ash3d-metreader.')
 !2051  format( &
 !      '******************* BLOCK 5 ***************************************************')
+!2052  format(a27,i3.3,'.nc')                          !for forecast winds       Wind_nc/gfs/latest/latest.f**.nc
+!2053  format(a39,i3.3,'.nc')                          !for archived gfs winds   Wind_nc/gfs/gfs.2012052300/2012052300.f**.nc
+!2054  format(a12)                                      !for NCEP reanalyis winds Wind_nc/NCEP
+!2060  format( &
+!      '*******************************************************************************',/, &
+!      '# AIRPORT LOCATION FILE ',/, &
+!      '# The following lines allow the user to specify whether times of ash arrival ',/, &
+!      '# at airports & other locations will be written out, and which file  ',/, &
+!      '# to read for a list of airport locations. ',/, &
+!      '# PLEASE NOTE:  Each line in the airport location file should contain the ',/, &
+!      '#               airport latitude, longitude, projected x and y coordinates,  ',/, &
+!      '#               and airport name.  If you are using a projected grid,  ',/, &
+!      '#               THE X AND Y MUST BE IN THE SAME PROJECTION as the computational grid.',/, &
+!      '#               Alternatively, coordinates can be projected via libprojection  ',/, &
+!      '#               by typing "yes" to the last parameter ')
+!2061  format( &
+!      '******************* BLOCK 6 *************************************************** ',/, &
+!      'yes                           # Write out ash arrival times at airports to ASCII FILE? ',/, &
+!      'no                            # Write out grain-size distribution to ASCII airport file?  ',/, &
+!      'yes                           # Write out ash arrival times to kml file?  ',/, &
+!      '                              # Name of file containing aiport locations  ',/, &
+!      'no                            # Defer to Lon/Lat coordinates? ("no" defers to projected)  ')
+!2070  format( &
+!      '******************************************************************************* ',/, &
+!      '# GRAIN SIZE GROUPS',/, &
+!      '# The first line must contain the number of settling velocity groups, but',/, &
+!      '# can optionally also include a flag for the fall velocity model to be used.',/, &
+!      '#    FV_ID = 1, Wilson and Huang',/, &
+!      '#          = 2, Wilson and Huang + Cunningham slip',/, &
+!      '#          = 3, Wilson and Huang + Mod by Pfeiffer Et al.',/, &
+!      '#          = 4, Ganser (assuming prolate ellipsoids)',/, &
+!      '#          = 5, Ganser + Cunningham slip',/, &
+!      '#          = 6, Stokes flow for spherical particles + slip',/, &
+!      '# If no fall model is specified, FV_ID = 1, by default',/, &
+!      '# The grain size bins can be enters with 2, 3, or 4 parameters.',/, &
+!      '# If TWO are given, they are read as:   FallVel (in m/s), mass fraction',/, &
+!      '# If THREE are given, they are read as: diameter (mm), mass fraction, density (kg/m3)',/, &
+!      '# If FOUR are given, they are read as:  diameter (mm), mass fraction, density (kg/m3), Shape F',/, &
+!      '# The shape factor is given as in Wilson and Huang: F=(b+c)/(2*a), but converted',/, &
+!      '# to sphericity (assuming b=c) for the Ganser model.',/, &
+!      '# If a shape factor is not given, a default value of F=0.4 is used.',/, &
+!      '# If FIVE are given, they are read as:  diameter (mm), mass fraction, density (kg/m3), Shape F, G',/, &
+!      '#  where G is an additional Ganser shape factor equal to c/b',/, &
+!      '#  ',/, &
+!      '# If the last grain size bin has a negative diameter, then the remaining mass fraction',/, &
+!      '# will be distributed over the previous bins via a log-normal distribution in phi.',/, &
+!      '# The last bin would be interpreted as:',/, &
+!      '# diam (neg value) , phi_mean, phi_stddev ')
+!2071  format( &
+!      '******************* BLOCK 7 *************************************************** ',/, &
+!      '12                           #Number of settling velocity groups',/, &
+!      '2        0.06118 800     0.44',/, &
+!      '1        0.07098 1040    0.44',/, &
+!      '0.5      0.22701 1280    0.44',/, &
+!      '0.25     0.21868 1520    0.44',/, &
+!      '0.1768   0.05362 1640    0.44',/, &
+!      '0.125    0.04039 1760    0.44',/, &
+!      '0.088    0.02814 1880    0.44',/, &
+!      '0.2176   0.018   600     1.0',/, &
+!      '0.2031   0.072   600     1.0',/, &
+!      '0.1895   0.12    600     1.0',/, &
+!      '0.1768   0.072   600     1.0',/, &
+!      '0.1649   0.018   600     1.0')
+!2080  format( &
+!      '******************************************************************************* ',/, &
+!      '# Options for writing vertical profiles ',/, &
+!      '# The first line below gives the number of locations (nlocs) where vertical ',/, &
+!      '# profiles are to be written.  That is followed by nlocs lines, each of which ',/, &
+!      '# contain the location, in the same coordinates as the computational grid.',/, &
+!      '# Optionally, a site name can be provided in after the location. ',/, &
+!      '******************* BLOCK 8 *************************************************** ')
+!2081  format( &
+!      '0                             #number of locations for vertical profiles (nlocs)  ')
+!2090  format( &
+!      '******************************************************************************* ',/, &
+!      '# netCDF output options ',/, &
+!      '# This last block is optional.',/, &
+!      '# The output file name can be give, but will default to 3d_tephra_fall.nc if absent',/, &
+!      '# The title and comment lines are passed through to the netcdf header of the',/, &
+!      '# output file. ')
+!2091  format( &
+!      '******************* BLOCK 9 *************************************************** ',/, &
+!      '3d_tephra_fall.nc             # Name of output file  ',/, &
+!      'Ash3d_web_run_dp              # Title of simulation  ',/, &
+!      'no comment                    # Comment  ')
+!2100  format( &
+!      '***********************',/, &
+!      '# Reset parameters',/, &
+!      '***********************')
+!2101  format( &
+!      'OPTMOD=RESETPARAMS',/, &
+!      'cdf_run_class        = ',i3)
+!2200  format( &
+!      '*******************************************************************************',/, &
+!      '# Topography',/, &
+!      '# Line 1 indicates whether or not to use topography followed by the integer flag',/, &
+!      '#        describing how topography will modify the vertical grid.',/, &
+!      '#          0 = no vertical modification; z-grid remains 0-> top throughout the domain',/, &
+!      '#          1 = shifted; s = z-z_surf; computational grid is uniformly shifted upward',/, &
+!      '#              everywhere by topography',/, &
+!      '#          2 = sigma-altitude; s=z_top(z-z_surf)/(z_top-z_surf); topography has decaying',/, &
+!      '#              influence with height',/, &
+!      '# Line 2 indicates the topography data format followed by the smoothing radius in km',/, &
+!      '# Topofile format must be one of',/, &
+!      '#   1 : Gridded lon/lat (netcdf): ETOPO, GEBCO',/, &
+!      '#   2 : Gridded Binary: NOAA GLOBE, GTOPO30',/, &
+!      '#   3 : ESRI ASCII',/, &
+!      '#  Line 3 is the file name of the topography data. ',/, &
+!      '#')
+!2201  format( &
+!      '******************* BLOCK 10+ *************************************************',/, &
+!      'OPTMOD=TOPO',/, &
+!      'no  0                           # use topography?; z-mod (0=none,1=shift,2=sigma)',/, &
+1      '1 20.0                          # Topofile format, smoothing radius',/, &
+!      'GEBCO_2023.nc                   # topofile name',/, &
+!      '*******************************************************************************')
 
       end program makeAsh3dinput2_ac
