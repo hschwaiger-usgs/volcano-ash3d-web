@@ -359,6 +359,7 @@ ${ASH3DEXEC} ${INFILE_MAIN} | tee ash3d_runlog.txt
 #  ash_arrivaltimes_airports.txt
 #  DepositFile_____final.dat
 #  ashfall_arrivaltimes_hours.kml
+#  DepositArrivalTime.dat
 #  deposit_thickness_mm.kml
 #  deposit_thickness_inches.kml
 #  ashfall_arrivaltimes_airports.txt
@@ -432,6 +433,7 @@ if [ "$RUNTYPE" == "ADV"  ] ; then
     unix2dos ash_arrivaltimes_airports.txt
     cp ash_arrivaltimes_airports.txt ashfall_arrivaltimes_airports.txt
     ln -s ash_arrivaltimes_airports.txt AshArrivalTimes.txt
+    cp DepositArrivalTime.dat ashfall_arrivaltimes_hours.dat
   elif [ "$RUNTYPE" == "ACL"  ] ; then
     echo "First stripping ash_arrivaltimes_airports.txt of deposit data"
     ${ASH3DBINDIR}/makeAshArrivalTimes_ac
@@ -500,6 +502,8 @@ if [ "$RUNTYPE" == "ADV" ] || [ "$RUNTYPE" == "ACL" ]  ; then
             echo "Error running GFSVolc_to_gif_dp_mm.sh: rc=$rc"
             exit 1
         fi
+        # Create a shapefile of the arrival time
+        ${ASH3DBINDIR}/Ash3d_PostProc 3d_tephra_fall.nc 7 5
     fi
 fi
 
@@ -560,12 +564,13 @@ fi
 
 echo "Making zip file"
 
-nout_files=22
+nout_files=24
 out_files=("${INFILE_MAIN}"         \
 "ash3d_runlog.txt"                  \
 "ash_arrivaltimes_airports.kmz"     \
 "ashfall_arrivaltimes_airports.txt" \
 "ashfall_arrivaltimes_hours.kmz"    \
+"ashfall_arrivaltimes_hours.dat"    \
 "deposit_thickness_inches.gif"      \
 "deposit_thickness_inches.kmz"      \
 "deposit_thickness_mm.gif"          \
@@ -573,6 +578,7 @@ out_files=("${INFILE_MAIN}"         \
 "deposit_thickness_mm.txt"          \
 "dp_shp.zip"                        \
 "dp_mm_shp.zip"                     \
+"DepAvlTm.zip"                      \
 "trajectory_1.gif"                  \
 "cloud_animation.gif"               \
 "cloud_arrivaltimes_airports.kmz"   \
