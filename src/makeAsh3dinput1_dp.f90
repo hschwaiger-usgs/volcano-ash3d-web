@@ -129,15 +129,17 @@
       ! Test read command-line arguments
       nargs = command_argument_count()
       if (nargs.ne.3) then
-        write(error_unit,*) 'ERROR: Three input arguments required'
-        write(error_unit,*) 'an input file, an output file, and the date &'
-        write(error_unit,*) 'time of the last downloaded wind file.'
+        write(error_unit,*) 'ERROR: Three input arguments required:'
+        write(error_unit,*) '         input filename'
+        write(error_unit,*) '         output file'
+        write(error_unit,*) '         date & time of the last downloaded wind data FC package.'
+        write(error_unit,*) '            date & time in format YYYYMMDDHH'
         write(error_unit,*) 'You have specified ',nargs, ' input arguments.'
         write(error_unit,*) 'program stopped'
         stop 1
       endif
-      call get_command_argument(1, infile, iostatus)
-      call get_command_argument(2, outfile, iostatus)
+      call get_command_argument(1, infile,          iostatus)
+      call get_command_argument(2, outfile,         iostatus)
       call get_command_argument(3, last_downloaded, iostatus)
 
       ! Read and parse command-line argument specifying last downloaded forecast package
@@ -199,7 +201,8 @@
         ! If so, then VolumeInput=.true, and we need to do some error checking
         VolumeInput = .true.
         write(output_unit,*) 'VolumeInput = .true.'
-        write(output_unit,*) 'Erupted volume specified as input:', e_volume, ' km3 DRE'
+        write(output_unit,*) 'Erupted volume specified as input:', &
+                              real(e_volume,kind=4), ' km3 DRE'
         if ((e_volume.lt.1.e-4_8).or.(e_volume.gt.5.0e1_8)) then
           write(error_unit,*) 'ERROR: Specified eruptive volume must be between 0.0001 and 50 km3.'
           write(error_unit,*) 'You entered ',e_volume, '.  Program stopped'
@@ -269,6 +272,7 @@
         ! Calculate eruption time before present
         Hours1900Erupt = hours_since_1900(iyear,imonth,iday,StartTime)
         Hours1900Wind  = hours_since_1900(windyear,windmonth,windday,windhour)
+        RunClass = 1
         if ((Hours1900Erupt+SimTime).gt.(Hours1900Wind+198.0_8)) then             !if the time is in the future
           write(error_unit,*) 'ERROR.  You entered an eruption start time'
           write(error_unit,*) 'that extends beyond the last currently available'
@@ -331,6 +335,11 @@
           stop 1
         endif
       else                     ! If this is a normal forecast run
+        if(Erup.eq.1)then
+          RunClass = 3  ! Forecast (actual eruption)
+        else
+          RunClass = 2  ! Hypothetical
+        endif
         write(output_unit,*) 'Using current windfiles'
         write(Windfile,1005)
 1005    format('Wind_nc/gfs/latest/latest.f')
@@ -789,9 +798,9 @@
       'Ash3d_web_run_dp              # Title of simulation  ',/, &
       'no comment                    # Comment  ')
 2100  format( &
-      '***********************',/, &
+      '******************************************************************************* ',/, &
       '# Reset parameters',/, &
-      '***********************')
+      '******************************************************************************* ')
 2101  format( &
       'OPTMOD=RESETPARAMS',/, &
       'cdf_run_class        = ',a12)

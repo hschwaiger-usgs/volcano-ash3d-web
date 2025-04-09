@@ -135,9 +135,11 @@
       ! Test read command-line arguments
       nargs = command_argument_count()
       if (nargs.ne.3) then
-        write(error_unit,*) 'ERROR: Three input arguments required'
-        write(error_unit,*) 'an input file, an output file, and the date &'
-        write(error_unit,*) 'time of the last downloaded wind file.'
+        write(error_unit,*) 'ERROR: Three input arguments required:'
+        write(error_unit,*) '         input filename'
+        write(error_unit,*) '         output file'
+        write(error_unit,*) '         date & time of the last downloaded wind data FC package.'
+        write(error_unit,*) '            date & time in format YYYYMMDDHH'
         write(error_unit,*) 'You have specified ',nargs, ' input arguments.'
         write(error_unit,*) 'program stopped'
         stop 1
@@ -205,7 +207,8 @@
         ! If so, then VolumeInput=.true, and we need to do some error checking
         VolumeInput = .true.
         write(output_unit,*) 'VolumeInput = .true.'
-        write(output_unit,*) 'Erupted volume specified as input:', e_volume, ' km3 DRE'
+        write(output_unit,*) 'Erupted volume specified as input:', &
+                              real(e_volume,kind=4), ' km3 DRE'
         if ((e_volume.lt.1.e-5_8).or.(e_volume.gt.1.0e2_8)) then
           write(error_unit,*) 'ERROR: Specified eruptive volume must be between 0.00001 and 100 km3.'
           write(error_unit,*) 'You entered ',e_volume, '.  Program stopped'
@@ -341,6 +344,11 @@
           stop 1
         endif
       else                     ! If this is a normal forecast run
+        if(Erup.eq.1)then
+          RunClass = 3  ! Forecast (actual eruption)
+        else
+          RunClass = 2  ! Hypothetical
+        endif
         write(output_unit,*) 'Using current windfiles'
         write(Windfile,1005)
 1005    format('Wind_nc/gfs/latest/latest.f')
@@ -436,6 +444,7 @@
       write(output_unit,*) 'writing full control file for preliminary run: ', outfile
 
       open(unit=fid_ctrout_full,file=outfile,status='replace',action='write',err=2500)
+
       write(fid_ctrout_full,2010) ! write block 1 header, then content  (Grid specification)
       write(fid_ctrout_full,2011) volcano_name, &
                                   lonLL, latLL, &
@@ -804,9 +813,9 @@
       'Ash3d_web_run_ac              # Title of simulation  ',/, &
       'no comment                    # Comment  ')
 2100  format( &
-      '***********************',/, &
+      '******************************************************************************* ',/, &
       '# Reset parameters',/, &
-      '***********************')
+      '******************************************************************************* ')
 2101  format( &
       'OPTMOD=RESETPARAMS',/, &
       'cdf_run_class        = ',a12)
