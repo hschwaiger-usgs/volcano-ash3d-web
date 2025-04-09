@@ -11,7 +11,7 @@
 
 !      --Written in Fortran 90
 
-!      --The program has been successsfully tested and run on the Linux Operating System using
+!      --The program has been successfully tested and run on the Linux Operating System using
 !          Red Hat 8/9 and Ubuntu 22/24.
 
 !       Although this program has been used by the USGS, no warranty, expressed or implied, is 
@@ -37,51 +37,62 @@
       integer,parameter :: fid_DepositData   = 11
       integer,parameter :: fid_ctrout_full   = 12
 
-      !real(kind=8) :: deposit(20,20)
-      real(kind=8),dimension(:,:),allocatable :: deposit
-      real(kind=8) :: row(10)
-      real(kind=8) :: dx_old, dy_old, dz, Height_old, lonLL_old, latLL_old
-      real(kind=8) :: latUR_old, lonUR_old, width_old
-      real(kind=8) :: dx_new, dy_new, Height_new, Height_new2
-      real(kind=8) :: lonLL_new, latLL_new, width_new, width_new2
-      real(kind=8) :: aspect_ratio, latUR_new, lonUR_new, resolution
-      integer      :: ifirst, ilast, ilines, i_volcano_old, jfirst, jlast, j_volcano_old
-      !integer      :: nWriteTimes
-      real(kind=8) :: Duration, e_volume, height_km, lat_mean, pHeight
-      real(kind=8) :: SimTime, StartTime
-      real(kind=8) :: v_lon, v_lat, v_elevation, width_km, WriteInterval
-      integer      :: i,j,iday,imonth,iostatus,iwind,iWindFormat,iyear
-      integer      :: ii,iii
-      integer      :: nargs,nWindFiles
+      integer           :: nargs
+      integer           :: iostatus
+      character(len=80) :: infile, outfile
+      logical           :: IsThere
+
+      character(len=25) :: DepositFile
+      real(kind=8),dimension(:,:),allocatable :: Deposit
+      real(kind=8)      :: Deposit_thresh
+      real(kind=8)      :: row(10)
+      real(kind=8)      :: aspect_ratio
+      real(kind=8)      :: resolution
+      integer           :: nbuffer
+      real(kind=8)      :: dx_old, dy_old
+      real(kind=8)      :: dz, Height_old, width_old
+      real(kind=8)      :: lonLL_old, latLL_old
+      real(kind=8)      :: latUR_old, lonUR_old
+      real(kind=8)      :: dx_new, dy_new
+      real(kind=8)      :: Height_new, width_new
+      real(kind=8)      :: Height_new2, width_new2
+      real(kind=8)      :: lonLL_new, latLL_new
+      real(kind=8)      :: latUR_new, lonUR_new
+
+      integer           :: ifirst, ilast, ilines, i_volcano_old, jfirst, jlast, j_volcano_old
+      !integer          :: nWriteTimes
+      real(kind=8)      :: Duration, e_volume, height_km, lat_mean, pHeight
+      real(kind=8)      :: SimTime, StartTime
+      real(kind=8)      :: v_lon, v_lat, v_elevation, width_km, WriteInterval
+      integer           :: i,iday,imonth,iyear,iwind,iwindformat
+      integer           :: j,ii,iii
+      integer           :: nWindFiles
       integer,dimension(10) :: block_linestart
-      integer      :: status
-      integer      :: nrows,remainder
-      !character(len=1) :: answer
-      !character(len=7) :: TimeNow_char
-      !character(len=23) :: CloudLoadFile
+      integer           :: nrows,remainder
       character(len=80) :: linebuffer
+      character(len=25) :: volcano_name
       character         :: testkey
       character(len=5)  :: dum_str
-      character(len=80) :: infile, outfile
-      character(len=25) :: volcano_name
       character(len=133):: inputlines(400)
-      logical           :: IsThere
+
 
       write(output_unit,*) ' '
       write(output_unit,*) '---------------------------------------------------'
       write(output_unit,*) 'starting makeAsh3dinput2_dp'
       write(output_unit,*) ' '
 
-      ! set constants
-      resolution = 75.0_8     !model resolution in x and y
-      aspect_ratio = 1.3_8   !map aspect ratio
+      ! Set constants
+      aspect_ratio     = 1.3_8                                    ! map aspect ratio (km/km)
+      resolution       = 75.0_8                                   ! model resolution in x and y
+      Deposit_thresh   = 0.01_8                                   ! threshold for setting model boundary
+      nbuffer          = 2                                        ! number of cells buffer between ifirst and model boundary
 
-!     TEST READ COMMAND LINE ARGUMENTS
+      ! Test read command-line arguments
       nargs = command_argument_count()
       if (nargs.eq.2) then
-        call get_command_argument(1, infile, status)
-        call get_command_argument(2, outfile, status)
-        write(error_unit,*) 'input file=',infile,', output file=',outfile
+        call get_command_argument(1, infile, iostatus)
+        call get_command_argument(2, outfile, iostatus)
+        write(output_unit,*) 'input file=',infile,', output file=',outfile
       else
         write(error_unit,*) 'ERROR: This program requires two input arguments:'
         write(error_unit,*) 'an input file and an output file.'
@@ -89,6 +100,9 @@
         write(error_unit,*) 'program stopped'
         stop 1
       endif
+      write(output_unit,*) 'Command-line arguments parsed as:'
+      write(output_unit,*) '  infile  = ', infile
+      write(output_unit,*) '  outfile = ', outfile
       inquire( file=infile, exist=IsThere )
       if(.not.IsThere)then
         write(error_unit,*)"ERROR: Could not find file :",infile
@@ -112,7 +126,7 @@
         if(index(inputlines(i),' BLOCK 9 ').ne.0)block_linestart(9)=i+1
         if(index(inputlines(i),' BLOCK 10 ').ne.0)block_linestart(10)=i+1
         i=i+1
-      end do
+      enddo
       ilines=i-2
       close(fid_ctrin_prelim)
 
@@ -126,35 +140,29 @@
       ! Reading BLOCK 2 of the preliminary control file
       read(inputlines(block_linestart(2)  ),*) iyear, imonth,iday,StartTime, Duration, pHeight, e_volume
       ! Reading BLOCK 3 of the preliminary control file
-      read(inputlines(block_linestart(3)  ),*) iwind, iWindFormat
+      read(inputlines(block_linestart(3)  ),*) iwind, iwindformat
       read(inputlines(block_linestart(3)+2),*) SimTime
       read(inputlines(block_linestart(3)+4),*) nWindFiles
       ! Reading BLOCK 4 of the preliminary control file
       read(inputlines(block_linestart(4)+17),*) WriteInterval
 
-      !write(output_unit,*) 'volcano name=',volcano_name
-      !write(output_unit,*) 'lonLL_old=',lonLL_old, ', latLL_old=',latLL_old
-      !write(output_unit,*) 'width_old=',width_old, ', height_old=',height_old
-      !write(output_unit,*) 'v_lon=',v_lon, ', v_lat=',v_lat, ', v_elevation=',v_elevation
-      !write(output_unit,*) 'dx_old=',dx_old, ', dy_old=',dy_old, ', dz=',dz
-      !write(output_unit,*) 'iyear=',iyear,', imonth=',imonth, ', iday=',iday, ', StartTime=',StartTime
-      !write(output_unit,*) 'iwind=',iwind, ', iWindformat=',iWindFormat
-      !write(output_unit,*) 'Simtime=',SimTime
-      !write(output_unit,*) 'nWindFiles=',nWindFiles
-      !write(output_unit,*) 'nWriteTimes=',nWriteTimes
-      !write(output_unit,*) 'WriteTimes=',WriteTimes
-
-      !calculate i_volcano, j_volcano
+      ! Calculate i_volcano, j_volcano
       latUR_old     = latLL_old+height_old
       lonUR_old     = lonLL_old+width_old
       if (v_lon.lt.lonLL_old) v_lon=v_lon+360.0_8
-      i_volcano_old = int((v_lon-lonLL_old)/dx_old)+1       !i node of volcano
-      j_volcano_old = int((v_lat-latLL_old)/dy_old)+1       !j node of volcano
+      i_volcano_old = int((v_lon-lonLL_old)/dx_old)+1       ! i node of volcano
+      j_volcano_old = int((v_lat-latLL_old)/dy_old)+1       ! j node of volcano
 
-      write(output_unit,*) 'opening DepositFile_____final.dat'
-      open(unit=fid_DepositData,file='DepositFile_____final.dat',status='old',err=1900)
+!      if (i_volcano_old.gt.20) then
+!        write(error_unit,*) 'ERROR: The volcano is not within the mapped area'
+!        stop 1
+!      endif
 
-      !initiate boundaries
+      DepositFile = 'DepositFile_____final.dat'
+      write(output_unit,*) 'opening ',DepositFile
+      open(unit=fid_DepositData,file=DepositFile,status='old',err=1900)
+
+      ! Initiate boundaries
       read(fid_DepositData,*)dum_str,ilast
       read(fid_DepositData,*)dum_str,jlast
       jfirst = 1
@@ -165,11 +173,11 @@
 
       do i=1,3
         read(fid_DepositData,*)         !skip header lines
-      end do
+      enddo
       read(fid_DepositData,'(a80)')linebuffer
       read(linebuffer,*)testkey
       do while(testkey.ne.'N')
-        ! haven't found 'NODATA_VALUE' yet
+        ! Haven't found 'NODATA_VALUE' yet
         read(fid_DepositData,'(a80)')linebuffer
         read(linebuffer,*)testkey
       enddo
@@ -178,74 +186,75 @@
         do ii=1,nrows
           read(fid_DepositData,*) row(1:10)
           iii=(ii-1)*10
-          deposit(iii+1:iii+10,j) = row(1:10)
-          !read(fid_DepositData,2) (deposit(i,j), i=1,10)
-          !read(fid_DepositData,2) (deposit(i,j), i=11,20)
-!2        format(10f10.3)
+          Deposit(iii+1:iii+10,j) = row(1:10)
         enddo
         if (remainder.gt.0) then
           read(fid_DepositData,*)row(1:remainder)
           iii=nrows*10
-          deposit(iii+1:iii+remainder,j) = row(1:remainder)
+          Deposit(iii+1:iii+remainder,j) = row(1:remainder)
         endif
         read(fid_DepositData,*)
-      end do
+      enddo
       close(fid_DepositData)
+      ! Now all the data has been read into the array Deposit(i,j)
 
       do i=1,ilast                                !find ifirst
+        ! For each i-slice, check if any value in Deposit(i,:) exceeds threshold
         do j=1,jlast
-          if (deposit(i,j).ge.0.01_8) then
+          if (Deposit(i,j).ge.Deposit_thresh) then
             ifirst = i
             go to 100
-          end if
-        end do
-      end do
+        endif
+        enddo
+      enddo
 100   continue
       do i=ilast,1,-1                             !find ilast
+        ! For each i-slice, check if any value in Deposit(i,:) exceeds threshold
         do j=1,jlast
-          if (deposit(i,j).ge.0.01_8) then
+          if (Deposit(i,j).ge.Deposit_thresh) then
             ilast = i
             go to 200
-          end if
-        end do
-      end do
+          endif
+        enddo
+      enddo
 200   continue
       do j=1,jlast                                !find jfirst
+        ! For each j-slice, check if any value in Deposit(:,j) exceeds threshold
         do i=1,ilast
-          if (deposit(i,j).ge.0.01_8) then
+          if (Deposit(i,j).ge.Deposit_thresh) then
             jfirst = j
             go to 300
-          end if
-        end do
-      end do
+          endif
+        enddo
+      enddo
 300   continue
       do j=jlast,1,-1                             !find jlast
+        ! For each j-slice, check if any value in Deposit(:,j) exceeds threshold
         do i=1,ilast
-          if (deposit(i,j).ge.0.01_8) then
+          if (Deposit(i,j).ge.Deposit_thresh) then
             jlast = j
             go to 400
-          end if
-        end do
-      end do
+          endif
+        enddo
+      enddo
 400 continue
 
-     !make sure the volcano is not right at the boundary
+      ! Make sure the volcano is not right at the boundary
       if (ifirst.ge.i_volcano_old) ifirst = i_volcano_old-1
       if (ilast .le.i_volcano_old) ilast  = i_volcano_old+1
       if (jfirst.ge.j_volcano_old) jfirst = j_volcano_old-1
       if (jlast .le.j_volcano_old) jlast  = j_volcano_old+1
 
-      !calculate new model boundaries
-      lonLL_new  = lonLL_old + float(ifirst-2)*dx_old
-      latLL_new  = latLL_old + float(jfirst-2)*dy_old
-      width_new  = float(ilast-ifirst+4)*dx_old
-      height_new = float(jlast-jfirst+4)*dy_old
+      ! Calculate new model boundaries
+      lonLL_new  = lonLL_old + float(ifirst-nbuffer)*dx_old
+      latLL_new  = latLL_old + float(jfirst-nbuffer)*dy_old
+      width_new  = float(ilast-ifirst+nbuffer*2)*dx_old
+      height_new = float(jlast-jfirst+nbuffer*2)*dy_old
       latUR_new  = latLL_new + height_new
       lonUR_new  = lonLL_new + width_new
 
-      !Adjust model boundaries to maintain the specified aspect ratio
-      !  Initialize dy_new to 0.0
-      dy_new = 0.0_8
+      ! Adjust model boundaries to maintain the specified aspect ratio
+      dy_new = 0.0_8   !  Initialize dy_new to 0.0
       lat_mean = latLL_new + height_new/2.0_8
       height_km=height_new*109.0_8
       width_km =width_new*109.0_8*cos(3.14_8*lat_mean/180.0_8)
@@ -255,16 +264,16 @@
          latLL_new  = latLL_new - (height_new2-height_new)/2.0_8
          height_new = height_new2
          latUR_new  = latLL_new+height_new
-         if ((latUR_new+dy_new).gt.89.5_8) then  !make sure top of model boundary doesn't cross the N pole
+         if ((latUR_new+dy_new).gt.89.5_8) then  ! Make sure top of model boundary doesn't cross the N pole
              write(output_unit,*) 'adjusting N model boundary so that it doesnt cross the north pole'
              latUR_new = 89.5_8 - dy_new
              height_new = latUR_new-latLL_new
-         end if
+         endif
          if ((latLL_new-dy_new).lt.-89.5_8) then
              write(output_unit,*) 'adjusting S model boundary so that it doesnt cross the south pole'
              latLL_new = -89.5_8 + dy_new
              height_new = latUR_new-latLL_new
-         end if
+         endif
          write(output_unit,*) 'height_new=', height_new
        else
          write(output_unit,*) 'adjusting width to maintain aspect ratio'
@@ -272,11 +281,12 @@
          lonLL_new  = lonLL_new - (width_new2-width_new)/2.0_8
          width_new  = width_new2
          write(output_unit,*) 'width_new=', width_new
-      end if
+      endif
 
       write(output_unit,*) 'Volcano name : ', volcano_name
       write(output_unit,*) 'Start time (year, month, day, hour):',iyear, imonth, iday, real(StartTime,kind=4)
       write(output_unit,*) ' i_volcano_old=', i_volcano_old, ',   j_volcano_old=', j_volcano_old
+      write(output_unit,*) ' Deposit_thresh = ',real(Deposit_thresh,kind=4)
       write(output_unit,*) ' ifirst=',ifirst, ', ilast=', ilast
       write(output_unit,*) ' jfirst=',jfirst, ', jlast=', jlast
       write(output_unit,*)
@@ -320,36 +330,10 @@
       do i=block_linestart(5)-1,ilines
         write(fid_ctrout_full,4) inputlines(i)
 4       format(a100)
-      end do
-
-
-!      write(fid_ctrout_full,2051)
-!      if (runtype.eq.'now') then
-!        do i=1,nWindfiles
-!          write(fid_ctrout_full,2052) WindFile, 3*(i-1)  ! Wind_nc/gfs/latest/latest.f[hhh]
-!        enddo
-!      else if (runtype.eq.'rec') then
-!        do i=1,nWindfiles
-!          write(fid_ctrout_full,2053) WindFile, 3*(i-1)  ! Wind_nc/gfs/gfs.YYYYMMDDFF/YYYYMMDDFF.f[hhh].nc
-!        enddo
-!      else
-!        write(fid_ctrout_full,2054) Windfile             ! Wind_nc/NCEP
-!      end if
-!
-!      write(fid_ctrout_full,2060) ! write block 6 header, then content  (Airport I/O options)
-!      write(fid_ctrout_full,2061)
-!      write(fid_ctrout_full,2070) ! write block 7 header, then content  (GSD specification)
-!      write(fid_ctrout_full,2071)
-!      write(fid_ctrout_full,2080) ! write block 8 header, then content  (Vertical Profiles)
-!      write(fid_ctrout_full,2081)
-!      write(fid_ctrout_full,2090) ! write block 9 header, then content  (NetCDF info)
-!      write(fid_ctrout_full,2091)
-      write(fid_ctrout_full,2100) ! write block 10 header, then content (Topography)
-      write(fid_ctrout_full,2101)
-      write(fid_ctrout_full,2200) ! write block 10+ header, then content (Reset Params)
-      write(fid_ctrout_full,2201)'Analysis    '
-      !write(fid_ctrout_full,2201)'Hypothetical'
-      !write(fid_ctrout_full,2201)'Forecast    '
+      enddo
+      ! Here we add the topography block
+      write(fid_ctrout_full,2200) ! write block 10+ header, then content (Topography)
+      write(fid_ctrout_full,2201)
 
       close(fid_ctrout_full)
 
@@ -361,6 +345,7 @@
       stop 0
 
 1900  write(error_unit,*) 'ERROR: DepositFile_____final.dat files do not exist.'
+      write(error_unit,*) '       Preliminary run did not write Deposit file as expected.'
       write(error_unit,*) 'Program stopped'
       stop 1
 
@@ -596,94 +581,101 @@
       '# if you have a soft link in the run directory.',/, &
       '# For a network of radiosonde data, please see the MetReader documentation for',/, &
       '# the input specification https://code.usgs.gov/vsc/ash3d/volcano-ash3d-metreader.')
-2051  format( &
-      '******************* BLOCK 5 ***************************************************')
-2052  format(a27,i3.3,'.nc')                          !for forecast winds       Wind_nc/gfs/latest/latest.f**.nc
-2053  format(a39,i3.3,'.nc')                          !for archived gfs winds   Wind_nc/gfs/gfs.2012052300/2012052300.f**.nc
-2054  format(a12)                                      !for NCEP reanalyis winds Wind_nc/NCEP
-2060  format( &
-      '*******************************************************************************',/, &
-      '# AIRPORT LOCATION FILE ',/, &
-      '# The following lines allow the user to specify whether times of ash arrival ',/, &
-      '# at airports & other locations will be written out, and which file  ',/, &
-      '# to read for a list of airport locations. ',/, &
-      '# PLEASE NOTE:  Each line in the airport location file should contain the ',/, &
-      '#               airport latitude, longitude, projected x and y coordinates,  ',/, &
-      '#               and airport name.  If you are using a projected grid,  ',/, &
-      '#               THE X AND Y MUST BE IN THE SAME PROJECTION as the computational grid.',/, &
-      '#               Alternatively, coordinates can be projected via libprojection  ',/, &
-      '#               by typing "yes" to the last parameter ')
-2061  format( &
-      '******************* BLOCK 6 *************************************************** ',/, &
-      'yes                           # Write out ash arrival times at airports to ASCII FILE? ',/, &
-      'no                            # Write out grain-size distribution to ASCII airport file?  ',/, &
-      'yes                           # Write out ash arrival times to kml file?  ',/, &
-      '                              # Name of file containing aiport locations  ',/, &
-      'no                            # Defer to Lon/Lat coordinates? ("no" defers to projected)  ')
-2070  format( &
-      '******************************************************************************* ',/, &
-      '# GRAIN SIZE GROUPS',/, &
-      '# The first line must contain the number of settling velocity groups, but',/, &
-      '# can optionally also include a flag for the fall velocity model to be used.',/, &
-      '#    FV_ID = 1, Wilson and Huang',/, &
-      '#          = 2, Wilson and Huang + Cunningham slip',/, &
-      '#          = 3, Wilson and Huang + Mod by Pfeiffer Et al.',/, &
-      '#          = 4, Ganser (assuming prolate ellipsoids)',/, &
-      '#          = 5, Ganser + Cunningham slip',/, &
-      '#          = 6, Stokes flow for spherical particles + slip',/, &
-      '# If no fall model is specified, FV_ID = 1, by default',/, &
-      '# The grain size bins can be enters with 2, 3, or 4 parameters.',/, &
-      '# If TWO are given, they are read as:   FallVel (in m/s), mass fraction',/, &
-      '# If THREE are given, they are read as: diameter (mm), mass fraction, density (kg/m3)',/, &
-      '# If FOUR are given, they are read as:  diameter (mm), mass fraction, density (kg/m3), Shape F',/, &
-      '# The shape factor is given as in Wilson and Huang: F=(b+c)/(2*a), but converted',/, &
-      '# to sphericity (assuming b=c) for the Ganser model.',/, &
-      '# If a shape factor is not given, a default value of F=0.4 is used.',/, &
-      '# If FIVE are given, they are read as:  diameter (mm), mass fraction, density (kg/m3), Shape F, G',/, &
-      '#  where G is an additional Ganser shape factor equal to c/b',/, &
-      '#  ',/, &
-      '# If the last grain size bin has a negative diameter, then the remaining mass fraction',/, &
-      '# will be distributed over the previous bins via a log-normal distribution in phi.',/, &
-      '# The last bin would be interpreted as:',/, &
-      '# diam (neg value) , phi_mean, phi_stddev ')
-2071  format( &
-      '******************* BLOCK 7 *************************************************** ',/, &
-      '12                           #Number of settling velocity groups',/, &
-      '2        0.06118 800     0.44',/, &
-      '1        0.07098 1040    0.44',/, &
-      '0.5      0.22701 1280    0.44',/, &
-      '0.25     0.21868 1520    0.44',/, &
-      '0.1768   0.05362 1640    0.44',/, &
-      '0.125    0.04039 1760    0.44',/, &
-      '0.088    0.02814 1880    0.44',/, &
-      '0.2176   0.018   600     1.0',/, &
-      '0.2031   0.072   600     1.0',/, &
-      '0.1895   0.12    600     1.0',/, &
-      '0.1768   0.072   600     1.0',/, &
-      '0.1649   0.018   600     1.0')
-2080  format( &
-      '******************************************************************************* ',/, &
-      '# Options for writing vertical profiles ',/, &
-      '# The first line below gives the number of locations (nlocs) where vertical ',/, &
-      '# profiles are to be written.  That is followed by nlocs lines, each of which ',/, &
-      '# contain the location, in the same coordinates as the computational grid.',/, &
-      '# Optionally, a site name can be provided in after the location. ',/, &
-      '******************* BLOCK 8 *************************************************** ')
-2081  format( &
-      '0                             #number of locations for vertical profiles (nlocs)  ')
-2090  format( &
-      '******************************************************************************* ',/, &
-      '# netCDF output options ',/, &
-      '# This last block is optional.',/, &
-      '# The output file name can be give, but will default to 3d_tephra_fall.nc if absent',/, &
-      '# The title and comment lines are passed through to the netcdf header of the',/, &
-      '# output file. ')
-2091  format( &
-      '******************* BLOCK 9 *************************************************** ',/, &
-      '3d_tephra_fall.nc             # Name of output file  ',/, &
-      'Ash3d_web_run_dp              # Title of simulation  ',/, &
-      'no comment                    # Comment  ')
-2100  format( &
+!2051  format( &
+!      '******************* BLOCK 5 ***************************************************')
+!2052  format(a27,i3.3,'.nc')                          !for forecast winds       Wind_nc/gfs/latest/latest.f**.nc
+!2053  format(a39,i3.3,'.nc')                          !for archived gfs winds   Wind_nc/gfs/gfs.2012052300/2012052300.f**.nc
+!2054  format(a12)                                      !for NCEP reanalyis winds Wind_nc/NCEP
+!2060  format( &
+!      '*******************************************************************************',/, &
+!      '# AIRPORT LOCATION FILE ',/, &
+!      '# The following lines allow the user to specify whether times of ash arrival ',/, &
+!      '# at airports & other locations will be written out, and which file  ',/, &
+!      '# to read for a list of airport locations. ',/, &
+!      '# PLEASE NOTE:  Each line in the airport location file should contain the ',/, &
+!      '#               airport latitude, longitude, projected x and y coordinates,  ',/, &
+!      '#               and airport name.  If you are using a projected grid,  ',/, &
+!      '#               THE X AND Y MUST BE IN THE SAME PROJECTION as the computational grid.',/, &
+!      '#               Alternatively, coordinates can be projected via libprojection  ',/, &
+!      '#               by typing "yes" to the last parameter ')
+!2061  format( &
+!      '******************* BLOCK 6 *************************************************** ',/, &
+!      'yes                           # Write out ash arrival times at airports to ASCII FILE? ',/, &
+!      'no                            # Write out grain-size distribution to ASCII airport file?  ',/, &
+!      'yes                           # Write out ash arrival times to kml file?  ',/, &
+!      '                              # Name of file containing aiport locations  ',/, &
+!      'no                            # Defer to Lon/Lat coordinates? ("no" defers to projected)  ')
+!2070  format( &
+!      '******************************************************************************* ',/, &
+!      '# GRAIN SIZE GROUPS',/, &
+!      '# The first line must contain the number of settling velocity groups, but',/, &
+!      '# can optionally also include a flag for the fall velocity model to be used.',/, &
+!      '#    FV_ID = 1, Wilson and Huang',/, &
+!      '#          = 2, Wilson and Huang + Cunningham slip',/, &
+!      '#          = 3, Wilson and Huang + Mod by Pfeiffer Et al.',/, &
+!      '#          = 4, Ganser (assuming prolate ellipsoids)',/, &
+!      '#          = 5, Ganser + Cunningham slip',/, &
+!      '#          = 6, Stokes flow for spherical particles + slip',/, &
+!      '# If no fall model is specified, FV_ID = 1, by default',/, &
+!      '# The grain size bins can be enters with 2, 3, or 4 parameters.',/, &
+!      '# If TWO are given, they are read as:   FallVel (in m/s), mass fraction',/, &
+!      '# If THREE are given, they are read as: diameter (mm), mass fraction, density (kg/m3)',/, &
+!      '# If FOUR are given, they are read as:  diameter (mm), mass fraction, density (kg/m3), Shape F',/, &
+!      '# The shape factor is given as in Wilson and Huang: F=(b+c)/(2*a), but converted',/, &
+!      '# to sphericity (assuming b=c) for the Ganser model.',/, &
+!      '# If a shape factor is not given, a default value of F=0.4 is used.',/, &
+!      '# If FIVE are given, they are read as:  diameter (mm), mass fraction, density (kg/m3), Shape F, G',/, &
+!      '#  where G is an additional Ganser shape factor equal to c/b',/, &
+!      '#  ',/, &
+!      '# If the last grain size bin has a negative diameter, then the remaining mass fraction',/, &
+!      '# will be distributed over the previous bins via a log-normal distribution in phi.',/, &
+!      '# The last bin would be interpreted as:',/, &
+!      '# diam (neg value) , phi_mean, phi_stddev ')
+!2071  format( &
+!      '******************* BLOCK 7 *************************************************** ',/, &
+!      '12                           #Number of settling velocity groups',/, &
+!      '2        0.06118 800     0.44',/, &
+!      '1        0.07098 1040    0.44',/, &
+!      '0.5      0.22701 1280    0.44',/, &
+!      '0.25     0.21868 1520    0.44',/, &
+!      '0.1768   0.05362 1640    0.44',/, &
+!      '0.125    0.04039 1760    0.44',/, &
+!      '0.088    0.02814 1880    0.44',/, &
+!      '0.2176   0.018   600     1.0',/, &
+!      '0.2031   0.072   600     1.0',/, &
+!      '0.1895   0.12    600     1.0',/, &
+!      '0.1768   0.072   600     1.0',/, &
+!      '0.1649   0.018   600     1.0')
+!2080  format( &
+!      '******************************************************************************* ',/, &
+!      '# Options for writing vertical profiles ',/, &
+!      '# The first line below gives the number of locations (nlocs) where vertical ',/, &
+!      '# profiles are to be written.  That is followed by nlocs lines, each of which ',/, &
+!      '# contain the location, in the same coordinates as the computational grid.',/, &
+!      '# Optionally, a site name can be provided in after the location. ',/, &
+!      '******************* BLOCK 8 *************************************************** ')
+!2081  format( &
+!      '0                             #number of locations for vertical profiles (nlocs)  ')
+!2090  format( &
+!      '******************************************************************************* ',/, &
+!      '# netCDF output options ',/, &
+!      '# This last block is optional.',/, &
+!      '# The output file name can be give, but will default to 3d_tephra_fall.nc if absent',/, &
+!      '# The title and comment lines are passed through to the netcdf header of the',/, &
+!      '# output file. ')
+!2091  format( &
+!      '******************* BLOCK 9 *************************************************** ',/, &
+!      '3d_tephra_fall.nc             # Name of output file  ',/, &
+!      'Ash3d_web_run_dp              # Title of simulation  ',/, &
+!      'no comment                    # Comment  ')
+!2100  format( &
+!      '***********************',/, &
+!      '# Reset parameters',/, &
+!      '***********************')
+!2101  format( &
+!      'OPTMOD=RESETPARAMS',/, &
+!      'cdf_run_class        = ',a12)
+2200  format( &
       '*******************************************************************************',/, &
       '# Topography',/, &
       '# Line 1 indicates whether or not to use topography followed by the integer flag',/, &
@@ -700,20 +692,12 @@
       '#   3 : ESRI ASCII',/, &
       '#  Line 3 is the file name of the topography data. ',/, &
       '#')
-2101  format( &
+2201  format( &
       '******************* BLOCK 10+ *************************************************',/, &
       'OPTMOD=TOPO',/, &
       'no  0                           # use topography?; z-mod (0=none,1=shift,2=sigma)',/, &
       '1 20.0                          # Topofile format, smoothing radius',/, &
       'GEBCO_2023.nc                   # topofile name',/, &
       '*******************************************************************************')
-2200  format( &
-      '***********************',/, &
-      '# Reset parameters',/, &
-      '***********************')
-2201  format( &
-      'OPTMOD=RESETPARAMS',/, &
-      'cdf_run_class        = ',a12)
-
 
       end program makeAsh3dinput2_dp

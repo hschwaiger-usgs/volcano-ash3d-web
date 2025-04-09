@@ -11,7 +11,7 @@
 
 !      --Written in Fortran 90
 
-!      --The program has been successsfully tested and run on the Linux Operating System using
+!      --The program has been successfully tested and run on the Linux Operating System using
 !          Red Hat 8/9 and Ubuntu 22/24.
 
 !       Although this program has been used by the USGS, no warranty, expressed or implied, is 
@@ -37,57 +37,68 @@
       integer,parameter :: fid_CloudLoadData = 11
       integer,parameter :: fid_ctrout_full   = 12
 
-      real(kind=8), dimension(:,:,:), allocatable           :: CloudLoad
-      real(kind=8) :: row(10)
-      real(kind=8) :: dx_old, dy_old, dz, Height_old, lonLL_old, latLL_old
-      real(kind=8) :: latUR_old, lonUR_old, width_old
-      real(kind=8) :: dx_new, dy_new, Height_new, Height_new2
-      real(kind=8) :: lonLL_new, latLL_new, width_new, width_new2
-      real(kind=8) :: aspect_ratio, latUR_new, lonUR_new, resolution
-      real(kind=8) :: CloudLoad_thresh
-      integer      :: ifirst, ilast, ilines, i_volcano_old, jfirst, jlast, j_volcano_old
-      integer      :: nWriteTimes
-      integer      :: nbuffer
-      real(kind=8) :: Duration, e_volume, FineAshFraction, height_km, lat_mean, pHeight
-      real(kind=8) :: SimTime, StartTime
-      real(kind=8) :: TimeNow, v_lon, v_lat, v_elevation, width_km, WriteTimes(24)
-      integer      :: i,j,iday,imonth,iostatus,iwind,iWindFormat,iyear
-      integer      :: ii,iii
-      integer      :: k
-      integer      :: nargs,nWindFiles
-      integer,dimension(10) :: block_linestart
-      integer      :: status
-      !character(len=1) :: answer
-      integer      :: nrows,remainder
-      character(len=7) :: TimeNow_char
+      integer           :: nargs
+      integer           :: iostatus
+      character(len=80) :: infile, outfile
+      logical           :: IsThere
+
       character(len=23) :: CloudLoadFile
+      real(kind=8),dimension(:,:,:),allocatable :: CloudLoad
+      real(kind=8)      :: CloudLoad_thresh
+      real(kind=8)      :: row(10)
+      real(kind=8)      :: aspect_ratio
+      real(kind=8)      :: resolution
+      integer           :: nbuffer
+      real(kind=8)      :: dx_old, dy_old
+      real(kind=8)      :: dz, Height_old, width_old
+      real(kind=8)      :: lonLL_old, latLL_old
+      real(kind=8)      :: latUR_old, lonUR_old
+      real(kind=8)      :: dx_new, dy_new
+      real(kind=8)      :: Height_new, width_new
+      real(kind=8)      :: Height_new2, width_new2
+      real(kind=8)      :: lonLL_new, latLL_new
+      real(kind=8)      :: latUR_new, lonUR_new
+
+      integer           :: ifirst, ilast, ilines, i_volcano_old, jfirst, jlast, j_volcano_old
+      integer           :: nWriteTimes
+      real(kind=8)      :: Duration, e_volume, height_km, lat_mean, pHeight
+      real(kind=8)      :: FineAshFraction
+      real(kind=8)      :: SimTime, StartTime
+      real(kind=8)      :: StepTime
+      character(len=7)  :: StepTime_char
+      real(kind=8)      :: v_lon, v_lat, v_elevation, width_km, WriteTimes(24)
+      integer           :: i,iday,imonth,iyear,iwind,iwindformat
+      integer           :: j,k,ii,iii
+      integer           :: nWindFiles
+      integer,dimension(10) :: block_linestart
+      integer           :: nrows,remainder
       character(len=80) :: linebuffer
+      character(len=25) :: volcano_name
       character         :: testkey
       character(len=5)  :: dum_str
-      character(len=80) :: infile, outfile
-      character(len=25) :: volcano_name
       character(len=133):: inputlines(400)
-      logical           :: IsThere
+
 
       write(output_unit,*) ' '
       write(output_unit,*) '---------------------------------------------------'
       write(output_unit,*) 'starting makeAsh3dinput2_ac'
       write(output_unit,*) ' '
 
-      ! set constants
+      ! Set constants
       aspect_ratio     = 1.5_8                                    ! map aspect ratio (km/km)
-      FineAshFraction  = 0.05_8                                   ! mass fraction fine ash
       resolution       = 100.0_8                                  ! model resolution in x and y
       CloudLoad_thresh = 0.03_8                                   ! threshold for setting model boundary
       nbuffer          = 2                                        ! number of cells buffer between ifirst and model boundary
-
-!     TEST READ COMMAND LINE ARGUMENTS
+      FineAshFraction  = 0.05_8                                   ! mass fraction fine ash
+      
+      ! Test read command-line arguments
       nargs = command_argument_count()
       if (nargs.eq.2) then
-        call get_command_argument(1, infile, status)
-        call get_command_argument(2, outfile, status)
+        call get_command_argument(1, infile, iostatus)
+        call get_command_argument(2, outfile, iostatus)
+        write(output_unit,*) 'input file=',infile,', output file=',outfile
       else
-        write(error_unit,*) 'ERROR: Two input arguments required'
+        write(error_unit,*) 'ERROR: This program requires two input arguments:'
         write(error_unit,*) 'an input file and an output file.'
         write(error_unit,*) 'You have specified ',nargs, ' input arguments.'
         write(error_unit,*) 'program stopped'
@@ -119,7 +130,7 @@
         if(index(inputlines(i),' BLOCK 9 ').ne.0)block_linestart(9)=i+1
         if(index(inputlines(i),' BLOCK 10 ').ne.0)block_linestart(10)=i+1
         i=i+1
-      end do
+      enddo
       ilines=i-2
       close(fid_ctrin_prelim)
 
@@ -133,81 +144,44 @@
       ! Reading BLOCK 2 of the preliminary control file
       read(inputlines(block_linestart(2)  ),*) iyear, imonth,iday,StartTime, Duration, pHeight, e_volume
       ! Reading BLOCK 3 of the preliminary control file
-      read(inputlines(block_linestart(3)  ),*) iwind, iWindFormat
+      read(inputlines(block_linestart(3)  ),*) iwind, iwindformat
       read(inputlines(block_linestart(3)+2),*) SimTime
       read(inputlines(block_linestart(3)+4),*) nWindFiles
       ! Reading BLOCK 4 of the preliminary control file
       read(inputlines(block_linestart(4)+16),*) nWriteTimes
       read(inputlines(block_linestart(4)+17),*) (WriteTimes(i), i=1,nWriteTimes)
 
-      ! For double-checking that the control file is read correctly, if needed.
-      !write(output_unit,*) 'volcano name=',volcano_name
-      !write(output_unit,*) 'lonLL_old=',lonLL_old, ', latLL_old=',latLL_old
-      !write(output_unit,*) 'width_old=',width_old, ', height_old=',height_old
-      !write(output_unit,*) 'v_lon=',v_lon, ', v_lat=',v_lat, ', v_elevation=',v_elevation
-      !write(output_unit,*) 'dx_old=',dx_old, ', dy_old=',dy_old, ', dz=',dz
-      !write(output_unit,*) 'iyear=',iyear,', imonth=',imonth, ', iday=',iday, ', StartTime=',StartTime
-      !write(output_unit,*) 'iwind=',iwind, ', iWindformat=',iWindFormat
-      !write(output_unit,*) 'Simtime=',SimTime
-      !write(output_unit,*) 'nWindFiles=',nWindFiles
-      !write(output_unit,*) 'nWriteTimes=',nWriteTimes
-      !write(output_unit,*) 'WriteTimes=',WriteTimes(1:nWriteTimes)
-
-      !calculate i_volcano, j_volcano
+      ! Calculate i_volcano, j_volcano
       latUR_old     = latLL_old+height_old
       lonUR_old     = lonLL_old+width_old
       if (v_lon.lt.lonLL_old) v_lon=v_lon+360.0_8
-      i_volcano_old = int((v_lon-lonLL_old)/dx_old)+1       !i node of volcano
-      j_volcano_old = int((v_lat-latLL_old)/dy_old)+1       !j node of volcano
+      i_volcano_old = int((v_lon-lonLL_old)/dx_old)+1       ! i node of volcano
+      j_volcano_old = int((v_lat-latLL_old)/dy_old)+1       ! j node of volcano
 
       if (i_volcano_old.gt.20) then
         write(error_unit,*) 'ERROR: The volcano is not within the mapped area'
         stop 1
       endif
 
-      !do i=1,3
-      !    read(11,*)         !skip header lines
-      !end do
-      !read(11,'(a80)')linebuffer
-      !read(linebuffer,*)testkey
-      !do while(testkey.ne.'N')
-      !   ! haven't found 'NODATA_VALUE' yet
-      !  read(11,'(a80)')linebuffer
-      !  read(linebuffer,*)testkey
-      !enddo
-
-!      do j=jlast,1,-1
-!        do ii=1,nrows
-!          read(11,*) row(1:10)
-!          iii=(ii-1)*10
-!          deposit(iii+1:iii+10,j) = row(1:10)
-!2         format(10f10.3)
-!        enddo
-!        if (remainder.gt.0) then
-!          read(11,*)row(1:remainder)
-!          iii=nrows*10
-!          deposit(iii+1:iii+remainder,j) = row(1:remainder)
-!        endif
-!        read(11,*)
-!      end do
 
       ! Now looping through all the expected CloudLoad files and evaluating
       do k=1,nWriteTimes
-        TimeNow = WriteTimes(k)
-        if (TimeNow.lt.10.0_8) then
-          write(TimeNow_char,1) TimeNow
+        StepTime = WriteTimes(k)
+        if (StepTime.lt.10.0_8) then
+          write(StepTime_char,1) StepTime
 1         format('_00',f4.2)
-        elseif (TimeNow.lt.100.0_8) then
-          write(TimeNow_char,2) TimeNow
+        elseif (StepTime.lt.100.0_8) then
+          write(StepTime_char,2) StepTime
 2         format('_0',f5.2)
         else
-          write(TimeNow_char,22) TimeNow
+          write(StepTime_char,22) StepTime
 22        format('_',f6.2)
         endif
-        CloudLoadFile = 'CloudLoad' // TimeNow_char // 'hrs.dat'
+        CloudLoadFile = 'CloudLoad' // StepTime_char // 'hrs.dat'
         write(output_unit,*) 'opening ', CloudLoadFile
         open(unit=fid_CloudLoadData,file=CloudLoadFile,status='old',err=1900)
 
+        ! Initiate boundaries
         read(fid_CloudLoadData,*)dum_str,ilast
         read(fid_CloudLoadData,*)dum_str,jlast
         jfirst = 1
@@ -222,7 +196,7 @@
         read(fid_CloudLoadData,'(a80)')linebuffer
         read(linebuffer,*)testkey
         do while(testkey.ne.'N')
-          ! haven't found 'NODATA_VALUE' yet
+          ! Haven't found 'NODATA_VALUE' yet
           read(fid_CloudLoadData,'(a80)')linebuffer
           read(linebuffer,*)testkey
         enddo
@@ -238,26 +212,23 @@
             iii=nrows*10
             CloudLoad(iii+1:iii+remainder,j,k) = row(1:remainder)
           endif
-          !read(fid_CloudLoadData,3) (CloudLoad(i,j,k), i=1,10)
-          !read(fid_CloudLoadData,3) (CloudLoad(i,j,k), i=11,20)
-!3        format(10f10.3)
           read(fid_CloudLoadData,*)
-        end do
+        enddo
         close(fid_CloudLoadData)
-      end do
+      enddo
       ! Now all the data has been read into the array CloudLoad(i,j,k)
 
       do i=1,ilast                                !find ifirst
         ! For each i-slice, check if any value in CloudLoad(i,:,:) exceeds threshold
         do j=1,jlast
           do k=1,nWriteTimes
-            if (CloudLoad(i,j,k).ge.0.01_8) then
+            if (CloudLoad(i,j,k).ge.CloudLoad_thresh) then
                 ifirst = i
               go to 100
-            end if
-          end do
-        end do
-      end do
+            endif
+          enddo
+        enddo
+      enddo
 100   continue
       do i=ilast,1,-1                             !find ilast
         ! For each i-slice, check if any value in CloudLoad(i,:,:) exceeds threshold
@@ -266,10 +237,10 @@
             if (CloudLoad(i,j,k).ge.CloudLoad_thresh) then
                  ilast = i
               go to 200
-            end if
-          end do
-        end do
-      end do
+            endif
+          enddo
+        enddo
+      enddo
 200   continue
       do j=1,jlast                                !find jfirst
         ! For each j-slice, check if any value in CloudLoad(:,j,:) exceeds threshold
@@ -278,10 +249,10 @@
             if (CloudLoad(i,j,k).ge.CloudLoad_thresh) then
                  jfirst = j
               go to 300
-            end if
-          end do
-        end do
-      end do
+            endif
+          enddo
+        enddo
+      enddo
 300   continue
       do j=jlast,1,-1                             !find jlast
         ! For each j-slice, check if any value in CloudLoad(:,j,:) exceeds threshold
@@ -290,19 +261,19 @@
             if (CloudLoad(i,j,k).ge.CloudLoad_thresh) then
                  jlast = j
               go to 400
-            end if
-          end do
-        end do
-      end do
+            endif
+          enddo
+        enddo
+      enddo
 400 continue
 
-      !make sure the volcano is not right at the boundary
+      ! Make sure the volcano is not right at the boundary
       if (ifirst.ge.i_volcano_old) ifirst = i_volcano_old-1
       if (ilast .le.i_volcano_old) ilast  = i_volcano_old+1
       if (jfirst.ge.j_volcano_old) jfirst = j_volcano_old-1
       if (jlast .le.j_volcano_old) jlast  = j_volcano_old+1
 
-      !calculate new model boundaries
+      ! Calculate new model boundaries
       lonLL_new  = lonLL_old + float(ifirst-nbuffer)*dx_old
       latLL_new  = latLL_old + float(jfirst-nbuffer)*dy_old
       width_new  = float(ilast-ifirst+nbuffer)*dx_old
@@ -310,7 +281,7 @@
       latUR_new  = latLL_new + height_new
       lonUR_new  = lonLL_new + width_new
 
-      !Adjust model boundaries to maintain the specified aspect ratio
+      ! Adjust model boundaries to maintain the specified aspect ratio
       lat_mean = latLL_new + height_new/2.0_8
       height_km=height_new*109.0_8
       width_km =width_new*109.0_8*cos(3.14_8*lat_mean/180.0_8)
@@ -323,14 +294,14 @@
          dy_new = height_new/resolution
          if ((latUR_new+dy_new).gt.89.5_8) then  ! Make sure top of model boundary doesn't cross the N pole
              write(output_unit,*) 'adjusting N model boundary so that it doesnt cross the north pole'
-             latUR_new = 89.5_8-dy_new
+             latUR_new = 89.5_8 - dy_new
              height_new = latUR_new-latLL_new
-         end if
+         endif
          if ((latLL_new-dy_new).lt.-89.5_8) then
              write(output_unit,*) 'adjusting S model boundary so that it doesnt cross the south pole'
-             latLL_new = -89.5_8+dy_new
+             latLL_new = -89.5_8 + dy_new
              height_new = latUR_new-latLL_new
-         end if
+         endif
          write(output_unit,*) 'height_new=', height_new
        else
          write(output_unit,*) 'adjusting width to maintain aspect ratio'
@@ -338,7 +309,7 @@
          lonLL_new  = lonLL_new - (width_new2-width_new)/2.0_8
          width_new  = width_new2
          write(output_unit,*) 'width_new=', width_new
-      end if
+      endif
 
       write(output_unit,*) 'Volcano name : ', volcano_name
       write(output_unit,*) 'Start time (year, month, day, hour):',iyear, imonth, iday, real(StartTime,kind=4)
@@ -402,7 +373,7 @@
       write(error_unit,*) '       Preliminary run did not write CloudLoad files as expected.'
       write(error_unit,*) 'Program stopped'
       stop 1
-      
+
       ! Output control file format statements
 2010  format( &
       '# Input file generated by web application. ',/, &
@@ -635,7 +606,7 @@
       '# if you have a soft link in the run directory.',/, &
       '# For a network of radiosonde data, please see the MetReader documentation for',/, &
       '# the input specification https://code.usgs.gov/vsc/ash3d/volcano-ash3d-metreader.')
-2051  format( &
-      '******************* BLOCK 5 ***************************************************')
+!2051  format( &
+!      '******************* BLOCK 5 ***************************************************')
 
       end program makeAsh3dinput2_ac
