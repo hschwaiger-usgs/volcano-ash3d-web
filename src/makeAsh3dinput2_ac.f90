@@ -724,7 +724,7 @@
 !      '******************* BLOCK 10+ *************************************************',/, &
 !      'OPTMOD=TOPO',/, &
 !      'no  0                           # use topography?; z-mod (0=none,1=shift,2=sigma)',/, &
-1      '1 20.0                          # Topofile format, smoothing radius',/, &
+!      '1 20.0                          # Topofile format, smoothing radius',/, &
 !      'GEBCO_2023.nc                   # topofile name',/, &
 !      '*******************************************************************************')
 
