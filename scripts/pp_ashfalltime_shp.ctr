@@ -1,0 +1,17 @@
+3d_tephra_fall.nc       data_filename
+3                       input format code (1=ascii, 2=binary, 3=netcdf)
+ash3d_input.inp         Ash3d_control_file_name   (skipped if datafile is netcdf)
+7                       invar [outvar]    input variable and output variable, if different
+2 1                     ndims Only needed for format 1 or 2, LatLonFlag
+20 72                   nx ny [nz] Also only needed for format 1 or 2
+0.125 0.125             dx dy [dz] Needed if not a part of the data file
+-153.0 60.0             srtx srty         Start x and y
+5                       output format     (1=ascii, 2=KML 3=image, 4=binary, 5=shapefile)
+3                       plot_pref         (1=dislin, 2=plplot, 3=gnuplot, 4=GMT)
+-1                      time_step         Only needed if input file is multi-timestep (eg netcdf) (-1 for final, -2 for all)
+0                       Filled contour flag (1 for filled, 0 for lines)
+1 15                     custom contour flag (1 for true, 0 for false), number of contours
+1.0 2.0 3.0 4.0 5.0 6.0 7.0 8.0 9.0 10.0 11.0 12.0 13.0 14.0 15.0 lev(ncont)  : contour levels
+0 0 0 0 0 0 0 0 0 0 0 0 0 0 0    R(ncont)    : Red channel of RGB
+0 0 0 0 0 0 0 0 0 0 0 0 0 0 0    G(ncont)    : Green channel of RGB
+0 0 0 0 0 0 0 0 0 0 0 0 0 0 0    B(ncont)    : Blue channel of RGB

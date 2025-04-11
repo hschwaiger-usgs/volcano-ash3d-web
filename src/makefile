@@ -267,7 +267,7 @@ install:
 	install -m 755 ../scripts/GFSVolc_to_gif_dp.sh         $(INSTALLDIR)/bin/scripts/
 	install -m 755 ../scripts/GFSVolc_to_gif_tvar.sh       $(INSTALLDIR)/bin/scripts/
 	install -m 755 ../scripts/GMT_Ash3d_to_gif.sh          $(INSTALLDIR)/bin/scripts/
-	install -m 755 ../scripts/PP_Ash3d_to_gif.sh           $(INSTALLDIR)/bin/scripts
+	install -m 755 ../scripts/PP_Ash3d_to_gif.sh           $(INSTALLDIR)/bin/scripts/
 	install -m 755 ../scripts/gmt_test.sh                  $(INSTALLDIR)/bin/scripts/
 	install -m 755 ../scripts/killrun.sh                   $(INSTALLDIR)/bin/scripts/
 	install -m 755 ../scripts/runAsh3d_ac.sh               $(INSTALLDIR)/bin/scripts/
@@ -278,6 +278,7 @@ install:
 	install -m 755 ../scripts/full_2_simp.sh               $(INSTALLDIR)/bin/scripts/
 	install -m 644 ../share/GlobalAirports_ewert.txt       $(INSTALLDIR)/share/
 	install -m 644 ../share/readme.pdf                     $(INSTALLDIR)/share/
+	install -m 644 ../scripts/pp_ashfalltime_shp.ctr       $(INSTALLDIR)/bin/scripts/
 	install -m 644 ../share/post_proc/*cpt                 $(INSTALLDIR)/share/post_proc/
 	install -m 644 ../share/post_proc/*png                 $(INSTALLDIR)/share/post_proc/
 	install -m 644 ../share/post_proc/*xy                  $(INSTALLDIR)/share/post_proc/
@@ -309,6 +310,7 @@ uninstall:
 	rm -f $(INSTALLDIR)/bin/scripts/runAsh3d.sh
 	rm -f $(INSTALLDIR)/bin/scripts/runTraj.sh
 	rm -f $(INSTALLDIR)/bin/scripts/xyz2shp.py
+	rm -f $(INSTALLDIR)/bin/scripts/pp_ashfalltime_shp.ctr
 	rm -f $(INSTALLDIR)/share/post_proc/*png
 	rm -f $(INSTALLDIR)/share/post_proc/VAAC*.xy
 	rm -f $(INSTALLDIR)/share/post_proc/Ash3d*cpt
