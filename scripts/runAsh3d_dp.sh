@@ -503,7 +503,10 @@ if [ "$RUNTYPE" == "ADV" ] || [ "$RUNTYPE" == "ACL" ]  ; then
             exit 1
         fi
         # Create a shapefile of the arrival time
-        ${ASH3DBINDIR}/Ash3d_PostProc 3d_tephra_fall.nc 7 5
+        #${ASH3DBINDIR}/Ash3d_PostProc 3d_tephra_fall.nc 7 5
+        cp ${ASH3DSCRIPTDIR}/pp_ashfalltime_shp.ctr .
+        ${ASH3DBINDIR}/Ash3d_PostProc pp_ashfalltime_shp.ctr
+
     fi
 fi
 

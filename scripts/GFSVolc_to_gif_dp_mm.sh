@@ -462,11 +462,8 @@ composite -geometry +${legendx_UL}+${legendy_UL} ${ASH3DSHARE_PP}/legend_dep.png
 # Finalizing output (animations, shape files, etc.)
 #Make shapefile
 echo "Generating shapefile with Ash3d_PostProc 5 5"
-# This first line uses the default contour levels
-#/opt/USGS/Ash3d/bin/Ash3d_PostProc 3d_tephra_fall.nc 5 5
-# This one uses a control file setting 1-hour contour levels
-cp ${ASH3DSCRIPTDIR}/pp_ashfalltime_shp.ctr .
-${ASH3DBINDIR}/Ash3d_PostProc pp_ashfalltime_shp.ctr
+# This first line uses the default contour levels for deposit
+${ASH3DBINDIR}/Ash3d_PostProc 3d_tephra_fall.nc 5 5
 
 mv depothik.zip dp_mm_shp.zip
 # Clean up more temporary files
