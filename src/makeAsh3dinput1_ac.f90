@@ -41,16 +41,20 @@
 !   5426.0                           # Elevation (m)
 !   8.0 1.0 60.0  0.003              # Plume height (km), duration (hrs), sim. time (hrs), [optional volume (km3 DRE)]
 !   2024 11 07 12.6666666666666666 0 # Start time (year, month, day, hour UTC) [Not Actual Eruption]
-
+!   20                               # iwindformat; normally 20 (0.5 GFS), but can be 34 (0.25 ECMWF)
+!
       ! This module requires Fortran 2003 or later
       use iso_fortran_env, only : &
          input_unit,output_unit,error_unit
 
       implicit none
 
+      integer,parameter :: GFS_Archive_Days   = 14
+      integer,parameter :: ECMWF_Archive_Days = 3
+      integer,parameter :: NAM_Archive_Days   = 7
+
       integer,parameter :: fid_ctrin_mini  = 10
       integer,parameter :: fid_ctrout_full = 11
-      integer,parameter :: GFS_Archive_Days = 14
 
       integer           :: nargs
       integer           :: iostatus
@@ -60,21 +64,27 @@
       real(kind=8)      :: aspect_ratio
       real(kind=8)      :: dx, dy
       real(kind=8)      :: dz
-      real(kind=8)      :: e_volume
       real(kind=8)      :: lonLL, latLL
       real(kind=8)      :: lonUR, latUR
       real(kind=8)      :: FineAshFraction
-      real(kind=8)      :: Duration, Height
-      real(kind=8)      :: hours_since_1900, min_duration, min_vol, pHeight
-      real(kind=8)      :: SimTime, StartTime
+      integer           :: e_iday,e_imonth,e_iyear
+      real(kind=8)      :: e_Hour
+      real(kind=8)      :: e_Hours1900
+      real(kind=8)      :: e_Volume, min_vol
+      real(kind=8)      :: e_Duration, min_duration
+      real(kind=8)      :: e_Height
+      real(kind=8)      :: hours_since_1900
+      real(kind=8)      :: SimTime
       real(kind=8)      :: min_SimTime, max_SimTime
       integer           :: Erup
       integer           :: RunClass
       character(len=3)  :: runtype          ! 'now', 'rec', or 'old'
-      real(kind=8)      :: v_lon, v_lat, v_elevation, width
-      real(kind=8)      :: windhour, WriteInterval, WriteTimes(20)
-      integer           :: i,iday,imonth,iyear,iwind,iwindformat
+      real(kind=8)      :: v_lon, v_lat, v_elevation
+      real(kind=8)      :: Comp_Width,Comp_Height
+      real(kind=8)      :: WriteInterval, WriteTimes(20)
+      integer           :: i
       integer           :: imonthdays(12)
+      integer           :: iwind,iwindformat
       integer           :: nWindFiles
       character(len=80) :: Windfile
       integer           :: nWriteTimes
@@ -85,14 +95,16 @@
       character(len=10) :: time2            !time argument used to get current date and time
       character(len=5)  :: timezone
       character(len=8)  :: date
-      integer           :: values(8),iyearnow,imonthnow,idaynow,ihournow,iminutesnow  !time values
+      integer           :: values(8),Now_iyear,Now_imonth,Now_iday,Now_ihour,Now_iminutes  !time values
+      real(kind=8)      :: Now_hour
+      real(kind=8)      :: Now_Hours1900
+
       integer           :: timediff                       ! time difference (local-UTC, minutes)
-      ! Variables for checking eruption start time relative to run-time
-      real(kind=8)      :: HourNow, Hours1900Erupt, Hours1900Now
       ! Variables for time of windfiles
       character(len=10) :: last_downloaded  !date and time of last downloaded wind file
-      integer           :: windyear,windmonth,windday
-      real(kind=8)      :: Hours1900Wind
+      integer           :: NWP_iyear,NWP_imonth,NWP_iday
+      real(kind=8)      :: NWP_hour
+      real(kind=8)      :: NWP_Hours1900
       logical           :: VolumeInput                    ! boolean set to true if volume is specified
 
       data imonthdays/31,29,31,30,31,30,31,31,30,31,30,31/
@@ -120,15 +132,15 @@
       ! Get current date & time
       timezone = "+0000"
       call date_and_time(date,time2,timezone,values)  !get current date & time
-      iyearnow    = values(1)
-      imonthnow   = values(2)
-      idaynow     = values(3)
+      Now_iyear    = values(1)
+      Now_imonth   = values(2)
+      Now_iday     = values(3)
       timediff    = values(4)
-      ihournow    = values(5)
-      HourNow     = ihournow - float(timediff)/60.0_8
-      iminutesnow = values(6)
-      Hours1900Now = hours_since_1900(iyearnow,imonthnow,idaynow,HourNow)
-      write(output_unit,1001) iyearnow,imonthnow,idaynow,ihournow,iminutesnow
+      Now_ihour    = values(5)
+      Now_hour     = Now_ihour - float(timediff)/60.0_8
+      Now_iminutes = values(6)
+      Now_Hours1900 = hours_since_1900(Now_iyear,Now_imonth,Now_iday,Now_hour)
+      write(output_unit,1001) Now_iyear,Now_imonth,Now_iday,Now_ihour,Now_iminutes
 1001  format(' current date: ',i4,'.',i2.2,'.',i2,' ',i2,':',i2.2,&
              ' local time')
 
@@ -149,7 +161,7 @@
       call get_command_argument(3, last_downloaded, iostatus)
 
       ! Read and parse command-line argument specifying last downloaded forecast package
-      read(last_downloaded,1041) windyear, windmonth, windday, windhour
+      read(last_downloaded,1041) NWP_iyear, NWP_imonth, NWP_iday, NWP_hour
 1041  format(i4,i2,i2,f2.0)
 
       write(output_unit,*) 'Command-line arguments parsed as:'
@@ -171,6 +183,7 @@
       !  Line 3 : Elevation (m)
       !  Line 4 : Plume height (km), duration (hrs), sim. time (hrs), optional volume (km3)
       !  Line 5 : YYYY MM DD HH.HH Erup  : Start time (hours relative to start of current windfile)
+      !  Line 6 : iwindformat
         ! line 1
       read(fid_ctrin_mini,'(a25)',iostat=iostatus) volcano_name  ! This is normally 30, but is 25 in ash3d_input_ac.inp
       if(iostatus.ne.0)then
@@ -195,23 +208,23 @@
         write(error_unit,*) 'ERROR: Could not read volcano line with ESPs'
         stop 1
       endif
-      read(linebuffer,*,iostat=iostatus) pHeight, Duration, SimTime
+      read(linebuffer,*,iostat=iostatus) e_Height, e_Duration, SimTime
       if(iostatus.ne.0)then
         write(error_unit,*) 'ERROR: Could not read volcano ErupH, ErupD, SimTime'
         stop 1
       endif
       ! Successfully read 3 values, try for 4
-      read(linebuffer,*,iostat=iostatus) pHeight, Duration, SimTime, e_volume
+      read(linebuffer,*,iostat=iostatus) e_Height, e_Duration, SimTime, e_Volume
       if(iostatus.eq.0)then
-        ! If 4 values were read, then a user-provided e_volume was given
+        ! If 4 values were read, then a user-provided e_Volume was given
         ! If so, then VolumeInput=.true, and we need to do some error checking
         VolumeInput = .true.
         write(output_unit,*) 'VolumeInput = .true.'
         write(output_unit,*) 'Erupted volume specified as input:', &
-                              real(e_volume,kind=4), ' km3 DRE'
-        if ((e_volume.lt.1.e-5_8).or.(e_volume.gt.1.0e2_8)) then
+                              real(e_Volume,kind=4), ' km3 DRE'
+        if ((e_Volume.lt.1.e-5_8).or.(e_Volume.gt.1.0e2_8)) then
           write(error_unit,*) 'ERROR: Specified eruptive volume must be between 0.00001 and 100 km3.'
-          write(error_unit,*) 'You entered ',e_volume, '.  Program stopped'
+          write(error_unit,*) 'You entered ',e_Volume, '.  Program stopped'
           stop 1
         endif
       endif
@@ -222,9 +235,9 @@
         write(error_unit,*) 'ERROR: Could not read volcano line with start time'
         stop 1
       endif
-      read(linebuffer,*,iostat=iostatus) iyear, imonth, iday, StartTime
+      read(linebuffer,*,iostat=iostatus) e_iyear, e_imonth, e_iday, e_Hour
       ! Successfully read 4 values, try for 5
-      read(linebuffer,*,iostat=iostatus)iyear, imonth, iday, StartTime, Erup
+      read(linebuffer,*,iostat=iostatus) e_iyear, e_imonth, e_iday, e_Hour, Erup
       if(iostatus.ne.0)then
         write(output_unit,*) 'WARNING: Could not read volcano actual eruption flag.'
         write(output_unit,*) '         Setting to 0.'
@@ -241,34 +254,46 @@
         write(output_unit,*) 'WARNING: Could not read wind file type'
         iWindFormat = 20
       endif
-      ! Done with mini-input file
+      if(iWindFormat.ne.20.and.iWindFormat.ne.34)then
+        write(output_unit,*) 'WARNING: provided iwindformat not recognized: ',iWindFormat
+        write(output_unit,*) '         Resetting to 20'
+        iWindFormat = 20
+      endif
+        ! Done with mini-input file
       close(fid_ctrin_mini)
 
-      if ((StartTime.lt.0.0_8).or.((iyear.ne.0).and.(StartTime.gt.24.0_8))) then
-        write(error_unit,*) 'ERROR: Start hour must be between zero and 24.  You entered ',StartTime
+      if ((e_Hour.lt.0.0_8).or.((e_iyear.ne.0).and.(e_Hour.gt.24.0_8))) then
+        write(error_unit,*) 'ERROR: Start hour must be between zero and 24.  You entered ',e_Hour
         stop 1
       endif
 
-      if (iyear.ne.0) then
+      write(*,*)"--------------------------"
+      write(*,*)"System time now      : ",Now_iyear,Now_imonth,Now_iday,Now_hour,Now_Hours1900
+      write(*,*)"Eruption start time  : ",e_iyear,e_imonth,e_iday,e_Hour
+      write(*,*)"Most recent wind data: ",NWP_iyear, NWP_imonth, NWP_iday, NWP_hour
+
+      stop 66
+
+      if (e_iyear.ne.0) then
         ! Year is an actual number (not a forecast run)
         ! First, trap errors in start time
-        if ((iyear.lt.1948).or.(iyear.gt.iyearnow)) then
+        if ((e_iyear.lt.1948).or.(e_iyear.gt.Now_iyear)) then
           write(error_unit,*) 'ERROR:  Eruption start year must be zero or a year between'
-          write(error_unit,*) '1948 and the present.  You entered:',iyear
+          write(error_unit,*) '1948 and the present.  You entered:',e_iyear
           write(error_unit,*) 'Program stopped'
           stop 1
         endif
-        if ((imonth.lt.0).or.(imonth.gt.12)) then
+        if ((e_imonth.lt.0).or.(e_imonth.gt.12)) then
           write(error_unit,*) 'ERROR:  Eruption start month must be between 0 and 12.'
-          write(error_unit,*) 'You entered:',imonth
+          write(error_unit,*) 'You entered:',e_imonth
           write(error_unit,*) 'Program stopped'
           stop 1
         endif
-        if ((iday.lt.0).or.(iday.gt.imonthdays(imonth))) then
+        if ((e_iday.lt.0).or.(e_iday.gt.imonthdays(e_imonth))) then
           write(error_unit,*) 'ERROR: Eruption start day must be less than the number of days'
-          write(error_unit,*) 'in that month.  The month you entered is:',imonth
-          write(error_unit,*) 'The number of days in this month is:',imonthdays(imonth)
-          write(error_unit,*) 'the day in that month you entered is:',iday
+          write(error_unit,*) 'in that month.  The month you entered is:',e_imonth
+          write(error_unit,*) 'The number of days in this month is:',imonthdays(e_imonth)
+          write(error_unit,*) 'the day in that month you entered is:',e_iday
           write(error_unit,*) 'Program stopped'
           stop 1
         endif
@@ -280,10 +305,10 @@
         endif
  
         ! Calculate eruption time before present
-        Hours1900Erupt = hours_since_1900(iyear,imonth,iday,StartTime)
-        Hours1900Wind  = hours_since_1900(windyear,windmonth,windday,windhour)
+        e_Hours1900 = hours_since_1900(e_iyear,e_imonth,e_iday,e_Hour)
+        NWP_Hours1900  = hours_since_1900(NWP_iyear,NWP_imonth,NWP_iday,NWP_hour)
         RunClass = 1  ! Set default class as Analysis
-        if ((Hours1900Erupt+SimTime).gt.(Hours1900Wind+198.0_8)) then             ! if the time is in the future
+        if ((e_Hours1900+SimTime).gt.(NWP_Hours1900+198.0_8)) then             ! if the time is in the future
           write(error_unit,*) 'ERROR.  You entered an eruption start time'
           write(error_unit,*) 'that extends beyond the last currently available'
           write(error_unit,*) 'wind file.  the last currently available wind file'
@@ -291,7 +316,7 @@
           write(error_unit,*) 'Please adjust your start time or'
           write(error_unit,*) 'simulation time.'
           stop 1
-        elseif (Hours1900Erupt.gt.Hours1900Wind) then      ! if the start time is within the last wind file
+        elseif (e_Hours1900.gt.NWP_Hours1900) then      ! if the start time is within the last wind file
           runtype = 'now'
           if(Erup.eq.1)then
             RunClass = 3  ! Forecast (actual eruption)
@@ -302,7 +327,7 @@
           write(WindFile,1040)
 1040      format('Wind_nc/gfs/latest/latest.f')
           WindFile = trim(WindFile)
-        elseif ((Hours1900Now-Hours1900Erupt).lt.(24.0_8*GFS_Archive_Days)) then ! if it's in the GFS archive
+        elseif ((Now_Hours1900-e_Hours1900).lt.(24.0_8*GFS_Archive_Days)) then ! if it's in the GFS archive
           runtype='rec'
           if(Erup.eq.1)then
             ! This could be if we are tracking a cloud over a few days and using old forecast data
@@ -312,14 +337,14 @@
             RunClass = 1  ! Analysis
           endif
           write(output_unit,*) 'Using archived gfs wind files'
-          if (StartTime.lt.12.0) then                        ! before 1200 UTC
-            write(WindFile,1002) iyear, imonth, iday, iyear, imonth, iday
+          if (e_Hour.lt.12.0) then                        ! before 1200 UTC
+            write(WindFile,1002) e_iyear, e_imonth, e_iday, e_iyear, e_imonth, e_iday
 1002        format('Wind_nc/gfs/gfs.',i4,i2.2,i2.2,'00','/',i4,i2.2,i2.2,'00.f')
           else                                               ! after 1200 UTC
-            write(WindFile,1003) iyear, imonth, iday, iyear, imonth, iday
+            write(WindFile,1003) e_iyear, e_imonth, e_iday, e_iyear, e_imonth, e_iday
 1003        format('Wind_nc/gfs/gfs.',i4,i2.2,i2.2,'12','/',i4,i2.2,i2.2,'12.f')
           endif
-        elseif (iyear.ge.1948) then                            ! If we're using NCEP reanalysis
+        elseif (e_iyear.ge.1948) then                            ! If we're using NCEP reanalysis
           runtype='old'
           if(Erup.eq.1)then
             ! We should not have an actual eruption with NCEP data
@@ -336,7 +361,7 @@
           nWindFiles=1
           write(WindFile,1004)
 1004      format('Wind_nc/NCEP')
-        elseif (iyear.lt.1948) then                            ! if before 1948 (error)
+        elseif (e_iyear.lt.1948) then                            ! if before 1948 (error)
           write(error_unit,*) 'ERROR.  You entered a year earlier than 1948.'
           write(error_unit,*) 'Wind files do not exist for this earlier time period.'
           stop 1
@@ -356,15 +381,15 @@
       endif
 
       ! Make sure plume height is greater than volcano elevation
-      if (pHeight.lt.(v_elevation/1000.0_8)) then
+      if (e_Height.lt.(v_elevation/1000.0_8)) then
         write(error_unit,*) 'ERROR: plume height is lower than volcano summit elevation'
         write(error_unit,*) 'program stopped'
         stop 1
       endif
 
       ! Make sure minimum eruption duration exceeds 0.05 hrs
-      if (Duration.lt.min_duration) then
-        write(error_unit,*) 'ERROR: eruption duration = ',Duration
+      if (e_Duration.lt.min_duration) then
+        write(error_unit,*) 'ERROR: eruption duration = ',e_Duration
         write(error_unit,*) 'eruption duration must exceed ',min_duration
         write(error_unit,*) 'Program stopped'
         stop 1
@@ -373,23 +398,23 @@
       ! Calculate eruptive volume, model domain, resolution
       if (VolumeInput.eqv..false.) then             ! erupted volume (km3)
         ! Calculate total erupted volume from the Mastin relation
-        e_volume=((pHeight-v_elevation/1000.0_8)/2.0_8)** (1.0_8/0.241_8)*3600.0_8*Duration/1.0e09_8
-        if (e_volume.lt.min_vol) e_volume = min_vol
-        write(output_unit,*) 'Erupted volume calculated as:',e_volume
+        e_Volume=((e_Height-v_elevation/1000.0_8)/2.0_8)** (1.0_8/0.241_8)*3600.0_8*e_Duration/1.0e09_8
+        if (e_Volume.lt.min_vol) e_Volume = min_vol
+        write(output_unit,*) 'Erupted volume calculated as:',e_Volume
       endif
-      e_volume= FineAshFraction * e_volume                    ! adjust for mass in the cloud
-      height  = 50.0_8*SimTime*3600.0_8/(109.0_8*1000.0_8)    ! estimate of # of deg. latitude a cloud can travel
-      height  = max(height,1.5_8)
-      width   = aspect_ratio*height/cos(3.14_8*v_lat/180.0_8)
-      latLL   = v_lat-height/2.0_8
-      lonLL   = v_lon-width/2.0_8
-      latUR   = latLL+height
-      lonUR   = lonLL+width
-      dx      = width/20.1_8
-      dy      = height/20.1_8
-      dz      = pHeight/20.0_8
-      if (((pHeight-(v_elevation/1000.0_8))/dz).lt.5.0_8) then       ! Added to ensure enough nodes for low plumes
-        dz = (pHeight-(v_elevation/1000.0_8))/5.0_8
+      e_Volume= FineAshFraction * e_Volume                    ! adjust for mass in the cloud
+      Comp_Height  = 50.0_8*SimTime*3600.0_8/(109.0_8*1000.0_8)    ! estimate of # of deg. latitude a cloud can travel
+      Comp_Height  = max(Comp_Height,1.5_8)
+      Comp_Width   = aspect_ratio*Comp_Height/cos(3.14_8*v_lat/180.0_8)
+      latLL   = v_lat - Comp_Height/2.0_8
+      lonLL   = v_lon - Comp_Width/2.0_8
+      latUR   = latLL + Comp_Height
+      lonUR   = lonLL + Comp_Width
+      dx      = Comp_Width/20.1_8
+      dy      = Comp_Height/20.1_8
+      dz      = e_Height/20.0_8
+      if (((e_Height-(v_elevation/1000.0_8))/dz).lt.5.0_8) then       ! Added to ensure enough nodes for low plumes
+        dz = (e_Height-(v_elevation/1000.0_8))/5.0_8
       endif
 
       if (SimTime.le.8.0_8) then                    ! Calculate time interval between write times
@@ -404,7 +429,7 @@
         WriteInterval = 8.0_8
       endif
                                                  ! Calculate write times and nWriteTimes
-      WriteTimes(1) = (WriteInterval+aint(StartTime/WriteInterval)*WriteInterval)-StartTime
+      WriteTimes(1) = (WriteInterval+aint(e_Hour/WriteInterval)*WriteInterval)-e_Hour
       i=1
       do while (WriteTimes(i).lt.SimTime)
         WriteTimes(i+1) = WriteTimes(i)+WriteInterval
@@ -413,31 +438,31 @@
       nWriteTimes=i-1
 
       if ((latLL-dy).le.-89.5_8) then                ! Make sure the south model boundary doesn't cross the S. pole
-        latLL  = -89.5_8+dy
-        height = latUR-latLL
-        dy     = height/20.1_8
+        latLL       = -89.5_8 + dy
+        Comp_Height = latUR - latLL
+        dy          = Comp_Height/20.1_8
       endif
       if ((latUR+dy).ge.89.5_8) then                 ! Same for the north model boundary
-        latUR  = 89.5_8-dy
-        height = latUR - latLL
-        dy     = height/20.1_8
+        latUR       = 89.5_8-dy
+        Comp_Height = latUR - latLL
+        dy          = Comp_Height/20.1_8
       endif
       if (lonLL.lt.-180.0_8)     lonLL=lonLL+360.0_8
-      if (width.gt.360.0_8)then
+      if (Comp_Width.gt.360.0_8)then
         ! Just make the domain periodic
-        width = 360.0_8
+        Comp_Width = 360.0_8
         lonLL = 0.0_8
       endif
 
       write(output_unit,*) 'Eruption ESP for ash cloud:'
-      write(output_unit,*) ' Duration = ',real(Duration,kind=4), &
-                           ', pHeight= ',real(pHeight,kind=4),&
-                           ', e_volume = ',real(e_volume,kind=4)
+      write(output_unit,*) ' e_Duration = ',real(e_Duration,kind=4), &
+                           ', e_Height= ',real(e_Height,kind=4),&
+                           ', e_Volume = ',real(e_Volume,kind=4)
       write(output_unit,*) 'Model parameters:'
-      write(output_unit,*) ' height   = ',real(height,kind=4),    ', width  = ',real(width,kind=4)
+      write(output_unit,*) ' height   = ',real(Comp_Height,kind=4),', width  = ',real(Comp_Width,kind=4)
       write(output_unit,*) ' v_lon    = ',real(v_lon,kind=4),     ', v_lat  = ',real(v_lat,kind=4)
       write(output_unit,*) ' lonLL    = ',real(lonLL,kind=4),     ', latLL  = ',real(latLL,kind=4)
-      write(output_unit,*) ' width    = ',real(width,kind=4),     ', height = ',real(height,kind=4)
+      write(output_unit,*) ' width    = ',real(Comp_Width,kind=4), ', height = ',real(Comp_Height,kind=4)
       write(output_unit,*) ' dx       = ',real(dx,kind=4),        ', dy     = ',real(dy,kind=4)
       write(output_unit,*) ' Simulation time (hrs) = ', real(SimTime,kind=4)
       write(output_unit,*) ' WriteInterval         = ',real(WriteInterval,kind=4)
@@ -449,12 +474,12 @@
       write(fid_ctrout_full,2010) ! write block 1 header, then content  (Grid specification)
       write(fid_ctrout_full,2011) volcano_name, &
                                   lonLL, latLL, &
-                                  width, height, &
+                                  Comp_Width,Comp_Height, &
                                   v_lon, v_lat, v_elevation, &
                                   dx, dy, &
                                   dz
       write(fid_ctrout_full,2020) ! write block 2 header, then content  (Eruption specification)
-      write(fid_ctrout_full,2021) iyear, imonth, iday, StartTime, Duration, pHeight, e_volume
+      write(fid_ctrout_full,2021) e_iyear, e_imonth, e_iday, e_Hour, e_Duration, e_Height, e_Volume
       write(fid_ctrout_full,2030) ! write block 3 header, then content  (Wind options)
       write(fid_ctrout_full,2031) iwind, iWindformat, &
                                   SimTime, &

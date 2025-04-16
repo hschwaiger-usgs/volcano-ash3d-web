@@ -61,11 +61,13 @@
 
       integer           :: ifirst, ilast, ilines, i_volcano_old, jfirst, jlast, j_volcano_old
       !integer          :: nWriteTimes
-      real(kind=8)      :: Duration, e_volume, height_km, lat_mean, pHeight
-      real(kind=8)      :: SimTime, StartTime
+      integer           :: e_iday,e_imonth,e_iyear
+      real(kind=8)      :: e_Duration, e_Volume, height_km, lat_mean, e_Height
+      real(kind=8)      :: e_Hour
+      real(kind=8)      :: SimTime
       real(kind=8)      :: v_lon, v_lat, v_elevation, width_km, WriteInterval
-      integer           :: i,iday,imonth,iyear,iwind,iwindformat
-      integer           :: j,ii,iii
+      integer           :: iwind,iwindformat
+      integer           :: i,j,ii,iii
       integer           :: nWindFiles
       integer,dimension(10) :: block_linestart
       integer           :: nrows,remainder
@@ -138,7 +140,7 @@
       read(inputlines(block_linestart(1)+5),*) dx_old, dy_old
       read(inputlines(block_linestart(1)+6),*) dz
       ! Reading BLOCK 2 of the preliminary control file
-      read(inputlines(block_linestart(2)  ),*) iyear, imonth,iday,StartTime, Duration, pHeight, e_volume
+      read(inputlines(block_linestart(2)  ),*) e_iyear, e_imonth, e_iday, e_Hour, e_Duration, e_Height, e_Volume
       ! Reading BLOCK 3 of the preliminary control file
       read(inputlines(block_linestart(3)  ),*) iwind, iwindformat
       read(inputlines(block_linestart(3)+2),*) SimTime
@@ -284,7 +286,7 @@
       endif
 
       write(output_unit,*) 'Volcano name : ', volcano_name
-      write(output_unit,*) 'Start time (year, month, day, hour):',iyear, imonth, iday, real(StartTime,kind=4)
+      write(output_unit,*) 'Start time (year, month, day, hour):',e_iyear, e_imonth, e_iday, real(e_Hour,kind=4)
       write(output_unit,*) ' i_volcano_old=', i_volcano_old, ',   j_volcano_old=', j_volcano_old
       write(output_unit,*) ' Deposit_thresh = ',real(Deposit_thresh,kind=4)
       write(output_unit,*) ' ifirst=',ifirst, ', ilast=', ilast
@@ -302,9 +304,9 @@
       write(output_unit,*)
 
       write(output_unit,*) 'Eruption ESP for deposit run:'
-      write(output_unit,*) ' Duration = ',real(Duration,kind=4), &
-                           ', pHeight= ',real(pHeight,kind=4),&
-                           ', e_volume = ',real(e_volume,kind=4)
+      write(output_unit,*) ' e_Duration = ',real(e_Duration,kind=4), &
+                           ', e_Height  = ',real(e_Height,kind=4),&
+                           ', e_Volume  = ',real(e_Volume,kind=4)
       write(output_unit,*)
       write(output_unit,*) 'writing full control file for full Ash3d run: ', outfile
 
@@ -317,7 +319,7 @@
                                   dx_new, dy_new, &
                                   dz
       write(fid_ctrout_full,2020) ! write block 2 header, then content  (Eruption specification)
-      write(fid_ctrout_full,2021) iyear, imonth, iday, StartTime, Duration, pHeight, e_volume
+      write(fid_ctrout_full,2021) e_iyear, e_imonth, e_iday, e_Hour, e_Duration, e_Height, e_Volume
       write(fid_ctrout_full,2030) ! write block 3 header, then content  (Wind options)
       write(fid_ctrout_full,2031) iwind, iWindformat, &
                                   SimTime, &
