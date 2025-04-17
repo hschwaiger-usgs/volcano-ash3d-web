@@ -60,13 +60,12 @@
       real(kind=8)      :: latUR_new, lonUR_new
 
       integer           :: ifirst, ilast, ilines, i_volcano_old, jfirst, jlast, j_volcano_old
-      !integer          :: nWriteTimes
       integer           :: e_iday,e_imonth,e_iyear
       real(kind=8)      :: e_Duration, e_Volume, height_km, lat_mean, e_Height
       real(kind=8)      :: e_Hour
       real(kind=8)      :: SimTime
       real(kind=8)      :: v_lon, v_lat, v_elevation, width_km, WriteInterval
-      integer           :: iwind,iwindformat
+      integer           :: iwind,iwindformat,igrid,idf
       integer           :: i,j,ii,iii
       integer           :: nWindFiles
       integer,dimension(10) :: block_linestart
@@ -142,7 +141,7 @@
       ! Reading BLOCK 2 of the preliminary control file
       read(inputlines(block_linestart(2)  ),*) e_iyear, e_imonth, e_iday, e_Hour, e_Duration, e_Height, e_Volume
       ! Reading BLOCK 3 of the preliminary control file
-      read(inputlines(block_linestart(3)  ),*) iwind, iwindformat
+      read(inputlines(block_linestart(3)  ),*) iwind, iwindformat,igrid,idf
       read(inputlines(block_linestart(3)+2),*) SimTime
       read(inputlines(block_linestart(3)+4),*) nWindFiles
       ! Reading BLOCK 4 of the preliminary control file
@@ -154,11 +153,6 @@
       if (v_lon.lt.lonLL_old) v_lon=v_lon+360.0_8
       i_volcano_old = int((v_lon-lonLL_old)/dx_old)+1       ! i node of volcano
       j_volcano_old = int((v_lat-latLL_old)/dy_old)+1       ! j node of volcano
-
-!      if (i_volcano_old.gt.20) then
-!        write(error_unit,*) 'ERROR: The volcano is not within the mapped area'
-!        stop 1
-!      endif
 
       DepositFile = 'DepositFile_____final.dat'
       write(output_unit,*) 'opening ',DepositFile
@@ -321,7 +315,7 @@
       write(fid_ctrout_full,2020) ! write block 2 header, then content  (Eruption specification)
       write(fid_ctrout_full,2021) e_iyear, e_imonth, e_iday, e_Hour, e_Duration, e_Height, e_Volume
       write(fid_ctrout_full,2030) ! write block 3 header, then content  (Wind options)
-      write(fid_ctrout_full,2031) iwind, iWindformat, &
+      write(fid_ctrout_full,2031) iwind, iWindformat, igrid, idf, &
                                   SimTime, &
                                   nWindfiles
       write(fid_ctrout_full,2040) ! write block 4 header, then content  (Output products)
@@ -519,7 +513,7 @@
       '# then nWindFiles should be set to 1 and only the root folder of the windfiles listed.')
 2031  format( &
       '******************* BLOCK 3 *************************************************** ',/, &
-       i2,3x,i2,'       #iwind, iwindFormat  ',/, &
+       i2,3x,i2,3x,i3,3x,i1,'       #iwind, iwindFormat  ',/, &
       '2                   #iHeightHandler  ',/, &
       f7.1,  '             #Simulation time in hours  ',/, &
       'yes                 #stop computation when 99% of erupted mass has deposited?  ',/, &
@@ -585,8 +579,11 @@
       '# the input specification https://code.usgs.gov/vsc/ash3d/volcano-ash3d-metreader.')
 !2051  format( &
 !      '******************* BLOCK 5 ***************************************************')
-!2052  format(a27,i3.3,'.nc')                          !for forecast winds       Wind_nc/gfs/latest/latest.f**.nc
-!2053  format(a39,i3.3,'.nc')                          !for archived gfs winds   Wind_nc/gfs/gfs.2012052300/2012052300.f**.nc
+!2052  format(a27,i3.3,'.nc')                          ! for forecast winds       Wind_nc/gfs/latest/latest.f**.nc
+2052  format(a39,i3.3,'.nc')                          ! for archived gfs winds     Wind_nc/gfs/gfs.YYYYMMDDHH/YYYYMMDDHH.f**.nc
+2053  format(a46,i1.1,'h-oper-fc.grib2')              ! for archived ecmwf winds   Wind_nc/ecmwf/ecmwf.YYYYMMDDHH/YYYYMMDDHH0000-*h-oper-fc.grib2
+2054  format(a46,i2.2,'h-oper-fc.grib2')              ! for archived ecmwf winds   Wind_nc/ecmwf/ecmwf.YYYYMMDDHH/YYYYMMDDHH0000-*h-oper-fc.grib2
+2055  format(a46,i3.3,'h-oper-fc.grib2')              ! for archived ecmwf winds   Wind_nc/ecmwf/ecmwf.YYYYMMDDHH/YYYYMMDDHH0000-*h-oper-fc.grib2
 !2054  format(a12)                                      !for NCEP reanalyis winds Wind_nc/NCEP
 !2060  format( &
 !      '*******************************************************************************',/, &

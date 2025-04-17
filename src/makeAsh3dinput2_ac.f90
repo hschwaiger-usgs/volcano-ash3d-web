@@ -69,7 +69,7 @@
       real(kind=8)      :: StepTime
       character(len=7)  :: StepTime_char
       real(kind=8)      :: v_lon, v_lat, v_elevation, width_km, WriteTimes(24)
-      integer           :: iwind,iwindformat
+      integer           :: iwind,iwindformat,igrid,idf
       integer           :: i,j,k,ii,iii
       integer           :: nWindFiles
       integer,dimension(10) :: block_linestart
@@ -146,7 +146,7 @@
       ! Reading BLOCK 2 of the preliminary control file
       read(inputlines(block_linestart(2)  ),*) e_iyear, e_imonth, e_iday, e_Hour, e_Duration, e_Height, e_Volume
       ! Reading BLOCK 3 of the preliminary control file
-      read(inputlines(block_linestart(3)  ),*) iwind, iwindformat
+      read(inputlines(block_linestart(3)  ),*) iwind, iwindformat, igrid, idf
       read(inputlines(block_linestart(3)+2),*) SimTime
       read(inputlines(block_linestart(3)+4),*) nWindFiles
       ! Reading BLOCK 4 of the preliminary control file
@@ -349,7 +349,7 @@
       write(fid_ctrout_full,2020) ! write block 2 header, then content  (Eruption specification)
       write(fid_ctrout_full,2021) e_iyear, e_imonth, e_iday, e_Hour, e_Duration, e_Height, e_Volume
       write(fid_ctrout_full,2030) ! write block 3 header, then content  (Wind options)
-      write(fid_ctrout_full,2031) iwind, iWindformat, &
+      write(fid_ctrout_full,2031) iwind, iWindformat, igrid, idf, &
                                   SimTime, &
                                   nWindfiles
       write(fid_ctrout_full,2040) ! write block 4 header, then content  (Output products)
@@ -547,7 +547,7 @@
       '# then nWindFiles should be set to 1 and only the root folder of the windfiles listed.')
 2031  format( &
       '******************* BLOCK 3 *************************************************** ',/, &
-       i2,3x,i2,'       #iwind, iwindFormat  ',/, &
+       i2,3x,i2,3x,i3,3x,i1,'       #iwind, iwindFormat  ',/, &
       '2                   #iHeightHandler  ',/, &
       f7.1,  '             #Simulation time in hours  ',/, &
       'no                  #stop computation when 99% of erupted mass has deposited?  ',/, &
