@@ -204,7 +204,7 @@ fi
 
 echo "creating soft links to topo file"
 rm -f GEBCO_2023.nc
-ln -s ${TOPOROOT}/GEBCO/GEBCO_2023.nc .
+ln -s ${TOPOROOT}/GEBCO/GEBCO_2023.nc GEBCO_2023.nc
 rc=$((rc + $?))
 if [[ "$rc" -gt 0 ]] ; then
     echo "Error linking GEBCO_2023.nc: rc=$rc"
@@ -221,7 +221,7 @@ if [ "$RUNTYPE" == "ADV"  ] ; then
     echo "running ${MAKEINPUT1} ${INFILE_SIMPLE} ${INFILE_PRELIM}"
     if test -r ${ASH3DBINDIR}/${MAKEINPUT1} ; then
         ${ASH3DBINDIR}/${MAKEINPUT1} ${INFILE_SIMPLE} ${INFILE_PRELIM} \
-                                     ${LAST_DOWNLOADED}
+                                 ${LAST_DOWNLOADED} 2>outerr.log
       else
         echo "Error: ${ASH3DBINDIR}/${MAKEINPUT1} doesn't exist"
         exit 1
@@ -249,17 +249,18 @@ if [ "$RUNTYPE" == "ADV"  ] ; then
    # For deposit runs, ${INFILE_PRELIM} and DepositFile_____final.dat are needed.
    # For cloud runs, ${INFILE_PRELIM} and CloudLoad_*hrs.dat are needed.
    echo "   Running :: ${ASH3DEXEC} ${INFILE_PRELIM} | tee ashlog_prelim.txt"
-   ${ASH3DEXEC} ${INFILE_PRELIM} | tee ashlog_prelim.txt
+   ${ASH3DEXEC} ${INFILE_PRELIM} 2>outerr.log | tee ashlog_prelim.txt
+   rc=$((rc + ${PIPESTATUS[0]}))
+   if [[ "$rc" -gt 0 ]] ; then
+       echo "Error running Preliminary Ash3d run: rc=$rc"
+       exit 1
+   fi
    echo "-------------------------------------------------------------------------------"
    echo "-------------------------------------------------------------------------------"
    echo "----------             Completed  Preliminary Ash3d run              ----------"
    echo "-------------------------------------------------------------------------------"
    echo "-------------------------------------------------------------------------------"
-   rc=$((rc + $?))
-   if [[ "$rc" -gt 0 ]] ; then
-       echo "Error running Preliminary Ash3d run: rc=$rc"
-       exit 1
-   fi
+
    if [ "$CLEANFILES" == "T" ]; then
        echo "removing kml files"
        rm -f *.kml *kmz AshArrivalTimes.txt
@@ -272,7 +273,7 @@ echo "__________________________________________________________________________
 echo "making ${INFILE_MAIN}"
 if [ "$RUNTYPE" == "DEP" ] || [ "$RUNTYPE" == "ACL" ]  ; then
     if test -r ${ASH3DBINDIR}/${MAKEINPUT2} ; then
-        ${ASH3DBINDIR}/${MAKEINPUT2} ${INFILE_PRELIM} ${INFILE_MAIN}
+        ${ASH3DBINDIR}/${MAKEINPUT2} ${INFILE_PRELIM} ${INFILE_MAIN} 2>outerr.log
       else
         echo "Error: ${ASH3DBINDIR}/${MAKEINPUT2} does not exist"
         exit 1
@@ -335,7 +336,12 @@ echo "**************************************************************************
 # Again, the default log file written by Ash3d is Ash3d.lst, but we will capture all stdout to
 # an alternative log file.  
 echo "   Running :: ${ASH3DEXEC} ${INFILE_MAIN} | tee ash3d_runlog.txt"
-${ASH3DEXEC} ${INFILE_MAIN} | tee ash3d_runlog.txt
+${ASH3DEXEC} ${INFILE_MAIN} 2>outerr.log | tee ash3d_runlog.txt
+rc=$((rc + ${PIPESTATUS[0]}))
+if [[ "$rc" -gt 0 ]] ; then
+    echo "Error running main Ash3d run: rc=$rc"
+    exit 1
+fi
 # This will produce the following output files written directly by Ash3d:
 #  3d_tephra_fall.nc
 #  Ash3d.lst
@@ -359,11 +365,6 @@ echo "--------------------------------------------------------------------------
 echo "----------                Completed  Main Ash3d run                  ----------"
 echo "-------------------------------------------------------------------------------"
 echo "-------------------------------------------------------------------------------"
-rc=$((rc + $?))
-if [[ "$rc" -gt 0 ]] ; then
-    echo "Error running main Ash3d run: rc=$rc"
-    exit 1
-fi
 
 if test -r depTS_0001.gnu; then
    echo "using gnuplot to plot deposit thickness vs. time"
@@ -372,17 +373,16 @@ if test -r depTS_0001.gnu; then
      gnuplot ${i}
    done
    zip -r ash_arrivaltimes_airports.kmz ash_arrivaltimes_airports.kml depTS*.png
-   rm ash_arrivaltimes_airports.kml
 else
    mv ash_arrivaltimes_airports.kml cloud_arrivaltimes_airports.kml
    zip -r cloud_arrivaltimes_airports.kmz cloud_arrivaltimes_airports.kml
-   rm cloud_arrivaltimes_airports.kml
 fi
 rc=$((rc + $?))
 if [[ "$rc" -gt 0 ]] ; then
     echo "Error zipping output: rc=$rc"
     exit 1
 fi
+rm -f ash_arrivaltimes_airports.kml cloud_arrivaltimes_airports.kml
 
 #
 # Zip all kml files, make kmz files
@@ -413,7 +413,7 @@ if [ "$RUNTYPE" == "ADV"  ] ; then
     unix2dos ash_arrivaltimes_airports.txt
   elif [ "$RUNTYPE" == "DEP"  ] ; then
     echo "First stripping ash_arrivaltimes_airports.txt of cloud data"
-    ${ASH3DBINDIR}/makeAshArrivalTimes_dp
+    ${ASH3DBINDIR}/makeAshArrivalTimes_dp 2>outerr.log
     rc=$((rc+$?))
     if [[ "$rc" -gt 0 ]] ; then
         echo "Error running makeAshArrivalTimes_dp: rc=$rc"
@@ -426,7 +426,7 @@ if [ "$RUNTYPE" == "ADV"  ] ; then
     ln -s ash_arrivaltimes_airports.txt AshArrivalTimes.txt
   elif [ "$RUNTYPE" == "ACL"  ] ; then
     echo "First stripping ash_arrivaltimes_airports.txt of deposit data"
-    ${ASH3DBINDIR}/makeAshArrivalTimes_ac
+    ${ASH3DBINDIR}/makeAshArrivalTimes_ac 2>outerr.log
     rc=$((rc+$?))
     if [[ "$rc" -gt 0 ]] ; then
         echo "Error running makeAshArrivalTimes_ac: rc=$rc"
