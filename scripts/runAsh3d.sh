@@ -248,8 +248,8 @@ if [ "$RUNTYPE" == "ADV"  ] ; then
    # be processed to determine the geometry of the subsequent full run.
    # For deposit runs, ${INFILE_PRELIM} and DepositFile_____final.dat are needed.
    # For cloud runs, ${INFILE_PRELIM} and CloudLoad_*hrs.dat are needed.
-   echo "   Running :: ${ASH3DEXEC} ${INFILE_PRELIM} | tee ashlog_prelim.txt"
-   ${ASH3DEXEC} ${INFILE_PRELIM} | tee ashlog_prelim.txt
+   echo "   Running :: ASH33DCFL=0.5 ${ASH3DEXEC} ${INFILE_PRELIM} | tee ashlog_prelim.txt"
+   ASH33DCFL=0.5 ${ASH3DEXEC} ${INFILE_PRELIM} | tee ashlog_prelim.txt
    echo "-------------------------------------------------------------------------------"
    echo "-------------------------------------------------------------------------------"
    echo "----------             Completed  Preliminary Ash3d run              ----------"

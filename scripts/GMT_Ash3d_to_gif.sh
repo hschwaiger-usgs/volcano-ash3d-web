@@ -121,6 +121,7 @@ if test -r ${infile} ; then
     echo "error: no ${infile} file. Exiting"
     exit 1
 fi
+
 #******************************************************************************
 if [ "$CLEANFILES" == "T" ]; then
     echo "Removing old files"
@@ -323,39 +324,49 @@ do
     #set mapping parameters
     DLON_INT="$(echo $DLON | sed 's/\.[0-9]*//')"  #convert DLON to an integer
     if [ $DLON_INT -le 2 ] ; then
-        BASE="-Ba0.25/a0.25"           # label every 5 degress lat/lon
-        DETAIL="-Dh"                   # high resolution coastlines (-Dc=crude)
+        BASE="-Ba0.25/a0.25"           # label every 0.25 degrees lat/lon
+        DETAIL="-Dh"                   # high resolution coastlines (-Dh=high)
         KMSCALE="30"
         MISCALE="20"
       elif [ $DLON_INT -le 5 ] ; then
-        BASE="-Ba1/a1"                 # label every 5 degress lat/lon
-        DETAIL="-Dh"                   # high resolution coastlines (-Dc=crude)
+        BASE="-Ba1/a1"                 # label every 1 degrees lat/lon
+        DETAIL="-Dh"                   # high resolution coastlines (-Dh=high)
         KMSCALE="50"
         MISCALE="30"
       elif [ $DLON_INT -le 10 ] ; then
-        BASE="-Ba2/a2"                 # label every 5 degress lat/lon
-        DETAIL="-Dh"                   # high resolution coastlines (-Dc=crude)
+        BASE="-Ba2/a2"                 # label every 2 degrees lat/lon
+        DETAIL="-Dh"                   # high resolution coastlines (-Dh=high)
         KMSCALE="100"
         MISCALE="50"
       elif [ $DLON_INT -le 20 ] ; then
-        BASE="-Ba5/a5"                 # label every 5 degress lat/lon
-        DETAIL="-Dh"                   # high resolution coastlines (-Dc=crude)
+        BASE="-Ba5/a5"                 # label every 5 degrees lat/lon
+        DETAIL="-Dh"                   # high resolution coastlines (-Dh=high)
         KMSCALE="200"
         MISCALE="100"
       elif [ $DLON_INT -le 40 ] ; then
         BASE="-Ba10/a10"               # label every 10 degrees lat/lon
-        DETAIL="-Dl"                   # low resolution coastlines (-Dc=crude)
+        DETAIL="-Dl"                   # low resolution coastlines (-Dl=low)
+        KMSCALE="400"
+        MISCALE="200"
+      elif [ $DLON_INT -le 100 ] ; then
+        BASE="-Ba20/a20"               # label every 20 degrees lat/lon
+        DETAIL="-Dl"                   # low resolution coastlines (-Dl=low)
         KMSCALE="400"
         MISCALE="200"
       else
         BASE="-Ba20/a20"               # label every 20 degrees lat/lon
-        DETAIL="-Dl"                   # low resolution coastlines (-Dc=crude)
+        DETAIL="-Dl"                   # low resolution coastlines (-Dl=low)
         KMSCALE="400"
         MISCALE="200"
     fi
     #set mapping parameters
-    AREA="-R$lonmin/$lonmax/$latmin/$latmax"
-    PROJ="-JM${VCLON}/${VCLAT}/20"      # Mercator projection, with origin at lat & lon of volcano, 20 cm width
+    if [ $DLON_INT -le 100 ] ; then
+      AREA="-R$lonmin/$lonmax/$latmin/$latmax"
+      PROJ="-JM${VCLON}/${VCLAT}/20"      # Mercator projection, with origin at lat & lon of volcano, 20 cm width
+    else
+      AREA="-R0/360/$latmin/$latmax"
+      PROJ="-JQ0/0/20"      # Cylindrical Eq dist projection, with origin at lat & lon of volcano, 20 cm width
+    fi
     COAST="-G220/220/220 -W"            # RGB values for land areas (220/220/220=light gray)
     BOUNDARIES="-Na"                    # -N=draw political boundaries, a=all national, Am. state & marine b.
     RIVERS="-I1/1p,blue -I2/0.25p,blue" # Perm. large rivers used 1p blue line, other large rivers 0.25p blue line

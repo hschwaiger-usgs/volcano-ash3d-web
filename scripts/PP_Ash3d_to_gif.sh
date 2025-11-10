@@ -23,9 +23,16 @@
 # Parsing command-line arguments
 echo "checking input arguments"
 if [ -z $1 ] ; then
-    echo "Error: you must specify the variable to plot"
-    #echo "Usage: runAsh3d.sh rundir zipname dash_flag run_ID java_thread_ID"
-    exit 1
+  echo "No variable code provided."
+  echo "  0 = depothick"
+  echo "  1 = ashcon_max"
+  echo "  2 = cloud_height"
+  echo "  3 = cloud_load"
+  echo "  4 = depotime"
+  echo "  5 = depothick final (inches)"
+  echo "  6 = depothick final (mm)"
+  echo "  7 = ash_arrival_time"
+  exit 1
 fi
 
 

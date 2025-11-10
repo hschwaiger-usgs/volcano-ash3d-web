@@ -280,6 +280,11 @@
       latLL_new  = latLL_old + float(jfirst-nbuffer)*dy_old
       width_new  = float(ilast-ifirst+nbuffer)*dx_old
       height_new = float(jlast-jfirst+nbuffer)*dy_old
+      if(width_new.ge.360.0_8)then
+        width_new = 360.0_8
+        lonLL_new = 0.0_8
+      endif
+
       latUR_new  = latLL_new + height_new
       lonUR_new  = lonLL_new + width_new
 

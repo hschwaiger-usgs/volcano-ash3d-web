@@ -75,7 +75,7 @@ infile=${RUNHOME}/"3d_tephra_fall.nc"
 #******************************************************************************
 #MAKE SURE 3D_tephra_fall.nc EXISTS
 if test -r ${infile} ; then
-    echo "reading from ${infile} file"
+    echo "Preparing to read from ${infile} file"
   else
     echo "error: no ${infile} file. Exiting"
     rc=$((rc + $?))
@@ -180,9 +180,9 @@ iwindformat=`ncdump -h ${infile} |grep b3l1 | cut -f2 -d\" | cut -f1 -d# |  tr -
 echo "windtime=$windtime"
 echo "iwindformat=$iwindformat"
 if [ ${iwindformat} -eq 25 ]; then
-     windfile="NCEP reanalysis 2.5 degree"
+    windfile="NCEP reanalysis 2.5 degree"
   else
-     windfile="GFS forecast 0.5 degree for $windtime"
+    windfile="GFS forecast 0.5 degree for $windtime"
 fi
 echo "time_interval=${time_interval}"
 
@@ -195,20 +195,36 @@ gmt gmtset PROJ_ELLIPSOID Sphere
 AREA="-R$LLLON/$URLON/$LLLAT/$URLAT"
 #AREA="-Rac_tot_out_t${time}.grd"
 DLON_INT="$(echo $DLON | sed 's/\.[0-9]*//')"  #convert DLON to an integer
-if [ $DLON_INT -le 5 ] ; then
-   BASE="-Ba1/a1"                  # label every 5 degress lat/lon
-   DETAIL="-Dh"                        # high resolution coastlines (-Dc=crude)
+if [ $DLON_INT -le 2 ] ; then
+   BASE="-Ba0.25/a0.25"           # label every 0.25 degrees lat/lon
+   DETAIL="-Dh"                   # high resolution coastlines (-Dh=high)
+ elif [ $DLON_INT -le 5 ] ; then
+   BASE="-Ba1/a1"                  # label every 1 degrees lat/lon
+   DETAIL="-Dh"                    # high resolution coastlines (-Dh=high)
  elif [ $DLON_INT -le 10 ] ; then
-   BASE="-Ba2/a2"                  # label every 5 degress lat/lon
-   DETAIL="-Dh"                        # high resolution coastlines (-Dc=crude)
+   BASE="-Ba2/a2"                  # label every 2 degrees lat/lon
+   DETAIL="-Dh"                    # high resolution coastlines (-Dh=high)
  elif [ $DLON_INT -le 20 ] ; then
-   BASE="-Ba5/a5"                  # label every 5 degress lat/lon
-   DETAIL="-Dh"                        # high resolution coastlines (-Dc=crude)
+   BASE="-Ba5/a5"                  # label every 5 degrees lat/lon
+   DETAIL="-Dh"                    # high resolution coastlines (-Dh=high)
+ elif [ $DLON_INT -le 40 ] ; then
+   BASE="-Ba10/a10"               # label every 10 degrees lat/lon
+   DETAIL="-Dl"                   # low resolution coastlines (-Dl=low)
+ elif [ $DLON_INT -le 100 ] ; then
+   BASE="-Ba20/a20"               # label every 20 degrees lat/lon
+   DETAIL="-Dl"                   # low resolution coastlines (-Dl=low)
  else
-   BASE="-Ba10/a10"                    #label every 10 degrees lat/lon
-   DETAIL="-Dl"                        # low resolution coastlines (-Dc=crude)
+   BASE="-Ba20/a20"               # label every 20 degrees lat/lon
+   DETAIL="-Dl"                   # low resolution coastlines (-Dl=low)
 fi
-PROJ="-JM${VCLON}/${VCLAT}/20"
+#set mapping parameters
+if [ $DLON_INT -le 100 ] ; then
+   AREA="-R$lonmin/$lonmax/$latmin/$latmax"
+   PROJ="-JM${VCLON}/${VCLAT}/20"      # Mercator projection, with origin at lat & lon of volcano, 20 cm width
+else
+   AREA="-R0/360/$latmin/$latmax"
+   PROJ="-JQ0/0/20"      # Cylindrical Eq dist projection, with origin at lat & lon of volcano, 20 cm width
+fi
 COAST="-G220/220/220 -W"            # RGB values for land areas (220/220/220=light gray)
 BOUNDARIES="-Na"                    # -N=draw political boundaries, a=all national, Am. state & marine b.
   

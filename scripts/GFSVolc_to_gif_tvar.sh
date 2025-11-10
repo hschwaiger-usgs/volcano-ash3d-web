@@ -42,7 +42,8 @@ fi
 if [ "$#" -eq 2 ]; then
   echo "Second command line argument detected: setting run directory"
   RUNHOME=$2
-  else
+ else
+  echo "No second command line argument detected, using cwd"
   RUNHOME=`pwd`
 fi
 cd ${RUNHOME}
@@ -293,33 +294,36 @@ do
     #set mapping parameters
     DLON_INT="$(echo $DLON | sed 's/\.[0-9]*//')"  #convert DLON to an integer
     if [ $DLON_INT -le 2 ] ; then
-        BASE="-Ba0.25/a0.25"           # label every 5 degress lat/lon
-        DETAIL="-Dh"                   # high resolution coastlines (-Dc=crude)
+        BASE="-Ba0.25/a0.25"           # label every 0.25 degrees lat/lon
+        DETAIL="-Dh"                   # high resolution coastlines (-Dh=high)
         KMSCALE="30"
         MISCALE="20"
       elif [ $DLON_INT -le 5 ] ; then
-        BASE="-Ba1/a1"                 # label every 5 degress lat/lon
-        DETAIL="-Dh"                   # high resolution coastlines (-Dc=crude)
+        BASE="-Ba1/a1"                  # label every 1 degrees lat/lon
+        DETAIL="-Dh"                    # high resolution coastlines (-Dh=high)
         KMSCALE="50"
         MISCALE="30"
       elif [ $DLON_INT -le 10 ] ; then
-        BASE="-Ba2/a2"                 # label every 5 degress lat/lon
-        DETAIL="-Dh"                   # high resolution coastlines (-Dc=crude)
+        BASE="-Ba2/a2"                  # label every 2 degrees lat/lon
+        DETAIL="-Dh"                    # high resolution coastlines (-Dh=high)
         KMSCALE="100"
         MISCALE="50"
       elif [ $DLON_INT -le 20 ] ; then
-        BASE="-Ba5/a5"                 # label every 5 degress lat/lon
-        DETAIL="-Dh"                   # high resolution coastlines (-Dc=crude)
+        BASE="-Ba5/a5"                  # label every 5 degrees lat/lon
+        DETAIL="-Dh"                    # high resolution coastlines (-Dh=high)
         KMSCALE="200"
         MISCALE="100"
       elif [ $DLON_INT -le 40 ] ; then
-        BASE="-Ba10/a10"               # label every 10 degrees lat/lon
-        DETAIL="-Dl"                   # low resolution coastlines (-Dc=crude)
+       BASE="-Ba10/a10"               # label every 10 degrees lat/lon
+       DETAIL="-Dl"                   # low resolution coastlines (-Dl=low)
+      elif [ $DLON_INT -le 100 ] ; then
+        BASE="-Ba20/a20"               # label every 20 degrees lat/lon
+        DETAIL="-Dl"                   # low resolution coastlines (-Dl=low)
         KMSCALE="400"
         MISCALE="200"
       else
         BASE="-Ba20/a20"               # label every 20 degrees lat/lon
-        DETAIL="-Dl"                   # low resolution coastlines (-Dc=crude)
+        DETAIL="-Dl"                   # low resolution coastlines (-Dl=low)
         KMSCALE="400"
         MISCALE="200"
     fi

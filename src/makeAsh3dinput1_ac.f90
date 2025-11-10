@@ -130,6 +130,11 @@
 
       data imonthdays/31,29,31,30,31,30,31,31,30,31,30,31/
 
+      INTERFACE
+        subroutine print_usage
+        end subroutine print_usage
+      END INTERFACE
+
       write(output_unit,*) ' '
       write(output_unit,*) '---------------------------------------------------'
       write(output_unit,*) 'starting makeAsh3dinput1_ac'
@@ -212,29 +217,34 @@
       read(fid_ctrin_mini,'(a25)',iostat=iostatus) volcano_name  ! This is normally 30, but is 25 in ash3d_input_ac.inp
       if(iostatus.ne.0)then
         write(error_unit,*) 'ERROR: Could not read volcano name'
+        call print_usage
         stop 1
       endif
         ! line 2
       read(fid_ctrin_mini,*      ,iostat=iostatus) v_lon, v_lat
       if(iostatus.ne.0)then
         write(error_unit,*) 'ERROR: Could not read volcano lon and lat'
+        call print_usage
         stop 1
       endif
         ! line 3
       read(fid_ctrin_mini,*      ,iostat=iostatus) v_elevation
       if(iostatus.ne.0)then
         write(error_unit,*) 'ERROR: Could not read volcano elevation'
+        call print_usage
         stop 1
       endif
         ! line 4
       read(fid_ctrin_mini,'(a80)',iostat=iostatus) linebuffer
       if(iostatus.ne.0)then
         write(error_unit,*) 'ERROR: Could not read volcano line with ESPs'
+        call print_usage
         stop 1
       endif
       read(linebuffer,*,iostat=iostatus) e_Height, e_Duration, SimTime
       if(iostatus.ne.0)then
         write(error_unit,*) 'ERROR: Could not read volcano e_Height, e_Duration, SimTime'
+        call print_usage
         stop 1
       endif
       ! Error-checking values for line 4
@@ -242,6 +252,7 @@
       if (e_Height.lt.(v_elevation/1000.0_8)) then
         write(error_unit,*) 'ERROR: plume height is lower than volcano summit elevation'
         write(error_unit,*) 'program stopped'
+        call print_usage
         stop 1
       endif
       ! Make sure minimum eruption duration exceeds 0.05 hrs
@@ -249,13 +260,15 @@
         write(error_unit,*) 'ERROR: eruption duration = ',e_Duration
         write(error_unit,*) 'eruption duration must exceed ',min_duration
         write(error_unit,*) 'Program stopped'
+        call print_usage
         stop 1
       endif
-      ! Make sure the simulation time is long enought
+      ! Make sure the simulation time is long enough
       if (SimTime.lt.min_SimTime) then
         write(error_unit,*) 'ERROR: you gave a simulation time of ',real(SimTime,kind=4),&
                             ' hours.'
         write(error_unit,*) 'Simulation time must be =>',real(min_SimTime,kind=4)
+        call print_usage
         stop 1
       endif
       ! Successfully read 3 values, try for 4
@@ -270,6 +283,7 @@
         if ((e_Volume.lt.1.e-5_8).or.(e_Volume.gt.1.0e2_8)) then
           write(error_unit,*) 'ERROR: Specified eruptive volume must be between 0.00001 and 100 km3.'
           write(error_unit,*) 'You entered ',e_Volume, '.  Program stopped'
+          call print_usage
           stop 1
         endif
       endif
@@ -278,6 +292,7 @@
       read(fid_ctrin_mini,'(a80)',iostat=iostatus)linebuffer
       if(iostatus.ne.0)then
         write(error_unit,*) 'ERROR: Could not read volcano line with start time'
+        call print_usage
         stop 1
       endif
       read(linebuffer,*,iostat=iostatus) e_iyear, e_imonth, e_iday, e_Hour
@@ -287,17 +302,20 @@
         write(error_unit,*) '   e_imonth = ',e_imonth
         write(error_unit,*) '   e_iday   = ',e_iday
         write(error_unit,*) '   e_Hour   = ',e_Hour
+        call print_usage
         stop 1
       elseif(e_iyear.eq.0)then
         if(e_iday.lt.0.or.e_iday.gt.5)then
           ! Don't let forecast go more than 5 days out
           write(error_unit,*) 'ERROR: forecast offset start day must be 0=<t<=5'
           write(error_unit,*) '   e_iday   = ',e_iday
+          call print_usage
           stop 1
         endif
         if(e_Hour.lt.0.0_8.or.e_Hour.gt.120.0_8)then
           write(error_unit,*) 'ERROR: forecast offset start hour must be 0=<t<=120'
           write(error_unit,*) '   e_Hour   = ',e_Hour
+          call print_usage
           stop 1
         endif
       else
@@ -306,6 +324,7 @@
           write(error_unit,*) 'ERROR:  Eruption start year must be zero or a year between'
           write(error_unit,*) '1948 and the present.  You entered:',e_iyear
           write(error_unit,*) 'Program stopped'
+          call print_usage
           stop 1
         else
           e_Hours1900 = HS_hours_since_baseyear(e_iyear,e_imonth,e_iday,e_hour,byear,useLeaps)
@@ -313,6 +332,7 @@
         if ((e_imonth.lt.0).or.(e_imonth.gt.12)) then
           write(error_unit,*) 'ERROR:  Eruption start month must be between 0 and 12.'
           write(error_unit,*) 'You entered:',e_imonth
+          call print_usage
           write(error_unit,*) 'Program stopped'
           stop 1
         endif
@@ -321,6 +341,7 @@
           write(error_unit,*) 'in that month.  The month you entered is:',e_imonth
           write(error_unit,*) 'The number of days in this month is:',imonthdays(e_imonth)
           write(error_unit,*) 'the day in that month you entered is:',e_iday
+          call print_usage
           write(error_unit,*) 'Program stopped'
           stop 1
         endif
@@ -352,12 +373,12 @@
         ! Done with mini-input file
       close(fid_ctrin_mini)
 
-      write(*,*)"--------------------------"
-      write(*,*)"System time now      : ",Now_iyear,Now_imonth,Now_iday,&
-                                          real(Now_hour,kind=4),real(Now_Hours1900,kind=4)
-      write(*,*)"Eruption start time  : ",e_iyear,e_imonth,e_iday,real(e_Hour,kind=4)
-      write(*,*)"Most recent wind data: ",NWP_iyear,NWP_imonth,NWP_iday,NWP_ihour
-      write(*,*)"--------------------------"
+      write(output_unit,*)"--------------------------"
+      write(output_unit,*)"System time now      : ",Now_iyear,Now_imonth,Now_iday,&
+                                                    real(Now_hour,kind=4),real(Now_Hours1900,kind=4)
+      write(output_unit,*)"Eruption start time  : ",e_iyear,e_imonth,e_iday,real(e_Hour,kind=4)
+      write(output_unit,*)"Most recent wind data: ",NWP_iyear,NWP_imonth,NWP_iday,NWP_ihour
+      write(output_unit,*)"--------------------------"
 
       ! Now sort out the windfiles to use
       if(e_iyear.eq.0.or.e_Hours1900.gt.NWP_Hours1900)then
@@ -549,7 +570,7 @@
       write(fid_ctrout_full,2011) volcano_name, &
                                   lonLL, latLL, &
                                   Comp_Width,Comp_Height, &
-                                  v_lon, v_lat, v_elevation, &
+                                  v_lon, v_lat, v_elevation/1000.0_8, &
                                   dx, dy, &
                                   dz
       write(fid_ctrout_full,2020) ! write block 2 header, then content  (Eruption specification)
@@ -953,5 +974,31 @@
       stop 1
 
       end program makeAsh3dinput1_ac
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+      subroutine print_usage
+
+      ! This module requires Fortran 2003 or later
+      use iso_fortran_env, only : &
+         input_unit,output_unit,error_unit
+
+      implicit none
+      write(error_unit,*)"Input file should have the following format:"
+      write(error_unit,*)" "
+      write(error_unit,*)"Popocatépetl                     # ",&
+                         "Volcano name"
+      write(error_unit,*)"-98.622 19.023                   # ",&
+                         "Longitude, Latitude"
+      write(error_unit,*)"5426.0                           # ",&
+                         "Elevation (m)"
+      write(error_unit,*)"8.0 1.0 60.0  0.003              # ",&
+                         "Plume height (km), duration (hrs), sim. time (hrs), [optional volume (km3 DRE)]"
+      write(error_unit,*)"2024 11 07 12.6666666666666666 0 # ",&
+                         "Start time (year, month, day, hour UTC) [Not Actual Eruption]"
+      write(error_unit,*)"20                               # ",&
+                         "iwindformat; normally 20 (0.5 GFS), but can be 34 (0.25 ECMWF)"
+
+      end subroutine print_usage
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
