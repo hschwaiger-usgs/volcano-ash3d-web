@@ -151,7 +151,6 @@
       close(13)
 
       write(6,*)"citywriter ended normally."
-      stop 0
 
       end program citywriter
          

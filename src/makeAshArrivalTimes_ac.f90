@@ -81,9 +81,9 @@
        close(10)
        close(11)
 
-       write(*,*)"makeAshArrivalTimes_ac ended normally."
-       !return
-       stop 0
+       write(6,*)"makeAshArrivalTimes_ac ended normally."
+
+       stop
 
 !----------------------------------------------------------------------------------------
 

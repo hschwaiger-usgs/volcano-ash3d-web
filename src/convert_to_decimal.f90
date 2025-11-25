@@ -21,7 +21,7 @@
       write(6,1) numnow
 1     format(f14.8)
 
-      stop 0
+      stop
 
 2000  write(6,*) 'error running convert_to_decimal'
       stop 1

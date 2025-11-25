@@ -57,7 +57,7 @@
       write(6,*)  'Task completed'
       close(10)
 
-      stop 0
+      stop
 
 !the following variables will remain in the netcdf file
             !float lat(lat)

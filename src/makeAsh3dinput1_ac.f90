@@ -623,7 +623,7 @@
       write(output_unit,*) '---------------------------------------------------'
       write(output_unit,*) ' '
 
-      stop 0
+      stop
 
       ! Output control file format statements
 2010  format( &

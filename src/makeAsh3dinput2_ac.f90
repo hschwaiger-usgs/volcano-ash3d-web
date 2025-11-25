@@ -377,7 +377,7 @@
       write(output_unit,*) '---------------------------------------------------'
       write(output_unit,*) ' '
 
-      stop 0
+      stop
 
 1900  write(error_unit,*) 'ERROR: CloudLoad_xxx.xhrs.dat files do not exist.'
       write(error_unit,*) '       Preliminary run did not write CloudLoad files as expected.'

@@ -338,7 +338,7 @@
       write(output_unit,*) '---------------------------------------------------'
       write(output_unit,*) ' '
 
-      stop 0
+      stop
 
 1900  write(error_unit,*) 'ERROR: DepositFile_____final.dat files do not exist.'
       write(error_unit,*) '       Preliminary run did not write Deposit file as expected.'
