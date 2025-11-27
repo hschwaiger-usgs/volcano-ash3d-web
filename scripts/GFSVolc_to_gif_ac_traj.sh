@@ -144,53 +144,20 @@ else
 fi
 
 # Test for the existance/executability of required programs and files.
-command -v "${ASH3DSCRIPTDIR}/gmt_test.sh"        > /dev/null 2>&1 ||  { echo >&2 "gmt_test.sh not found. Exiting"; exit 1;}
-command -v "${ASH3DSCRIPTDIR}/ReadNCheader.sh"    > /dev/null 2>&1 ||  { echo >&2 "ReadNCheader.sh not found. Exiting"; exit 1;}
-command -v "${ASH3DBINDIR}/legend_placer_ac_traj" > /dev/null 2>&1 ||  { echo >&2 "legend_placer_ac_traj not found. Exiting"; exit 1;}
-command -v date      > /dev/null 2>&1 ||  { echo >&2 "date not found. Exiting"; exit 1;}
-command -v awk       > /dev/null 2>&1 ||  { echo >&2 "awk not found. Exiting"; exit 1;}
-command -v sed       > /dev/null 2>&1 ||  { echo >&2 "sed not found. Exiting"; exit 1;}
-command -v bc        > /dev/null 2>&1 ||  { echo >&2 "bc not found. Exiting"; exit 1;}
-command -v ncdump    > /dev/null 2>&1 ||  { echo >&2 "ncdump not found. Exiting"; exit 1;}
-command -v convert   > /dev/null 2>&1 ||  { echo >&2 "convert not found. Exiting"; exit 1;}
-command -v identify  > /dev/null 2>&1 ||  { echo >&2 "identify not found. Exiting"; exit 1;}
-command -v composite > /dev/null 2>&1 ||  { echo >&2 "composite not found. Exiting"; exit 1;}
+command -v "${ASH3DSCRIPTDIR}/gmt_test.sh"        > /dev/null 2>&1 ||  { echo >&2 "${SLAB} gmt_test.sh not found. Exiting"; exit 1;}
+command -v "${ASH3DSCRIPTDIR}/ReadNCheader.sh"    > /dev/null 2>&1 ||  { echo >&2 "${SLAB} ReadNCheader.sh not found. Exiting"; exit 1;}
+command -v "${ASH3DBINDIR}/legend_placer_ac_traj" > /dev/null 2>&1 ||  { echo >&2 "${SLAB} legend_placer_ac_traj not found. Exiting"; exit 1;}
+command -v date      > /dev/null 2>&1 ||  { echo >&2 "${SLAB} date not found. Exiting"; exit 1;}
+command -v awk       > /dev/null 2>&1 ||  { echo >&2 "${SLAB} awk not found. Exiting"; exit 1;}
+command -v sed       > /dev/null 2>&1 ||  { echo >&2 "${SLAB} sed not found. Exiting"; exit 1;}
+command -v bc        > /dev/null 2>&1 ||  { echo >&2 "${SLAB} bc not found. Exiting"; exit 1;}
+command -v ncdump    > /dev/null 2>&1 ||  { echo >&2 "${SLAB} ncdump not found. Exiting"; exit 1;}
+command -v convert   > /dev/null 2>&1 ||  { echo >&2 "${SLAB} convert not found. Exiting"; exit 1;}
+command -v identify  > /dev/null 2>&1 ||  { echo >&2 "${SLAB} identify not found. Exiting"; exit 1;}
+command -v composite > /dev/null 2>&1 ||  { echo >&2 "${SLAB} composite not found. Exiting"; exit 1;}
 
 # We need to know if we must prefix all gmt commands with 'gmt', as required by version 5/6
 source ${ASH3DSCRIPTDIR}/gmt_test.sh
-
-##################################################################################
-#### PRELIMINARY SCRIPT CALL CHECK
-##################################################################################
-#### Customizable settings
-#### Parsing command-line arguments
-####  first/second pass , rundirectory
-###NARGS=$#
-###echo "${SLAB} ------------------------------------------------------------"
-###echo "${SLAB} running GFSVolc_to_gif_ac_traj.sh with $NARGS parameters:"
-###if [ $NARGS -gt 0 ]; then
-###  PASSID=$1
-###else
-###  PASSID=0
-###fi
-###if [ $PASSID -eq 0 ]; then
-###  echo "${SLAB}  0 = first pass"
-###fi
-###if [ $PASSID -eq 1 ]; then
-###  echo "${SLAB}  1 = second pass"
-###fi
-###if [ "$NARGS" -eq 2 ]; then
-###  echo "${SLAB} Second command line argument detected: setting run directory"
-###  RUNHOME=$2
-### else
-###  echo "${SLAB} No second command line argument detected, using pwd"
-###  RUNHOME=`pwd`
-###fi
-###cd ${RUNHOME}
-###echo `date`
-###echo "${SLAB} ------------------------------------------------------------"
-
-
 
 rc=0                                             # error message accumulator
 CLEANFILES="T"

@@ -1,6 +1,7 @@
 #!/bin/bash
 INFILE_FULL=$1
 INFILE_SIMPLE="ash3d_input_simp.inp"
+# Here are the hard-coded line numbers
 LNname=78
 LNcoord=80
 LNerup=100

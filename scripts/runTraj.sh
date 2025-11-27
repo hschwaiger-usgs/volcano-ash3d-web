@@ -70,11 +70,11 @@ else
 fi
 
 # Test for the existance/executability of required programs and files.
-command -v "${USGSROOT}/bin/MetTraj_F"     > /dev/null 2>&1 ||  { echo >&2 "MetTraj_F not found. Exiting"; exit 1;}
-command -v date      > /dev/null 2>&1 ||  { echo >&2 "date not found. Exiting"; exit 1;}
-command -v awk       > /dev/null 2>&1 ||  { echo >&2 "awk not found. Exiting"; exit 1;}
-command -v sed       > /dev/null 2>&1 ||  { echo >&2 "sed not found. Exiting"; exit 1;}
-command -v bc        > /dev/null 2>&1 ||  { echo >&2 "bc not found. Exiting"; exit 1;}
+command -v "${USGSROOT}/bin/MetTraj_F"     > /dev/null 2>&1 ||  { echo >&2 "${SLAB} MetTraj_F not found. Exiting"; exit 1;}
+command -v date      > /dev/null 2>&1 ||  { echo >&2 "${SLAB} date not found. Exiting"; exit 1;}
+command -v awk       > /dev/null 2>&1 ||  { echo >&2 "${SLAB} awk not found. Exiting"; exit 1;}
+command -v sed       > /dev/null 2>&1 ||  { echo >&2 "${SLAB} sed not found. Exiting"; exit 1;}
+command -v bc        > /dev/null 2>&1 ||  { echo >&2 "${SLAB} bc not found. Exiting"; exit 1;}
 
 if test -r ash3d_input_ac.inp; then
     INFILE_SIMPLE="ash3d_input_ac.inp"

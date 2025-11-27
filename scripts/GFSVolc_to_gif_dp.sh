@@ -22,16 +22,15 @@
 # identified by varID.
 # Run information is extracted from 3d_tephra_fall.nc
 #
-#      Usage: GFSVolc_to_gif_tvar.sh varID RunDir
-#       e.g. /opt/USGS/Ash3d/bin/scripts/GFSVolc_to_gif_dp_traj.sh          \
-#               3                                                           \
+#      Usage: GFSVolc_to_gif_dp.sh varID RunDir
+#       e.g. /opt/USGS/Ash3d/bin/scripts/GFSVolc_to_gif_dp.sh          \
 #               /var/www/html/ash3d-api/htdocs/ash3druns/ash3d_run_334738/
 #
 # Files needed:
 #   world_cities.txt      : shared post-processing file
 #   3d_tephra_fall.nc     : output from an Ash3d run
 #   USGSvid.png           : institutional logo needed for final map
-#   caveats_notofficial_trajectory.png : disclaimer banner added to figure
+#   caveats_notofficial.png : disclaimer banner added to figure
 # Programs needed:
 #   gmt_test.sh           : script that identifies gmt version and sets variables
 #   ReadNCheader.sh       : script that reads NetCDF header
@@ -69,8 +68,8 @@ ASH3DSHARE_PP="${ASH3DSHARE}/post_proc"
 
 # Parsing command-line arguments
 #  [rundirectory]
-echo "------------------------------------------------------------"
-echo "${SLAB} Running GFSVolc_to_gif_dp.sh"
+echo "${SLAB} ------------------------------------------------------------"
+echo "${SLAB} Running GFSVolc_to_gif_dp.sh:"
 if [ "$#" -eq 1 ]; then
    echo "Command line argument detected: setting run directory"
    RUNHOME=$1
@@ -79,7 +78,6 @@ if [ "$#" -eq 1 ]; then
   RUNHOME=`pwd`
 fi
 cd ${RUNHOME}
-echo `date`
 echo "${SLAB} ------------------------------------------------------------"
 
 ###############################################################################
@@ -106,7 +104,6 @@ else
   exit $rc
 fi
 LEGEND=${ASH3DSHARE_PP}/legend_dep_nws.png
-echo "${SLAB} Checking for ${LEGEND}"
 if [ -f "${LOGO}" ]; then
   echo "${SLAB}   Found file required file: ${LEGEND}"
 else
@@ -114,8 +111,7 @@ else
   rc=$((rc + $?))
   exit $rc
 fi
-CAVEAT=${ASH3DSHARE_PP}/caveats_notofficial_trajectory.png
-echo "${SLAB} Checking for ${CAVEAT}"
+CAVEAT=${ASH3DSHARE_PP}/caveats_notofficial.png
 if [ -f "${LOGO}" ]; then
   echo "${SLAB}   Found file required file: ${CAVEAT}"
 else
@@ -125,25 +121,22 @@ else
 fi
 
 # Test for the existance/executability of required programs and files.
-command -v "${ASH3DSCRIPTDIR}/gmt_test.sh"     > /dev/null 2>&1 ||  { echo >&2 "gmt_test.sh not found. Exiting"; exit 1;}
-command -v "${ASH3DSCRIPTDIR}/ReadNCheader.sh" > /dev/null 2>&1 ||  { echo >&2 "ReadNCheader.sh not found. Exiting"; exit 1;}
-command -v "${ASH3DBINDIR}/legend_placer_dp"   > /dev/null 2>&1 ||  { echo >&2 "legend_placer_dp not found. Exiting"; exit 1;}
-command -v "${ASH3DBINDIR}/Ash3d_PostProc"  > /dev/null 2>&1 ||  { echo >&2 "Ash3d_PostProc not found. Exiting"; exit 1;}
-command -v date      > /dev/null 2>&1 ||  { echo >&2 "date not found. Exiting"; exit 1;}
-command -v awk       > /dev/null 2>&1 ||  { echo >&2 "awk not found. Exiting"; exit 1;}
-command -v sed       > /dev/null 2>&1 ||  { echo >&2 "sed not found. Exiting"; exit 1;}
-command -v bc        > /dev/null 2>&1 ||  { echo >&2 "bc not found. Exiting"; exit 1;}
-command -v head      > /dev/null 2>&1 ||  { echo >&2 "head not found. Exiting"; exit 1;}
-command -v convert   > /dev/null 2>&1 ||  { echo >&2 "convert not found. Exiting"; exit 1;}
-command -v identify  > /dev/null 2>&1 ||  { echo >&2 "identify not found. Exiting"; exit 1;}
-command -v composite > /dev/null 2>&1 ||  { echo >&2 "composite not found. Exiting"; exit 1;}
+command -v "${ASH3DSCRIPTDIR}/gmt_test.sh"     > /dev/null 2>&1 ||  { echo >&2 "${SLAB}  gmt_test.sh not found. Exiting"; exit 1;}
+command -v "${ASH3DSCRIPTDIR}/ReadNCheader.sh" > /dev/null 2>&1 ||  { echo >&2 "${SLAB}  ReadNCheader.sh not found. Exiting"; exit 1;}
+command -v "${ASH3DBINDIR}/legend_placer_dp"   > /dev/null 2>&1 ||  { echo >&2 "${SLAB}  legend_placer_dp not found. Exiting"; exit 1;}
+command -v "${ASH3DBINDIR}/Ash3d_PostProc"     > /dev/null 2>&1 ||  { echo >&2 "${SLAB}  Ash3d_PostProc not found. Exiting"; exit 1;}
+command -v date      > /dev/null 2>&1 ||  { echo >&2 "${SLAB}  date not found. Exiting"; exit 1;}
+command -v awk       > /dev/null 2>&1 ||  { echo >&2 "${SLAB}  awk not found. Exiting"; exit 1;}
+command -v sed       > /dev/null 2>&1 ||  { echo >&2 "${SLAB}  sed not found. Exiting"; exit 1;}
+command -v bc        > /dev/null 2>&1 ||  { echo >&2 "${SLAB}  bc not found. Exiting"; exit 1;}
+command -v head      > /dev/null 2>&1 ||  { echo >&2 "${SLAB}  head not found. Exiting"; exit 1;}
+command -v convert   > /dev/null 2>&1 ||  { echo >&2 "${SLAB}  convert not found. Exiting"; exit 1;}
+command -v identify  > /dev/null 2>&1 ||  { echo >&2 "${SLAB}  identify not found. Exiting"; exit 1;}
+command -v composite > /dev/null 2>&1 ||  { echo >&2 "${SLAB}  composite not found. Exiting"; exit 1;}
 
 # We need to know if we must prefix all gmt commands with 'gmt', as required by version 5/6
 source ${ASH3DSCRIPTDIR}/gmt_test.sh
 
-##################################################################################
-#### PRELIMINARY SCRIPT CALL CHECK
-##################################################################################
 rc=0                                             # error message accumulator
 CLEANFILES="T"
 # Date of post-processing (may not be run date of simulation)
@@ -179,7 +172,7 @@ fi
 echo "${SLAB} Preparing to read from ${ASH3D_NCFILE} file"
 echo "${SLAB} ******************************************************************************"
 #GET VARIABLES FROM 3D_tephra-fall.nc
-source ${ASH3DSCRIPTDIR}/ReadNCheader.sh ${RUNHOME}/"3d_tephra_fall.nc"
+source ${ASH3DSCRIPTDIR}/ReadNCheader.sh ${ASH3D_NCFILE}
 echo "${SLAB} Finished reading netcdf header."
 echo "${SLAB} ******************************************************************************"
 
@@ -204,7 +197,7 @@ lonmin=$LLLON
 latmin=$LLLAT
 lonmax=`echo "$LLLON + $DLON" | bc -l`
 latmax=`echo "$LLLAT + $DLAT" | bc -l`
-echo "lonmin="$lonmin ", lonmax="$lonmax ", latmin="$latmin ", latmax="$latmax
+echo "${SLAB}  lonmin="$lonmin ", lonmax="$lonmax ", latmin="$latmin ", latmax="$latmax
 echo "$lonmin $lonmax $latmin $latmax $VCLON $VCLAT" > map_range.txt
 
 echo "${SLAB} Preparing to make the GMT maps for deposit."
@@ -253,7 +246,7 @@ echo "${SLAB} Preparing to make the GMT maps for deposit."
 ######################
 # Get the number of time steps we need
  #   depotime;       Fin.Dep (in);  Fin.Dep (mm)     ash_arrival_time
-#if [ $1 -eq 4 ] || [ $1 -eq 5 ] || [ $1 -eq 6 ] || [ $1 -eq 7 ] ; then
+#if [ $varID -eq 4 ] || [ $varID -eq 5 ] || [ $varID -eq 6 ] || [ $varID -eq 7 ] ; then
 #    #  For final times or non-time-series, set time to the last value
     tstart=$(( $tmax-1 ))
     echo "${SLAB} We are working on a final/static variable so set tstart = $tstart"
@@ -458,9 +451,9 @@ composite -geometry +${legendx_UL}+${legendy_UL} ${LEGEND} \
 
 # Finalizing output (animations, shape files, etc.)
 #Make shapefile
-echo "Generating shapefile with Ash3d_PostProc 3d_tephra_fall.nc 6 5"
+echo "Generating shapefile with Ash3d_PostProc ${ASH3D_NCFILE} 6 5"
 # This first line uses the default contour levels for deposit
-${ASH3DBINDIR}/Ash3d_PostProc 3d_tephra_fall.nc 6 5
+${ASH3DBINDIR}/Ash3d_PostProc ${ASH3D_NCFILE} 6 5
 # This post-processing tool generates deposit_thickness.txt from the NetCDF file, then
 # uses gnuplot to contour the data, writing out depothik.zip as well as temporary files: tmp.png
 # Rename shapefile and remove temporary files

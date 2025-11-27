@@ -58,11 +58,11 @@ ASH3DSHARE_PP="${ASH3DSHARE}/post_proc"
 # Test for the existance of required files.
    # Files are checked below once we have the RUNDIR
 # Test for the existance/executability of required programs.
-command -v "${ASH3DBINDIR}/convert_to_decimal"     > /dev/null 2>&1 ||  { echo >&2 "convert_to_decimal not found. Exiting"; exit 1;}
-command -v date      > /dev/null 2>&1 ||  { echo >&2 "date not found. Exiting"; exit 1;}
-command -v awk       > /dev/null 2>&1 ||  { echo >&2 "awk not found. Exiting"; exit 1;}
-command -v sed       > /dev/null 2>&1 ||  { echo >&2 "sed not found. Exiting"; exit 1;}
-command -v bc        > /dev/null 2>&1 ||  { echo >&2 "bc not found. Exiting"; exit 1;}
+command -v "${ASH3DBINDIR}/convert_to_decimal"     > /dev/null 2>&1 ||  { echo >&2 "${SLAB} convert_to_decimal not found. Exiting"; exit 1;}
+command -v date      > /dev/null 2>&1 ||  { echo >&2 "${SLAB} date not found. Exiting"; exit 1;}
+command -v awk       > /dev/null 2>&1 ||  { echo >&2 "${SLAB} awk not found. Exiting"; exit 1;}
+command -v sed       > /dev/null 2>&1 ||  { echo >&2 "${SLAB} sed not found. Exiting"; exit 1;}
+command -v bc        > /dev/null 2>&1 ||  { echo >&2 "${SLAB} bc not found. Exiting"; exit 1;}
 
 ###############################################################################
 # PRELIMINARY SCRIPT CALL CHECK

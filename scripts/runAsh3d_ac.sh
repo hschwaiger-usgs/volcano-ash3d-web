@@ -59,10 +59,6 @@ SLAB="[runAsh3d_ac.sh]: "            # Script label prepended on all echo to std
 # Customizable settings
 RUNTYPE="ACL"          # ADV,DEP,ACL
 CLEANFILES="T"         # set to T to remove temporary files
-USECONTAINERASH="F"    # set to T to use Ash3d container
-USECONTAINERTRAJ="F"   # set to T to use Trajectory container
-CONTAINEREXE="podman"  # container flavor
-CONTAINERRUNDIR="/run/user/1004/libpod/tmp"
 
 # Check input parameters needed for run
 NARGS=$#
@@ -106,15 +102,8 @@ ASH3DSCRIPTDIR="${ASH3DHOME}/bin/scripts"
 ASH3DSHARE="$ASH3DHOME/share"
 ASH3DSHARE_PP="${ASH3DSHARE}/post_proc"
 
-
 HOST=`hostname | cut -c1-9`
 echo "${SLAB} HOST=$HOST"
-if [ "$USECONTAINERASH" == "T" ]; then
-  echo "${SLAB} Post processing scripts for Ash3d results will be run with containers via ${CONTAINEREXE}"
-fi
-if [ "$USECONTAINERTRAJ" == "T" ]; then
-  echo "${SLAB} Post processing scripts for traj results will be run with containers via ${CONTAINEREXE}"
-fi
 
 #Determine last downloaded windfile
 LAST_DOWNLOADED=`cat ${WINDROOT}/gfs/last_downloaded.txt`
@@ -127,7 +116,7 @@ echo "${SLAB} Checking input arguments"
 if [ -z $1 ] ; then
   echo "${SLAB}   Error: you must specify an input directory containing the file ash3d_input_ac.inp"
   echo "${SLAB}   Usage: runAsh3d_ac.sh rundir zipname dash_flag run_ID java_thread_ID"
-  exit 1
+  exit $rc
 else
   RUNDIR=$1
   echo "${SLAB}   run directory is $1"
@@ -135,7 +124,7 @@ fi
 
 if [ -z $2 ] ; then
   echo "${SLAB}   Error: you must specify a zip file name"
-  exit 1
+  exit $rc
 else
   ZIPNAME=$2
 fi
@@ -168,7 +157,6 @@ rc=0                                                       # error message accum
 # Test for the existance of required files.
 GFS_LAST="${WINDROOT}/gfs/last_downloaded.txt"             # Needed to link to the correct forecast package
 AIRPORT="${ASH3DSHARE}/GlobalAirports_ewert.txt"
-echo "${SLAB} Checking for ${GFS_LAST}"
 if [ -f "${GFS_LAST}" ]; then
   echo "${SLAB}   Found file required file: ${GFS_LAST}"
 else
@@ -176,7 +164,6 @@ else
   rc=$((rc + $?))
   exit $rc
 fi
-echo "${SLAB} Checking for ${AIRPORT}"
 if [ -f "${AIRPORT}" ]; then
   echo "${SLAB}   Found file required file: ${AIRPORT}"
 else
@@ -186,19 +173,17 @@ else
 fi
 
 # Test for the existance/executability of required programs and files.
-command -v "${ASH3DSCRIPTDIR}/full_2_simp.sh"             > /dev/null 2>&1 ||  { echo >&2 "full_2_simp.sh not found. Exiting"; exit 1;}
-command -v "${ASH3DSCRIPTDIR}/runTraj.sh"                 > /dev/null 2>&1 ||  { echo >&2 "runTraj.sh not found. Exiting"; exit 1;}
-command -v "${ASH3DSCRIPTDIR}/GFSVolc_to_gif_ac_traj.sh"  > /dev/null 2>&1 ||  { echo >&2 "GFSVolc_to_gif_ac_traj.sh not found. Exiting"; exit 1;}
-command -v "${ASH3DSCRIPTDIR}/GFSVolc_to_gif_tvar.sh"     > /dev/null 2>&1 ||  { echo >&2 "GFSVolc_to_gif_tvar.sh not found. Exiting"; exit 1;}
-command -v "${USGSROOT}/bin/MetTraj_F"                    > /dev/null 2>&1 ||  { echo >&2 "MetTraj_F not found. Exiting"; exit 1;}
-command -v date     > /dev/null 2>&1 ||  { echo >&2 "date not found. Exiting"; exit 1;}
-command -v find     > /dev/null 2>&1 ||  { echo >&2 "find not found. Exiting"; exit 1;}
-command -v hostname > /dev/null 2>&1 ||  { echo >&2 "hostname not found. Exiting"; exit 1;}
-command -v zip      > /dev/null 2>&1 ||  { echo >&2 "zip not found. Exiting"; exit 1;}
-command -v unix2dos > /dev/null 2>&1 ||  { echo >&2 "unix2dos not found. Exiting"; exit 1;}
+command -v "${ASH3DSCRIPTDIR}/full_2_simp.sh"             > /dev/null 2>&1 ||  { echo >&2 "${SLAB} full_2_simp.sh not found. Exiting"; exit 1;}
+command -v "${ASH3DSCRIPTDIR}/runTraj.sh"                 > /dev/null 2>&1 ||  { echo >&2 "${SLAB} runTraj.sh not found. Exiting"; exit 1;}
+command -v "${ASH3DSCRIPTDIR}/GFSVolc_to_gif_ac_traj.sh"  > /dev/null 2>&1 ||  { echo >&2 "${SLAB} GFSVolc_to_gif_ac_traj.sh not found. Exiting"; exit 1;}
+command -v "${ASH3DSCRIPTDIR}/GFSVolc_to_gif_tvar.sh"     > /dev/null 2>&1 ||  { echo >&2 "${SLAB} GFSVolc_to_gif_tvar.sh not found. Exiting"; exit 1;}
+command -v "${USGSROOT}/bin/MetTraj_F"                    > /dev/null 2>&1 ||  { echo >&2 "${SLAB} MetTraj_F not found. Exiting"; exit 1;}
+command -v date     > /dev/null 2>&1 ||  { echo >&2 "${SLAB} date not found. Exiting"; exit 1;}
+command -v find     > /dev/null 2>&1 ||  { echo >&2 "${SLAB} find not found. Exiting"; exit 1;}
+command -v hostname > /dev/null 2>&1 ||  { echo >&2 "${SLAB} hostname not found. Exiting"; exit 1;}
+command -v zip      > /dev/null 2>&1 ||  { echo >&2 "${SLAB} zip not found. Exiting"; exit 1;}
+command -v unix2dos > /dev/null 2>&1 ||  { echo >&2 "${SLAB} unix2dos not found. Exiting"; exit 1;}
 
-##################################################################################
-#### PRELIMINARY SCRIPT CALL CHECK
 ##################################################################################
 #Assign default filenames and directory names and variables to be plotted
 # default variable netcdfnames
@@ -240,10 +225,10 @@ elif [ "$RUNTYPE" == "ACL"  ] ; then
 fi
 
 # Test for the existance/executability of required programs and files.
-command -v ${ASH3DEXEC}  > /dev/null 2>&1 ||  { echo >&2 "Ash3d executable not found. Exiting"; exit 1;}
-command -v ${MAKEINPUT1} > /dev/null 2>&1 ||  { echo >&2 "makeAsh3dinput1_[ac,dp] executable not found. Exiting"; exit 1;}
-command -v ${MAKEINPUT2} > /dev/null 2>&1 ||  { echo >&2 "makeAsh3dinput2_[ac,dp] executable not found. Exiting"; exit 1;}
-command -v ${MAKEASHARRIVAL} > /dev/null 2>&1 ||  { echo >&2 "makeAshArrivalTimes_[ac,dp] executable not found. Exiting"; exit 1;}
+command -v ${ASH3DEXEC}      > /dev/null 2>&1 ||  { echo >&2 "${SLAB} Ash3d executable not found. Exiting"; exit 1;}
+command -v ${MAKEINPUT1}     > /dev/null 2>&1 ||  { echo >&2 "${SLAB} makeAsh3dinput1_[ac,dp] executable not found. Exiting"; exit 1;}
+command -v ${MAKEINPUT2}     > /dev/null 2>&1 ||  { echo >&2 "${SLAB} makeAsh3dinput2_[ac,dp] executable not found. Exiting"; exit 1;}
+command -v ${MAKEASHARRIVAL} > /dev/null 2>&1 ||  { echo >&2 "${SLAB} makeAshArrivalTimes_[ac,dp] executable not found. Exiting"; exit 1;}
 
 echo "${SLAB} changing directories to ${RUNDIR}"
 if test -r ${RUNDIR} ; then
@@ -251,7 +236,7 @@ if test -r ${RUNDIR} ; then
   FULLRUNDIR=`pwd`
 else
   echo "${SLAB} Error: Directory ${RUNDIR} does not exist."
-  exit 1
+  exit $rc
 fi
 if [[ $? -ne 0 ]]; then
   rc=$((rc + 1))
@@ -269,7 +254,7 @@ if [ "$RUNTYPE" == "ADV"  ] ; then
   # lobby to have the file written from the webpage be called ash3d_input_adv.inp
   cp ${INFILE_MAIN} ash3d_input_adv.inp
   echo "${SLAB} Running full_2_simp.sh"
-  command -v ${ASH3DSCRIPTDIR}/full_2_simp.sh  > /dev/null 2>&1 ||  { echo >&2 "full_2_simp.sh script not found. Exiting"; exit 1;}
+  command -v ${ASH3DSCRIPTDIR}/full_2_simp.sh  > /dev/null 2>&1 ||  { echo >&2 "${SLAB} full_2_simp.sh script not found. Exiting"; exit 1;}
   ${ASH3DSCRIPTDIR}/full_2_simp.sh ash3d_input_adv.inp
 fi
 if [ "$CLEANFILES" == "T" ]; then
@@ -299,13 +284,13 @@ if [[ "$rc" -gt 0 ]] ; then
   exit $rc
 fi
 
-#echo "${SLAB} Creating soft links to topo file (Not needed for cloudd runs)"
+#echo "${SLAB} Creating soft links to topo file (Not needed for cloud runs)"
 #rm -f GEBCO_2023.nc
 #ln -s ${TOPOROOT}/GEBCO/GEBCO_2023.nc .
 #rc=$((rc + $?))
 #if [[ "$rc" -gt 0 ]] ; then
-#    echo "${SLAB} Error linking GEBCO_2023.nc: rc=$rc"
-#    exit 1
+#  echo "${SLAB} Error linking GEBCO_2023.nc: rc=$rc"
+#  exit $rc
 #fi
 
 ###############################################################################
@@ -354,22 +339,14 @@ echo "${SLAB} ----------             Completed  Preliminary Ash3d run           
 echo "${SLAB} -------------------------------------------------------------------------------"
 echo "${SLAB} -------------------------------------------------------------------------------"
 
-#echo "${SLAB} zipping up kml files for preliminary Ash3d run"
-#if test -r deposit_thickness_mm.kml; then
-#    zip deposit_thickness_mm_prelim.kmz deposit_thickness_mm.kml
-#fi
-#if test -r CloudLoad.kml; then
-#    zip CloudLoad_prelim.kmz CloudLoad.kml
-#fi
-
 if [ "$CLEANFILES" == "T" ]; then
   # Clean up files from the preliminary Ash3d run
-  # Note, we need to leave the ASCII output files of CloudLoad since they are used for
+  # Note, we need to leave some of the the ASCII output files since they are used for
   # determining the grid range via ${MAKEINPUT2}
-  echo "${SLAB} Removing kml files"
+  # CloudLoad for ACL and DepositFile_____final for DEP
   rm -f progress.txt Ash3d.lst
   rm -f CloudHeight.kml CloudLoad.kml ash_arrivaltimes_airports.* CloudHeight*.dat cloud_arrivaltimes_hours.kml
-  #rm -f deposit_stuff
+  rm -f depTS*.dat depTS*.gnu depTS*.png
 fi
 
 ###############################################################################
@@ -400,7 +377,8 @@ if [ "$CLEANFILES" == "T" ]; then
   echo "${SLAB} Removing remnant .dat files from the preliminary Ash3d run"
   rm -f ${INFILE_PRELIM}
   rm -f CloudLoad*.dat
-  #rm -f depTS*.dat depTS*.gnu
+  rm -f depTS*.dat depTS*.gnu
+  rm -f DepositFile_____final.dat
 fi
 
 ###############################################################################
@@ -469,19 +447,21 @@ fi
 #   cloud_arrivaltimes_hours.kml
 #   CloudHeight_*.dat
 #   CloudLoad_*.dat
-#  DepositFile_____final.dat
-#  ashfall_arrivaltimes_hours.kml
-#  deposit_thickness_mm.kml
-#  deposit_thickness_inches.kml
-#  ashfall_arrivaltimes_airports.txt
-#  depTS_000*.gnu
-#  depTS_000*.dat
+#
+#   DepositFile_____final.dat
+#   DepositFile_*.dat
+#   DepositArrivalTime.dat
+#   ashfall_arrivaltimes_hours.kml
+#   deposit_thickness_mm.kml
+#   deposit_thickness_inches.kml
+#   depTS_000*.gnu
+#   depTS_000*.dat
+#   depTS_000*.png
 echo "${SLAB} -------------------------------------------------------------------------------"
 echo "${SLAB} -------------------------------------------------------------------------------"
 echo "${SLAB} ----------                Completed  Main Ash3d run                  ----------"
 echo "${SLAB} -------------------------------------------------------------------------------"
 echo "${SLAB} -------------------------------------------------------------------------------"
-
 # Check if there are any deposit time-series files; if so, zip up ash_arrivaltimes_airports.kmz
 #if test -r depTS_0001.gnu; then
 #  echo "${SLAB} using gnuplot to plot deposit thickness vs. time"
@@ -494,14 +474,13 @@ echo "${SLAB} ------------------------------------------------------------------
 #  mv ash_arrivaltimes_airports.kml cloud_arrivaltimes_airports.kml
 #  zip -r cloud_arrivaltimes_airports.kmz cloud_arrivaltimes_airports.kml
 #fi
-
 mv ash_arrivaltimes_airports.kmz cloud_arrivaltimes_airports.kmz
 rc=$((rc + $?))
 if [[ "$rc" -gt 0 ]] ; then
   echo "${SLAB} Error zipping output: rc=$rc"
   exit $rc
 fi
-rm -f ash_arrivaltimes_airports.kml
+rm -f ash_arrivaltimes_airports.kml cloud_arrivaltimes_airports.kml
 
 #
 # Zip all kml files, make kmz files
@@ -510,18 +489,20 @@ echo "${SLAB} zipping up kml files"
 for file in *.kml
 do
   IFS='.'
-  array=( $file )
-  zip -r "${array[0]}".kmz "$file"
-  if [[ $? -ne 0 ]]; then
-    echo "${SLAB} Error zipping file $file"
-    rc=$((rc + 1))
-    exit $rc
-  fi
-  rm "$file"
-  if [[ $? -ne 0 ]]; then
-    echo "${SLAB} Error removing extra file $file after zip"
-    rc=$((rc + 1))
-    exit $rc
+  if test -r $file; then
+    array=( $file )
+    zip -r "${array[0]}".kmz "$file"
+    if [[ $? -ne 0 ]]; then
+      echo "${SLAB} Error zipping file $file"
+      rc=$((rc + 1))
+      exit $rc
+    fi
+    rm "$file"
+    if [[ $? -ne 0 ]]; then
+      echo "${SLAB} Error removing extra file $file after zip"
+      rc=$((rc + 1))
+      exit $rc
+    fi
   fi
 done
 
@@ -545,6 +526,7 @@ elif [ "$RUNTYPE" == "DEP"  ] ; then
   rc=$((rc+$?))
   cp ash_arrivaltimes_airports.txt ashfall_arrivaltimes_airports.txt
   ln -s ash_arrivaltimes_airports.txt AshArrivalTimes.txt
+  cp DepositArrivalTime.dat ashfall_arrivaltimes_hours.dat
 elif [ "$RUNTYPE" == "ACL"  ] ; then
   echo "${SLAB} First stripping ash_arrivaltimes_airports.txt of deposit data"
   # Reads file ash_arrivaltimes_airports.txt
@@ -585,97 +567,51 @@ if [ "$RUNTYPE" == "ADV" ] || [ "$RUNTYPE" == "ACL" ]  ; then
   if [[ $DASHBOARD_RUN == T* ]] ; then
     echo "${SLAB} Since we are exporting to the AVO dashboard, post-process for cloud_height"
     #    Now run it for cloud_height
-    if [ "$USECONTAINERASH" == "T" ]; then
-      echo "${SLAB}   Running ${CONTAINEREXE} script (GFSVolc_to_gif_tvar.sh) to process cloud_height results."
-      ${CONTAINEREXE} run --rm -v ${FULLRUNDIR}:${CONTAINERRUNDIR}:z \
-                      ash3dpp ${ASH3DSCRIPTDIR}/GFSVolc_to_gif_tvar.sh 2 ${CONTAINERRUNDIR}
-      rc=$((rc + $?))
-      if [[ "$rc" -gt 0 ]] ; then
-        echo "${SLAB} Error running ${CONTAINEREXE} ash3dpp GFSVolc_to_gif_tvar.sh 2: rc=$rc"
-        exit $rc
-      fi
-    else
-      echo "${SLAB} Calling GFSVolc_to_gif_tvar.sh 2"
-      ${ASH3DSCRIPTDIR}/GFSVolc_to_gif_tvar.sh 2
-      rc=$((rc + $?))
-      if [[ "$rc" -gt 0 ]] ; then
-        echo "${SLAB} Error running GFSVolc_to_gif_tvar.sh 2: rc=$rc"
-        exit $rc
-      fi
+    echo "${SLAB} Calling GFSVolc_to_gif_tvar.sh 2"
+    ${ASH3DSCRIPTDIR}/GFSVolc_to_gif_tvar.sh 2
+    rc=$((rc + $?))
+    if [[ "$rc" -gt 0 ]] ; then
+      echo "${SLAB} Error running GFSVolc_to_gif_tvar.sh 2: rc=$rc"
+      exit $rc
     fi
   fi
   #    Cloud load is the default, so run that one first
   #      Note:  the animated gif for this variable is copied to "cloud_animation.gif"
   echo "${SLAB} Process for cloud load results"
-  if [ "$USECONTAINERASH" == "T" ]; then
-    echo "${SLAB}   Running ${CONTAINEREXE} script (GFSVolc_to_gif_tvar.sh) to process cloud_load results."
-    echo "${SLAB} ${CONTAINEREXE} run --rm -v ${FULLRUNDIR}:${CONTAINERRUNDIR}:z ash3dpp ${ASH3DSCRIPTDIR}/GFSVolc_to_gif_tvar.sh 3 ${CONTAINERRUNDIR}"
-    ${CONTAINEREXE} run --rm -v ${FULLRUNDIR}:${CONTAINERRUNDIR}:z \
-                    ash3dpp ${ASH3DSCRIPTDIR}/GFSVolc_to_gif_tvar.sh 3 ${CONTAINERRUNDIR}
-    rc=$((rc + $?))
-    if [[ "$rc" -gt 0 ]] ; then
-      echo "${SLAB} Error running ${CONTAINEREXE} ash3dpp GFSVolc_to_gif_ac_tvar.sh 3: rc=$rc"
-      exit $rc
-    fi
-  else
-    echo "${SLAB}   Running installed script ${ASH3DSCRIPTDIR}/GFSVolc_to_gif_tvar.sh 3"
-    ${ASH3DSCRIPTDIR}/GFSVolc_to_gif_tvar.sh 3
-    rc=$((rc + $?))
-    if [[ "$rc" -gt 0 ]] ; then
-      echo "${SLAB} Error running GFSVolc_to_gif_tvar.sh 3: rc=$rc"
-      exit $rc
-    fi
+  echo "${SLAB}   Running installed script ${ASH3DSCRIPTDIR}/GFSVolc_to_gif_tvar.sh 3"
+  ${ASH3DSCRIPTDIR}/GFSVolc_to_gif_tvar.sh 3
+  rc=$((rc + $?))
+  if [[ "$rc" -gt 0 ]] ; then
+    echo "${SLAB} Error running GFSVolc_to_gif_tvar.sh 3: rc=$rc"
+    exit $rc
   fi
-  
-elif [ "$RUNTYPE" == "ADV" ] || [ "$RUNTYPE" == "DEP" ]  ; then
+fi  
+if [ "$RUNTYPE" == "ADV" ] || [ "$RUNTYPE" == "DEP" ]  ; then
   echo "${SLAB} Creating gif images of deposit"
-  if [ "$USECONTAINERASH" == "T" ]; then
-    echo "${SLAB} First process for deposit results (in inches)"
-    echo "${SLAB} Calling podman ${ASH3DSCRIPTDIR}/GFSVolc_to_gif_dp.sh"
-    echo "${SLAB}  ${CONTAINEREXE} run --rm -v ${FULLRUNDIR}:${CONTAINERRUNDIR}:z ash3dpp ${ASH3DSCRIPTDIR}/GFSVolc_to_gif_dp.sh ${CONTAINERRUNDIR}"
-    ${CONTAINEREXE} run --rm -v ${FULLRUNDIR}:${CONTAINERRUNDIR}:z \
-                    ash3dpp ${ASH3DSCRIPTDIR}/GFSVolc_to_gif_dp.sh ${CONTAINERRUNDIR}
-    rc=$((rc + $?))
-    if [[ "$rc" -gt 0 ]] ; then
-      echo "${SLAB} Error running ${CONTAINEREXE} ash3dpp GFSVolc_to_gif_dp.sh: rc=$rc"
-      exit $rc
-    fi
-    echo "${SLAB} Now process for deposit results in mm"
-    echo "${SLAB} Calling podman ${ASH3DSCRIPTDIR}/GFSVolc_to_gif_dp_mm.sh"
-    ${CONTAINEREXE} run --rm -v ${FULLRUNDIR}:${CONTAINERRUNDIR}:z \
-                    ash3dpp ${ASH3DSCRIPTDIR}/GFSVolc_to_gif_dp_mm.sh ${CONTAINERRUNDIR}
-    rc=$((rc + $?))
-    if [[ "$rc" -gt 0 ]] ; then
-      echo "${SLAB} Error running ${CONTAINEREXE} ash3dpp GFSVolc_to_gif_dp_mm.sh: rc=$rc"
-      exit $rc
-    fi
-  else
-    echo "${SLAB} First process for deposit results (in inches)"
-    echo "${SLAB} Calling ${ASH3DSCRIPTDIR}/GFSVolc_to_gif_dp.sh"
-    ${ASH3DSCRIPTDIR}/GFSVolc_to_gif_dp.sh
-    rc=$((rc + $?))
-    if [[ "$rc" -gt 0 ]] ; then
-      echo "${SLAB} Error running GFSVolc_to_gif_dp.sh: rc=$rc"
-      exit $rc
-    fi
-    echo "${SLAB} Now process for deposit results in mm"
-    echo "${SLAB} Calling ${ASH3DSCRIPTDIR}/GFSVolc_to_gif_dp_mm.sh"
-    ${ASH3DSCRIPTDIR}/GFSVolc_to_gif_dp_mm.sh
-    rc=$((rc + $?))
-    if [[ "$rc" -gt 0 ]] ; then
-      echo "${SLAB} Error running GFSVolc_to_gif_dp_mm.sh: rc=$rc"
-      exit $rc
-    fi
-    # Create a shapefile of the arrival time
-    #${ASH3DBINDIR}/Ash3d_PostProc 3d_tephra_fall.nc 7 5
-    cp ${ASH3DSCRIPTDIR}/pp_ashfalltime_shp.ctr .
-    ${ASH3DBINDIR}/Ash3d_PostProc pp_ashfalltime_shp.ctr 2>outerr_pp.log
-	rc=$((rc + $?))
-    if [[ "$rc" -gt 0 ]] ; then
-      echo "Error running Ash3d_PostProc to generate ashfalltime_shp: rc=$rc"
-      #exit 1
-	  rc=0
-    fi
+  echo "${SLAB} First process for deposit results (in inches)"
+  echo "${SLAB} Calling ${ASH3DSCRIPTDIR}/GFSVolc_to_gif_dp.sh"
+  ${ASH3DSCRIPTDIR}/GFSVolc_to_gif_dp.sh
+  rc=$((rc + $?))
+  if [[ "$rc" -gt 0 ]] ; then
+    echo "${SLAB} Error running GFSVolc_to_gif_dp.sh: rc=$rc"
+    exit $rc
+  fi
+  echo "${SLAB} Now process for deposit results in mm"
+  echo "${SLAB} Calling ${ASH3DSCRIPTDIR}/GFSVolc_to_gif_dp_mm.sh"
+  ${ASH3DSCRIPTDIR}/GFSVolc_to_gif_dp_mm.sh
+  rc=$((rc + $?))
+  if [[ "$rc" -gt 0 ]] ; then
+    echo "${SLAB} Error running GFSVolc_to_gif_dp_mm.sh: rc=$rc"
+    exit $rc
+  fi
+  # Create a shapefile of the arrival time
+  #${ASH3DBINDIR}/Ash3d_PostProc 3d_tephra_fall.nc 7 5
+  cp ${ASH3DSCRIPTDIR}/pp_ashfalltime_shp.ctr .
+  ${ASH3DBINDIR}/Ash3d_PostProc pp_ashfalltime_shp.ctr 2>outerr_pp.log
+  rc=$((rc + $?))
+  if [[ "$rc" -gt 0 ]] ; then
+    echo "Error running Ash3d_PostProc to generate ashfalltime_shp: rc=$rc"
+    rc=0
   fi
 fi
 
@@ -696,27 +632,13 @@ fi
 # Recreating the trajectory plot (using previously calculated trajecties), but using
 # the consistant basemap
 if test -r ftraj1.dat; then
-  if [ "$USECONTAINERTRAJ" == "T" ]; then
-    echo "${SLAB}   Running ${CONTAINEREXE} script (GFSVolc_to_gif_ac_traj.sh) to process traj results."
-    ${CONTAINEREXE} run --rm -v ${FULLRUNDIR}:${CONTAINERRUNDIR}:z \
-                    ash3dpp ${ASH3DSCRIPTDIR}/GFSVolc_to_gif_ac_traj.sh 1 ${CONTAINERRUNDIR}
-    rc=$((rc + $?))
-    if [[ "$rc" -gt 0 ]] ; then
-      echo "${SLAB} Error running ${CONTAINEREXE} ash3dpp GFSVolc_to_gif_ac_traj.sh 1: rc=$rc"
-      echo "${SLAB} Skipping post-processing"
-      echo "${SLAB} No trajectory output produced; continuing with run script"
-      #exit $rc
-    fi
-  else
-    echo "${SLAB}   Running installed script (GFSVolc_to_gif_ac_traj.sh) to process traj results."
-    ${ASH3DSCRIPTDIR}/GFSVolc_to_gif_ac_traj.sh 1
-    rc=$((rc + $?))
-    if [[ "$rc" -gt 0 ]] ; then
-      echo "${SLAB} Error running GFSVolc_to_gif_ac_traj.sh 1: rc=$rc"
-      echo "${SLAB} Skipping post-processing"
-      echo "${SLAB} No trajectory output produced; continuing with run script"
-      #exit $rc
-    fi
+  echo "${SLAB}   Running installed script (GFSVolc_to_gif_ac_traj.sh) to process traj results."
+  ${ASH3DSCRIPTDIR}/GFSVolc_to_gif_ac_traj.sh 1
+  rc=$((rc + $?))
+  if [[ "$rc" -gt 0 ]] ; then
+    echo "${SLAB} Error running GFSVolc_to_gif_ac_traj.sh 1: rc=$rc"
+    echo "${SLAB} Skipping post-processing"
+    echo "${SLAB} No trajectory output produced; continuing with run script"
   fi
 else
   echo "${SLAB} Skipping trajectory plots: no traj files exist in this directory."
@@ -811,4 +733,3 @@ echo "${SLAB} post-processing ended at:  $t2"
 echo "${SLAB} all done with run $4"
 
 exit $rc
-

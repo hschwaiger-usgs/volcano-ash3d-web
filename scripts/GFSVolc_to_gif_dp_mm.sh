@@ -23,15 +23,14 @@
 # Run information is extracted from 3d_tephra_fall.nc
 #
 #      Usage: GFSVolc_to_gif_tvar.sh varID RunDir
-#       e.g. /opt/USGS/Ash3d/bin/scripts/GFSVolc_to_gif_dp_traj.sh          \
-#               3                                                           \
+#       e.g. /opt/USGS/Ash3d/bin/scripts/GFSVolc_to_gif_dp_mm.sh          \
 #               /var/www/html/ash3d-api/htdocs/ash3druns/ash3d_run_334738/
 #
 # Files needed:
 #   world_cities.txt      : shared post-processing file
 #   3d_tephra_fall.nc     : output from an Ash3d run
 #   USGSvid.png           : institutional logo needed for final map
-#   caveats_notofficial_trajectory.png : disclaimer banner added to figure
+#   caveats_notofficial.png : disclaimer banner added to figure
 # Programs needed:
 #   gmt_test.sh           : script that identifies gmt version and sets variables
 #   ReadNCheader.sh       : script that reads NetCDF header
@@ -85,20 +84,6 @@ echo "${SLAB} ------------------------------------------------------------"
 ###############################################################################
 # PRELIMINARY SYSTEM CHECK
 ###############################################################################
-## Check if environment variables are set; if not, set them to the default
-#if [ -z ${USGSROOT} ];then
-# # Standard Linux location
-# USGSROOT="/opt/USGS"
-#fi
-#if [ -z ${ASH3DHOME} ];then
-# # Standard Linux location
-# ASH3DHOME="/opt/USGS/Ash3d"
-#fi
-## Set dependent path variables
-#ASH3DBINDIR="${ASH3DHOME}/bin"
-#ASH3DSCRIPTDIR="${ASH3DHOME}/bin/scripts"
-#ASH3DSHARE="$ASH3DHOME/share"
-#ASH3DSHARE_PP="${ASH3DSHARE}/post_proc"
 
 rc=0                                                       # error message accumulator
 # Test for the existance of required files.
@@ -128,7 +113,7 @@ else
   rc=$((rc + $?))
   exit $rc
 fi
-CAVEAT=${ASH3DSHARE_PP}/caveats_notofficial_trajectory.png
+CAVEAT=${ASH3DSHARE_PP}/caveats_notofficial.png
 echo "${SLAB} Checking for ${CAVEAT}"
 if [ -f "${LOGO}" ]; then
   echo "${SLAB}   Found file required file: ${CAVEAT}"
@@ -139,18 +124,18 @@ else
 fi
 
 # Test for the existance/executability of required programs and files.
-command -v "${ASH3DSCRIPTDIR}/gmt_test.sh"     > /dev/null 2>&1 ||  { echo >&2 "gmt_test.sh not found. Exiting"; exit 1;}
-command -v "${ASH3DSCRIPTDIR}/ReadNCheader.sh" > /dev/null 2>&1 ||  { echo >&2 "ReadNCheader.sh not found. Exiting"; exit 1;}
-command -v "${ASH3DBINDIR}/legend_placer_dp"   > /dev/null 2>&1 ||  { echo >&2 "legend_placer_dp not found. Exiting"; exit 1;}
-command -v "${ASH3DBINDIR}/Ash3d_PostProc"  > /dev/null 2>&1 ||  { echo >&2 "Ash3d_PostProc not found. Exiting"; exit 1;}
-command -v date      > /dev/null 2>&1 ||  { echo >&2 "date not found. Exiting"; exit 1;}
-command -v awk       > /dev/null 2>&1 ||  { echo >&2 "awk not found. Exiting"; exit 1;}
-command -v sed       > /dev/null 2>&1 ||  { echo >&2 "sed not found. Exiting"; exit 1;}
-command -v bc        > /dev/null 2>&1 ||  { echo >&2 "bc not found. Exiting"; exit 1;}
-command -v head      > /dev/null 2>&1 ||  { echo >&2 "head not found. Exiting"; exit 1;}
-command -v convert   > /dev/null 2>&1 ||  { echo >&2 "convert not found. Exiting"; exit 1;}
-command -v identify  > /dev/null 2>&1 ||  { echo >&2 "identify not found. Exiting"; exit 1;}
-command -v composite > /dev/null 2>&1 ||  { echo >&2 "composite not found. Exiting"; exit 1;}
+command -v "${ASH3DSCRIPTDIR}/gmt_test.sh"     > /dev/null 2>&1 ||  { echo >&2 "${SLAB} gmt_test.sh not found. Exiting"; exit 1;}
+command -v "${ASH3DSCRIPTDIR}/ReadNCheader.sh" > /dev/null 2>&1 ||  { echo >&2 "${SLAB} ReadNCheader.sh not found. Exiting"; exit 1;}
+command -v "${ASH3DBINDIR}/legend_placer_dp"   > /dev/null 2>&1 ||  { echo >&2 "${SLAB} legend_placer_dp not found. Exiting"; exit 1;}
+command -v "${ASH3DBINDIR}/Ash3d_PostProc"     > /dev/null 2>&1 ||  { echo >&2 "${SLAB} Ash3d_PostProc not found. Exiting"; exit 1;}
+command -v date      > /dev/null 2>&1 ||  { echo >&2 "${SLAB} date not found. Exiting"; exit 1;}
+command -v awk       > /dev/null 2>&1 ||  { echo >&2 "${SLAB} awk not found. Exiting"; exit 1;}
+command -v sed       > /dev/null 2>&1 ||  { echo >&2 "${SLAB} sed not found. Exiting"; exit 1;}
+command -v bc        > /dev/null 2>&1 ||  { echo >&2 "${SLAB} bc not found. Exiting"; exit 1;}
+command -v head      > /dev/null 2>&1 ||  { echo >&2 "${SLAB} head not found. Exiting"; exit 1;}
+command -v convert   > /dev/null 2>&1 ||  { echo >&2 "${SLAB} convert not found. Exiting"; exit 1;}
+command -v identify  > /dev/null 2>&1 ||  { echo >&2 "${SLAB} identify not found. Exiting"; exit 1;}
+command -v composite > /dev/null 2>&1 ||  { echo >&2 "${SLAB} composite not found. Exiting"; exit 1;}
 
 # We need to know if we must prefix all gmt commands with 'gmt', as required by version 5/6
 source ${ASH3DSCRIPTDIR}/gmt_test.sh
@@ -193,7 +178,7 @@ fi
 echo "${SLAB} Preparing to read from ${ASH3D_NCFILE} file"
 echo "${SLAB} ******************************************************************************"
 #GET VARIABLES FROM 3D_tephra-fall.nc
-source ${ASH3DSCRIPTDIR}/ReadNCheader.sh ${RUNHOME}/"3d_tephra_fall.nc"
+source ${ASH3DSCRIPTDIR}/ReadNCheader.sh ${ASH3D_NCFILE}
 echo "${SLAB} Finished reading netcdf header."
 echo "${SLAB} ******************************************************************************"
 

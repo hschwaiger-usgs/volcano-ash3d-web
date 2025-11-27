@@ -23,8 +23,8 @@
 # Run information is extracted from 3d_tephra_fall.nc
 #
 #      Usage: GFSVolc_to_gif_tvar.sh varID RunDir
-#       e.g. /opt/USGS/Ash3d/bin/scripts/GFSVolc_to_gif_ac_traj.sh          \
-#               3                                                           \
+#       e.g. /opt/USGS/Ash3d/bin/scripts/GFSVolc_to_gif_tvar.sh          \
+#               3                                                        \
 #               /var/www/html/ash3d-api/htdocs/ash3druns/ash3d_run_334738/
 #
 # Files needed:
@@ -43,7 +43,7 @@
 #   Ash3d_depotime.cpt
 #   3d_tephra_fall.nc     : output from an Ash3d run
 #   USGSvid.png           : institutional logo needed for final map
-#   caveats_notofficial_trajectory.png : disclaimer banner added to figure
+#   caveats_notofficial.png : disclaimer banner added to figure
 #   CloudHeightLegend2.png: legend png
 # Programs needed:
 #   gmt_test.sh           : script that identifies gmt version and sets variables
@@ -83,22 +83,30 @@ ASH3DSHARE_PP="${ASH3DSHARE}/post_proc"
 
 # Parsing command-line arguments
 #  variable code , [rundirectory]
-
 echo "${SLAB} ------------------------------------------------------------"
-echo "${SLAB} running GFSVolc_to_gif_tvar.sh with parameter:"
+if [ "$#" -eq 0 ]; then
+  echo "${SLAB} No variable code provided."
+  echo "${SLAB}   0 = depothick"
+  echo "${SLAB}   1 = ashcon_max"
+  echo "${SLAB}   2 = cloud_height"
+  echo "${SLAB}   3 = cloud_load"
+  echo "${SLAB}   4 = depotime"
+  echo "${SLAB}   5 = depothick final (inches)"
+  echo "${SLAB}   6 = depothick final (mm)"
+  echo "${SLAB}   7 = ash_arrival_time"
+  exit 1
+fi
+echo "${SLAB} Running GFSVolc_to_gif_tvar.sh with parameter:"
 echo "${SLAB}   varID=$1"
 varID=$1
-if [ $varID -eq 0 ]; then
-  echo "${SLAB}  0 = depothick"
-fi
-if [ $varID -eq 1 ]; then
-  echo "${SLAB}  1 = ashcon_max"
-fi
-if [ $varID -eq 2 ]; then
-  echo "${SLAB}  2 = cloud_height"
-fi
-if [ $varID -eq 3 ]; then
-  echo "${SLAB}  3 = cloud_load"
+if [ $varID -eq   0 ]; then
+  echo "${SLAB}   0 = depothick"
+elif [ $varID -eq 1 ]; then
+  echo "${SLAB}   1 = ashcon_max"
+elif [ $varID -eq 2 ]; then
+  echo "${SLAB}   2 = cloud_height"
+elif [ $varID -eq 3 ]; then
+  echo "${SLAB}   3 = cloud_load"
 fi
 # The optional second command-line argument is used in podman containers
 # to set the run directory
@@ -254,61 +262,32 @@ else
   rc=$((rc + $?))
   exit $rc
 fi
+CAVEAT=${ASH3DSHARE_PP}/caveats_notofficial.png
+if [ -f "${LOGO}" ]; then
+  echo "${SLAB}   Found file required file: ${CAVEAT}"
+else
+  echo "${SLAB}   ERROR: no ${CAVEAT} file. Exiting"
+  rc=$((rc + $?))
+  exit $rc
+fi
 
 # Test for the existance/executability of required programs and files.
-command -v "${ASH3DSCRIPTDIR}/gmt_test.sh"          > /dev/null 2>&1 ||  { echo >&2 "gmt_test.sh not found. Exiting"; exit 1;}
-command -v "${ASH3DSCRIPTDIR}/ReadNCheader.sh"      > /dev/null 2>&1 ||  { echo >&2 "ReadNCheader.sh not found. Exiting"; exit 1;}
-command -v "${ASH3DBINDIR}/legend_placer_ac"        > /dev/null 2>&1 ||  { echo >&2 "legend_placer_ac not found. Exiting"; exit 1;}
-command -v "${USGSROOT}/bin/HoursSince1900"         > /dev/null 2>&1 ||  { echo >&2 "HoursSince1900 not found. Exiting"; exit 1;}
-command -v "${USGSROOT}/bin/yyyymmddhh_since_1900"  > /dev/null 2>&1 ||  { echo >&2 "yyyymmddhh_since_1900 not found. Exiting"; exit 1;}
-command -v date      > /dev/null 2>&1 ||  { echo >&2 "date not found. Exiting"; exit 1;}
-command -v awk       > /dev/null 2>&1 ||  { echo >&2 "awk not found. Exiting"; exit 1;}
-command -v sed       > /dev/null 2>&1 ||  { echo >&2 "sed not found. Exiting"; exit 1;}
-command -v bc        > /dev/null 2>&1 ||  { echo >&2 "bc not found. Exiting"; exit 1;}
-command -v head      > /dev/null 2>&1 ||  { echo >&2 "head not found. Exiting"; exit 1;}
-command -v convert   > /dev/null 2>&1 ||  { echo >&2 "convert not found. Exiting"; exit 1;}
-command -v identify  > /dev/null 2>&1 ||  { echo >&2 "identify not found. Exiting"; exit 1;}
-command -v composite > /dev/null 2>&1 ||  { echo >&2 "composite not found. Exiting"; exit 1;}
+command -v "${ASH3DSCRIPTDIR}/gmt_test.sh"          > /dev/null 2>&1 ||  { echo >&2 "${SLAB} gmt_test.sh not found. Exiting"; exit 1;}
+command -v "${ASH3DSCRIPTDIR}/ReadNCheader.sh"      > /dev/null 2>&1 ||  { echo >&2 "${SLAB} ReadNCheader.sh not found. Exiting"; exit 1;}
+command -v "${ASH3DBINDIR}/legend_placer_ac"        > /dev/null 2>&1 ||  { echo >&2 "${SLAB} legend_placer_ac not found. Exiting"; exit 1;}
+command -v "${USGSROOT}/bin/HoursSince1900"         > /dev/null 2>&1 ||  { echo >&2 "${SLAB} HoursSince1900 not found. Exiting"; exit 1;}
+command -v "${USGSROOT}/bin/yyyymmddhh_since_1900"  > /dev/null 2>&1 ||  { echo >&2 "${SLAB} yyyymmddhh_since_1900 not found. Exiting"; exit 1;}
+command -v date      > /dev/null 2>&1 ||  { echo >&2 "${SLAB} date not found. Exiting"; exit 1;}
+command -v awk       > /dev/null 2>&1 ||  { echo >&2 "${SLAB} awk not found. Exiting"; exit 1;}
+command -v sed       > /dev/null 2>&1 ||  { echo >&2 "${SLAB} sed not found. Exiting"; exit 1;}
+command -v bc        > /dev/null 2>&1 ||  { echo >&2 "${SLAB} bc not found. Exiting"; exit 1;}
+command -v head      > /dev/null 2>&1 ||  { echo >&2 "${SLAB} head not found. Exiting"; exit 1;}
+command -v convert   > /dev/null 2>&1 ||  { echo >&2 "${SLAB} convert not found. Exiting"; exit 1;}
+command -v identify  > /dev/null 2>&1 ||  { echo >&2 "${SLAB} identify not found. Exiting"; exit 1;}
+command -v composite > /dev/null 2>&1 ||  { echo >&2 "${SLAB} composite not found. Exiting"; exit 1;}
 
 # We need to know if we must prefix all gmt commands with 'gmt', as required by version 5/6
 source ${ASH3DSCRIPTDIR}/gmt_test.sh
-
-##################################################################################
-#### PRELIMINARY SCRIPT CALL CHECK
-##################################################################################
-#### Customizable settings
-#### Parsing command-line arguments
-####  variable code , [rundirectory]
-###
-###echo "${SLAB} ------------------------------------------------------------"
-###echo "${SLAB} running GFSVolc_to_gif_tvar.sh with parameter:"
-###echo "${SLAB}   varID=$1"
-###varID=$1
-###if [ $varID -eq 0 ]; then
-###  echo "${SLAB}  0 = depothick"
-###fi
-###if [ $varID -eq 1 ]; then
-###  echo "${SLAB}  1 = ashcon_max"
-###fi
-###if [ $varID -eq 2 ]; then
-###  echo "${SLAB}  2 = cloud_height"
-###fi
-###if [ $varID -eq 3 ]; then
-###  echo "${SLAB}  3 = cloud_load"
-###fi
-#### The optional second command-line argument is used in podman containers
-#### to set the run directory
-###if [ "$#" -eq 2 ]; then
-###  echo "${SLAB} Second command line argument detected: setting run directory"
-###  RUNHOME=$2
-### else
-###  echo "${SLAB} No second command line argument detected, using pwd"
-###  RUNHOME=`pwd`
-###fi
-###cd ${RUNHOME}
-###echo "${SLAB} ------------------------------------------------------------"
-
-
 
 rc=0                                             # error message accumulator
 CLEANFILES="T"
@@ -337,11 +316,11 @@ ln -sf ${ASH3DSHARE_PP}/Ash3d_depotime.cpt .
 # Now testing for files that are needed
 ASH3D_NCFILE="${RUNHOME}/3d_tephra_fall.nc"
 if [ -f "$ASH3D_NCFILE" ]; then
-    echo "${SLAB} Found file $ASH3D_NCFILE"
-  else
-    echo "${SLAB} ERROR: no ${ASH3D_NCFILE} file. Exiting"
-    rc=$((rc + $?))
-    exit $rc
+  echo "${SLAB} Found file $ASH3D_NCFILE"
+else
+  echo "${SLAB} ERROR: no ${ASH3D_NCFILE} file. Exiting"
+  rc=$((rc + $?))
+  exit $rc
 fi
 
 # variable netcdfnames
@@ -361,7 +340,7 @@ fi
 echo "${SLAB} Preparing to read from ${ASH3D_NCFILE} file"
 echo "${SLAB} ******************************************************************************"
 #GET VARIABLES FROM 3D_tephra-fall.nc
-source ${ASH3DSCRIPTDIR}/ReadNCheader.sh ${RUNHOME}/"3d_tephra_fall.nc"
+source ${ASH3DSCRIPTDIR}/ReadNCheader.sh ${ASH3D_NCFILE}
 echo "${SLAB} Finished reading netcdf header."
 echo "${SLAB} ******************************************************************************"
 
@@ -372,6 +351,7 @@ for t in `seq 0 $((tmax-1))`;
 do
   time=`echo "${t0} + ${t} * ${time_interval}" | bc -l`
   echo "${SLAB}    ${volc} : Generating ash grids for time = " ${time}
+     # Make a cloud mask
   gmt grdconvert "$ASH3D_NCFILE?cloud_mask[$t]" tmp1.grd
   gmt grdmath 0 tmp1.grd NAN = tmp2.grd
   gmt grdmath 1 tmp2.grd ADD = cloud.grd
@@ -387,7 +367,7 @@ lonmin=$LLLON
 latmin=$LLLAT
 lonmax=`echo "$LLLON + $DLON" | bc -l`
 latmax=`echo "$LLLAT + $DLAT" | bc -l`
-echo "lonmin="$lonmin ", lonmax="$lonmax ", latmin="$latmin ", latmax="$latmax
+echo "${SLAB}  lonmin="$lonmin ", lonmax="$lonmax ", latmin="$latmin ", latmax="$latmax
 echo "$lonmin $lonmax $latmin $latmax $VCLON $VCLAT" > map_range.txt
 
 ## Setting up color mapping and contour lines
@@ -441,14 +421,13 @@ fi
 # Get the number of time steps we need
  #   depotime;       Fin.Dep (in);  Fin.Dep (mm)     ash_arrival_time
 if [ $varID -eq 4 ] || [ $varID -eq 5 ] || [ $varID -eq 6 ] || [ $varID -eq 7 ] ; then
-    #  For final times or non-time-series, set time to the last value
-    tstart=$(( $tmax-1 ))
-    echo "${SLAB} We are working on a final/static variable so set tstart = $tstart"
-#  else
-#    # For normal time-series variables, start at the beginning
-#    tstart=0
-#    #tstart=$(( $tmax-1 ))
-#    echo "We are working on a transient variable so set tstart = $tstart"
+  #  For final times or non-time-series, set time to the last value
+  tstart=$(( $tmax-1 ))
+  echo "${SLAB} We are working on a final/static variable so set tstart = $tstart"
+else
+  # For normal time-series variables, start at the beginning
+  tstart=0
+  echo "${SLAB} We are working on a transient variable so set tstart = $tstart"
 fi
 
 echo "${SLAB} Preparing to make the GMT maps."
@@ -564,7 +543,6 @@ do
     echo "${SLAB} Plotting contours (var = $varID) for step = $t"
     #0=depothick or 5=depothick final (NWS)
     # GMT v5/6 writes contour files as a separate step from drawing and writes all segments to one file
-    echo "${SLAB} gmt grdcontour ${dep_grd}   $AREA $PROJ $BASE -Cdp_0.1.lev -A- -W3,255/0/0   -Dcontourfile_0.1_0_i.xyz"
     gmt grdcontour ${dep_grd} $AREA $PROJ $BASE -Cdp_0.1.lev -A- -W3,255/0/0   -Dcontourfile_0.1_0_i.xyz
     gmt grdcontour ${dep_grd} $AREA $PROJ $BASE -Cdp_0.8.lev -A- -W3,0/0/255   -Dcontourfile_0.8_0_i.xyz
     gmt grdcontour ${dep_grd} $AREA $PROJ $BASE -Cdp_6.lev   -A- -W3,0/183/255 -Dcontourfile_6.0_0_i.xyz
@@ -595,7 +573,6 @@ do
      #   ashcon_max;     cloud_load
   elif [ $varID -eq 1 ] || [ $varID -eq 3 ] ; then
     echo "${SLAB} Plotting contours (var = $varID) for step = $t"
-    echo "gmt grdimage -Q var_out_t${time}.grd -C$CPT $AREA $PROJ $BASE -K -O >> temp.ps"
     gmt grdimage -Q var_out_t${time}.grd -C$CPT $AREA $PROJ $BASE -K -O >> temp.ps
 
      #   cloud_height
@@ -604,7 +581,7 @@ do
     gmt grdimage -Q var_out_t${time}.grd -C$CPTft $AREA $PROJ $BASE -K -O >> temp.ps
 
   else
-    echo $varID
+    echo "${SLAB} varID = $varID"
     echo "${SLAB} I don't know which vaiable to plot"
     exit
   fi
@@ -617,6 +594,9 @@ do
   # Wrote out legend_positions_ac.txt
   captionx_UL=`cat legend_positions_ac.txt | grep "legend1x_UL" | awk '{print $2}'`
   captiony_UL=`cat legend_positions_ac.txt | grep "legend1x_UL" | awk '{print $4}'`
+  # snip out the integer pixel offset as text, converting to a number
+  #legendx_UL=$((`cat legend_positions_ac.txt  | grep "legend2x_UL" | cut -c13-15`))
+  #legendy_UL=$((`cat legend_positions_ac.txt  | grep "legend2x_UL" | cut -c31-33`))
   legendx_UL=`cat legend_positions_ac.txt  | grep "legend2x_UL" | awk '{print $2}'`
   legendy_UL=`cat legend_positions_ac.txt  | grep "legend2x_UL" | awk '{print $4}'`
   echo "${SLAB} writing caption.txt"
@@ -658,30 +638,31 @@ if test -r cities.xy ; then
     gmt pstext cities.xy $AREA $PROJ -D0.1/0.1 -V -O -K >> temp.ps      #Plot names of all airports
 fi
 
-    if [ $1 -eq 1 ] ; then
-      # cloud_concentration
-      gmt psscale -D1.25i/0.5i/2i/0.15ih -C$CPT -Q -B10f5/:"mg/m^3": -O -K >> temp.ps
-      if [ $GMTv -eq 5 ] ; then
-        echo "${SLAB} writing CC.txt for GMT 5"
-        cat << EOF > CC.txt
+    # Add scalebar
+  if [ $varID -eq 1 ] ; then
+    # cloud_concentration
+    gmt psscale -D1.25i/0.5i/2i/0.15ih -C$CPT -Q -B10f5/:"mg/m^3": -O -K >> temp.ps
+    if [ $GMTv -eq 5 ] ; then
+      echo "${SLAB} writing CC.txt for GMT 5"
+      cat << EOF > CC.txt
 > 0.25 1.25 14p 3i j
 @%1%Ash Cloud Max Concentration
 EOF
-        gmt pstext CC.txt -R0/3/0/5 -JX3i -F+f14,Times-Roman+jLT -O -K -M -N >> temp.ps
-      else
-        echo "${SLAB} writing CC.txt for GMT 6"
-        cat << EOF > CC.txt
+      gmt pstext CC.txt -R0/3/0/5 -JX3i -F+f14,Times-Roman+jLT -O -K -M -N >> temp.ps
+    else
+      echo "${SLAB} writing CC.txt for GMT 6"
+      cat << EOF > CC.txt
 > 0.25 1.25 14p 3i j
 @%1%Ash Cloud Max Concentration
 EOF
-        gmt pstext CL.txt -R0/3/0/5 -JX3i -F+f14,Times-Roman+jLT -O -K -M -N >> temp.ps
-      fi
-    elif [ $1 -eq 3 ] ; then
-      # cloud_load
-      gmt psscale -D0.25i/1.15i/2i/0.15i -C$CPT -Q -B10f5/:"g/m^2": -O -K >> temp.ps
-      if [ $GMTv -eq 5 ] ; then
-        echo "${SLAB} writing CL.txt for GMT 5"
-        cat << EOF > CL.txt
+      gmt pstext CL.txt -R0/3/0/5 -JX3i -F+f14,Times-Roman+jLT -O -K -M -N >> temp.ps
+    fi
+  elif [ $varID -eq 3 ] ; then
+    # cloud_load
+    gmt psscale -D0.25i/1.15i/2i/0.15i -C$CPT -Q -B10f5/:"g/m^2": -O -K >> temp.ps
+    if [ $GMTv -eq 5 ] ; then
+      echo "${SLAB} writing CL.txt for GMT 5"
+      cat << EOF > CL.txt
 > 0.25 1.25 14p 3i j
 @%1%Ash Cloud Load
 EOF
@@ -694,7 +675,6 @@ EOF
 EOF
       gmt pstext CL.txt -R0/3/0/5 -JX3i -F+f14,Times-Roman+jLT -O -K -M -N >> temp.ps
     fi
-    rm -f CL.txt
   fi
 
   # depothick(trans);  ashcon_max;     cloud_height;   cloud_load;
@@ -711,6 +691,7 @@ EOF
 EOF
     gmt pstext current_time.txt $AREA $PROJ -O -Gwhite -Wwhite,o -N -K >> temp.ps
   fi
+
   # Last gmt command is to plot the volcano and close out the ps file
   echo $VCLON $VCLAT '1.0' | gmt psxy $AREA $PROJ -St0.1i -Gblack -Wthinnest -O >> temp.ps
 
@@ -767,16 +748,16 @@ do
   hours_now=`echo "$hours_real + $time" | bc -l`
   hours_since=`${USGSROOT}/bin/HoursSince1900 $year $month $day $hours_now`
   filename=`${USGSROOT}/bin/yyyymmddhh_since_1900 $hours_since`
-  echo "${SLAB} moving file output_t${time}.gif to ${filename}_${var}.gif"
+  echo "${SLAB} Moving file $t of $tmax output_t${time}.gif to ${filename}_${var}.gif"
   mv output_t${time}.gif ${filename}_${var}.gif
   # Advancing to the next time step
-  if [ $time_interval = "1" ]; then
-    t=$(($t+3))
-  elif [ $time_interval = "2" ]; then
-    t=$(($t+3))
-  else
+  #if [ $time_interval = "1" ]; then
+  #  t=$(($t+3))
+  #elif [ $time_interval = "2" ]; then
+  #  t=$(($t+3))
+  #else
     t=$(($t+1))
-  fi
+  #fi
 done
 
 # Clean up more temporary files
@@ -790,11 +771,10 @@ if [ "$CLEANFILES" == "T" ]; then
   rm -f legend_positions_ac.txt
   rm -f *.grd
   rm -f current_time.txt
-  rm -f legend*png
   rm -f VAAC_*.xy *cpt
-
   rm -f *.lev
-  #rm -f contourfile*xyz
+  rm -f contourfile*xyz
+  rm -f CL.txt
 fi
 
 echo "${SLAB} Eruption start time: "$year $month $day $hour
