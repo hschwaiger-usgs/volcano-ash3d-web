@@ -119,7 +119,7 @@ else
   rc=$((rc + $?))
   exit $rc
 fi
-LEGEND=${ASH3DSHARE_PP}/legend_dep_nws.png
+LEGEND=${ASH3DSHARE_PP}/legend_dep.png
 echo "${SLAB} Checking for ${LEGEND}"
 if [ -f "${LOGO}" ]; then
   echo "${SLAB}   Found file required file: ${LEGEND}"
@@ -485,7 +485,7 @@ height=`identify temp.gif | cut -f3 -d' ' | cut -f2 -d'x'`
 vidx_UL=$(($width*72/100))
 vidy_UL=$(($height*85/100))
 convert temp.gif deposit_thickness_mm.gif
-convert -append -background white deposit_thickness_inches.gif ${CAVEAT} deposit_thickness_mm.gif
+convert -append -background white deposit_thickness_mm.gif ${CAVEAT} deposit_thickness_mm.gif
 
 composite -geometry +${legendx_UL}+${legendy_UL} ${LEGEND} \
           deposit_thickness_mm.gif  deposit_thickness_mm.gif
@@ -493,7 +493,7 @@ composite -geometry +${legendx_UL}+${legendy_UL} ${LEGEND} \
 
 # Finalizing output (animations, shape files, etc.)
 #Make shapefile
-echo "Generating shapefile with Ash3d_PostProc 5 5"
+echo "Generating shapefile with Ash3d_PostProc 3d_tephra_fall.nc 5 5"
 # This first line uses the default contour levels for deposit
 ${ASH3DBINDIR}/Ash3d_PostProc 3d_tephra_fall.nc 5 5
 # This post-processing tool generates deposit_thickness_mm.txt from the NetCDF file, then
