@@ -45,7 +45,8 @@
 #   full_2_simp.sh              : for advanced runs, convert full input file to mini
 #   runTraj.sh                  : for trajectory run
 #   GFSVolc_to_gif_ac_traj.sh   : makes GMT maps of the trajectory results
-#   GMT_Ash3d_to_gif.sh         : produces GMT maps of time-series variables
+#   GMT_Ash3d_to_gif.sh         : produces GMT maps of time-series/static variables
+#   PP_Ash3d_to_gif.sh          : produces maps of time-series/static variables using the default graphics library
 #   MetTraj_F                   : trajectory executable
 #   Ash3d,Ash3d_res             : main character
 #   makeAsh3dinput1_[ac,dp]     : needed for converting mini-input to complete coarse input
@@ -66,6 +67,7 @@ else
 fi
 #RUNTYPE="ACL"          # ADV,DEP,ACL
 CLEANFILES="T"         # set to T to remove temporary files
+PPTOOL="GMT_Ash3d_to_gif.sh"
 
 # Check input parameters needed for run
 NARGS=$#
@@ -195,10 +197,11 @@ else
 fi
 
 # Test for the existance/executability of required programs and files.
+PPscript="${ASH3DSCRIPTDIR}/${PPTOOL}"
 command -v "${ASH3DSCRIPTDIR}/full_2_simp.sh"             > /dev/null 2>&1 ||  { echo >&2 "${SLAB} full_2_simp.sh not found. Exiting"; exit 1;}
 command -v "${ASH3DSCRIPTDIR}/runTraj.sh"                 > /dev/null 2>&1 ||  { echo >&2 "${SLAB} runTraj.sh not found. Exiting"; exit 1;}
 command -v "${ASH3DSCRIPTDIR}/GFSVolc_to_gif_ac_traj.sh"  > /dev/null 2>&1 ||  { echo >&2 "${SLAB} GFSVolc_to_gif_ac_traj.sh not found. Exiting"; exit 1;}
-command -v "${ASH3DSCRIPTDIR}/GMT_Ash3d_to_gif.sh"        > /dev/null 2>&1 ||  { echo >&2 "${SLAB} GMT_Ash3d_to_gif.sh not found. Exiting"; exit 1;}
+command -v "${PPscript}"                                  > /dev/null 2>&1 ||  { echo >&2 "${SLAB} ${PPTOOL} not found. Exiting"; exit 1;}
 command -v "${USGSROOT}/bin/MetTraj_F"                    > /dev/null 2>&1 ||  { echo >&2 "${SLAB} MetTraj_F not found. Exiting"; exit 1;}
 command -v date     > /dev/null 2>&1 ||  { echo >&2 "${SLAB} date not found. Exiting"; exit 1;}
 command -v find     > /dev/null 2>&1 ||  { echo >&2 "${SLAB} find not found. Exiting"; exit 1;}
@@ -585,7 +588,7 @@ do
   # 7=ash_arrival_time
   if [ "${plotvars[i]}" == "1" ]; then
     echo "  Running installed script ${ASH3DSCRIPTDIR}/GMT_Ash3d_to_gif.sh $i"
-    ${ASH3DSCRIPTDIR}/GMT_Ash3d_to_gif.sh $i
+    ${ASH3DSCRIPTDIR}/PP_Ash3d_to_gif.sh $i
     rc=$((rc + $?))
     if [[ "$rc" -gt 0 ]] ; then
       echo "Error running GMT_Ash3d_to_gif.sh $i: rc=$rc"
