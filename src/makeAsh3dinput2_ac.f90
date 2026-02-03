@@ -165,7 +165,6 @@
         stop 1
       endif
 
-
       ! Now looping through all the expected CloudLoad files and evaluating
       do k=1,nWriteTimes
         StepTime = WriteTimes(k)
@@ -580,14 +579,14 @@
       'no      # Write out ESRI ASCII deposit files at specified times?                  ',/, &
       'no      # Write out        KML deposit files at specified times?                  ',/, &
       'no      # Write out ESRI ASCII files of ash-cloud concentration?                  ',/, &
-      'no      # Write out        KML files of ash-cloud concentration ?                 ',/, &
+      'yes     # Write out        KML files of ash-cloud concentration ?                 ',/, &
       'yes     # Write out ESRI ASCII files of ash-cloud height?                        ',/, &
       'yes     # Write out        KML files of ash-cloud height?                        ',/, &
       'yes     # Write out ESRI ASCII files of ash-cloud load (T/km2) at specified times?  ',/, &
       'yes     # Write out        KML files of ash-cloud load (T/km2) at specified times?  ',/, &
       'no      # Write out ESRI ASCII file of deposit arrival times?  ',/, &
       'no      # Write out        KML file of deposit arrival times?  ',/, &
-      'no      # Write out ESRI ASCII file of cloud arrival times?  ',/, &
+      'yes     # Write out ESRI ASCII file of cloud arrival times?  ',/, &
       'yes     # Write out        KML file of cloud arrival times?  ',/, &
       'yes     # Write out 3-D ash concentration at specified times? / [output code: 1=2d+concen,2=2d only]',/, &
       'netcdf  #format of ash concentration files   ("ascii", "binary", or "netcdf")  ',/, &
