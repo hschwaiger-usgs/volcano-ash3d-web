@@ -415,6 +415,11 @@ convert \
     -font Courier-New \
     pango:@caption_pgo1.txt legend1.png
 rc=$((rc + $?))
+if [[ "$rc" -gt 0 ]] ; then
+  echo "${SLAB} Error using convert with text legend 1."
+  cat caption_pgo1.txt
+  exit $rc
+fi
 
 cat << EOF > caption_pgo2.txt
 <b>Eruption start:</b> ${year} ${month} ${day} ${hour}:${minute} UTC
@@ -427,10 +432,15 @@ convert \
     -pointsize 8 \
     -font Courier-New \
     pango:@caption_pgo2.txt legend2.png
-    convert +append -background white legend1.png legend2.png ${LOGO} legend.png
+if [[ "$rc" -gt 0 ]] ; then
+  echo "${SLAB} Error using convert with text legend 2."
+  cat caption_pgo2.txt
+  exit $rc
+fi
+convert +append -background white legend1.png legend2.png ${LOGO} legend.png
 rc=$((rc + $?))
 if [[ "$rc" -gt 0 ]] ; then
-  echo "${SLAB} Error using convert with text legend. Maybe pango is not intalled?"
+  echo "${SLAB} Error using convert to build legend bar."
   exit $rc
 fi
 

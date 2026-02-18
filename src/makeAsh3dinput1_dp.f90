@@ -667,7 +667,7 @@
       3f10.3,                     '   # vent location         (km, or deg. if latlonflag=1)  ',/, &
       2f13.3,                   '      # DX, DY of grid cells  (km, or deg.)  ',/, &
       f8.3,   '                        # DZ of grid cells      (always km)  ',/, &
-      '000.      4.                    # diffusion coefficient (m2/s), Suzuki constant  ',/, &
+      '-1.0      4.0                   # diffusion coefficient (m2/s), Suzuki constant  ',/, &
       '1                               # neruptions, number of eruptions or pulses')
 2020  format( &
       '******************************************************************************* ',/, &
@@ -930,8 +930,8 @@
 !2201  format( &
 !      '******************* BLOCK 10+ *************************************************',/, &
 !      'OPTMOD=TOPO',/, &
-!      'no  0                           # use topography?; z-mod (0=none,1=shift,2=sigma)',/, &
-!      '1 20.0                          # Topofile format, smoothing radius',/, &
+!      'no  2                           # use topography?; z-mod (0=none,1=shift,2=sigma)',/, &
+!      '1  6.0                          # Topofile format, smoothing radius',/, &
 !      'GEBCO_2023.nc                   # topofile name',/, &
 !      '*******************************************************************************')
 
