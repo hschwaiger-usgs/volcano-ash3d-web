@@ -694,7 +694,7 @@
 2201  format( &
       '******************* BLOCK 10+ *************************************************',/, &
       'OPTMOD=TOPO',/, &
-      'no  2                           # use topography?; z-mod (0=none,1=shift,2=sigma)',/, &
+      'yes  2                          # use topography?; z-mod (0=none,1=shift,2=sigma)',/, &
       '1  6.0                          # Topofile format, smoothing radius',/, &
       'GEBCO_2023.nc                   # topofile name',/, &
       '*******************************************************************************')
