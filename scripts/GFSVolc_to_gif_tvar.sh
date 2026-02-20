@@ -142,69 +142,69 @@ else
   rc=$((rc + $?))
   exit $rc
 fi
-if [ -f "${ASH3DSHARE_PP}/VAAC_Anchorage.xy" ]; then
-  echo "${SLAB}   Found required file: ${ASH3DSHARE_PP}/VAAC_Anchorage.xy"
-else
-  echo "${SLAB}   ERROR: no ${ASH3DSHARE_PP}/VAAC_Anchorage.xy file. Exiting"
-  rc=$((rc + $?))
-  exit $rc
-fi
-if [ -f "${ASH3DSHARE_PP}/VAAC_BuenosAires.xy" ]; then
-  echo "${SLAB}   Found required file: ${ASH3DSHARE_PP}/VAAC_BuenosAires.xy"
-else
-  echo "${SLAB}   ERROR: no ${ASH3DSHARE_PP}/VAAC_BuenosAires.xy file. Exiting"
-  rc=$((rc + $?))
-  exit $rc
-fi
-if [ -f "${ASH3DSHARE_PP}/VAAC_Darwin.xy" ]; then
-  echo "${SLAB}   Found required file: ${ASH3DSHARE_PP}/VAAC_Darwin.xy"
-else
-  echo "${SLAB}   ERROR: no ${ASH3DSHARE_PP}/VAAC_Darwin.xy file. Exiting"
-  rc=$((rc + $?))
-  exit $rc
-fi
-if [ -f "${ASH3DSHARE_PP}/VAAC_London.xy" ]; then
-  echo "${SLAB}   Found required file: ${ASH3DSHARE_PP}/VAAC_London.xy"
-else
-  echo "${SLAB}   ERROR: no ${ASH3DSHARE_PP}/VAAC_.xy file. Exiting"
-  rc=$((rc + $?))
-  exit $rc
-fi
-if [ -f "${ASH3DSHARE_PP}/VAAC_Montreal.xy" ]; then
-  echo "${SLAB}   Found required file: ${ASH3DSHARE_PP}/VAAC_Montreal.xy"
-else
-  echo "${SLAB}   ERROR: no ${ASH3DSHARE_PP}/VAAC_Montreal.xy file. Exiting"
-  rc=$((rc + $?))
-  exit $rc
-fi
-if [ -f "${ASH3DSHARE_PP}/VAAC_Tokyo.xy" ]; then
-  echo "${SLAB}   Found required file: ${ASH3DSHARE_PP}/VAAC_Tokyo.xy"
-else
-  echo "${SLAB}   ERROR: no ${ASH3DSHARE_PP}/VAAC_Tokyo.xy file. Exiting"
-  rc=$((rc + $?))
-  exit $rc
-fi
-if [ -f "${ASH3DSHARE_PP}/VAAC_Toulouse.xy" ]; then
-  echo "${SLAB}   Found required file: ${ASH3DSHARE_PP}/VAAC_Toulouse.xy"
-else
-  echo "${SLAB}   ERROR: no ${ASH3DSHARE_PP}/VAAC_Toulouse.xy file. Exiting"
-  rc=$((rc + $?))
-  exit $rc
-fi
-if [ -f "${ASH3DSHARE_PP}/VAAC_Washington.xy" ]; then
-  echo "${SLAB}   Found required file: ${ASH3DSHARE_PP}/VAAC_Washington.xy"
-else
-  echo "${SLAB}   ERROR: no ${ASH3DSHARE_PP}/VAAC_Washington.xy file. Exiting"
-  rc=$((rc + $?))
-  exit $rc
-fi
-if [ -f "${ASH3DSHARE_PP}/VAAC_Wellington.xy" ]; then
-  echo "${SLAB}   Found required file: ${ASH3DSHARE_PP}/VAAC_Wellington.xy"
-else
-  echo "${SLAB}   ERROR: no ${ASH3DSHARE_PP}/VAAC_Wellington.xy file. Exiting"
-  rc=$((rc + $?))
-  exit $rc
-fi
+#if [ -f "${ASH3DSHARE_PP}/VAAC_Anchorage.xy" ]; then
+#  echo "${SLAB}   Found required file: ${ASH3DSHARE_PP}/VAAC_Anchorage.xy"
+#else
+#  echo "${SLAB}   ERROR: no ${ASH3DSHARE_PP}/VAAC_Anchorage.xy file. Exiting"
+#  rc=$((rc + $?))
+#  exit $rc
+#fi
+#if [ -f "${ASH3DSHARE_PP}/VAAC_BuenosAires.xy" ]; then
+#  echo "${SLAB}   Found required file: ${ASH3DSHARE_PP}/VAAC_BuenosAires.xy"
+#else
+#  echo "${SLAB}   ERROR: no ${ASH3DSHARE_PP}/VAAC_BuenosAires.xy file. Exiting"
+#  rc=$((rc + $?))
+#  exit $rc
+#fi
+#if [ -f "${ASH3DSHARE_PP}/VAAC_Darwin.xy" ]; then
+#  echo "${SLAB}   Found required file: ${ASH3DSHARE_PP}/VAAC_Darwin.xy"
+#else
+#  echo "${SLAB}   ERROR: no ${ASH3DSHARE_PP}/VAAC_Darwin.xy file. Exiting"
+#  rc=$((rc + $?))
+#  exit $rc
+#fi
+#if [ -f "${ASH3DSHARE_PP}/VAAC_London.xy" ]; then
+#  echo "${SLAB}   Found required file: ${ASH3DSHARE_PP}/VAAC_London.xy"
+#else
+#  echo "${SLAB}   ERROR: no ${ASH3DSHARE_PP}/VAAC_.xy file. Exiting"
+#  rc=$((rc + $?))
+#  exit $rc
+#fi
+#if [ -f "${ASH3DSHARE_PP}/VAAC_Montreal.xy" ]; then
+#  echo "${SLAB}   Found required file: ${ASH3DSHARE_PP}/VAAC_Montreal.xy"
+#else
+#  echo "${SLAB}   ERROR: no ${ASH3DSHARE_PP}/VAAC_Montreal.xy file. Exiting"
+#  rc=$((rc + $?))
+#  exit $rc
+#fi
+#if [ -f "${ASH3DSHARE_PP}/VAAC_Tokyo.xy" ]; then
+#  echo "${SLAB}   Found required file: ${ASH3DSHARE_PP}/VAAC_Tokyo.xy"
+#else
+#  echo "${SLAB}   ERROR: no ${ASH3DSHARE_PP}/VAAC_Tokyo.xy file. Exiting"
+#  rc=$((rc + $?))
+#  exit $rc
+#fi
+#if [ -f "${ASH3DSHARE_PP}/VAAC_Toulouse.xy" ]; then
+#  echo "${SLAB}   Found required file: ${ASH3DSHARE_PP}/VAAC_Toulouse.xy"
+#else
+#  echo "${SLAB}   ERROR: no ${ASH3DSHARE_PP}/VAAC_Toulouse.xy file. Exiting"
+#  rc=$((rc + $?))
+#  exit $rc
+#fi
+#if [ -f "${ASH3DSHARE_PP}/VAAC_Washington.xy" ]; then
+#  echo "${SLAB}   Found required file: ${ASH3DSHARE_PP}/VAAC_Washington.xy"
+#else
+#  echo "${SLAB}   ERROR: no ${ASH3DSHARE_PP}/VAAC_Washington.xy file. Exiting"
+#  rc=$((rc + $?))
+#  exit $rc
+#fi
+#if [ -f "${ASH3DSHARE_PP}/VAAC_Wellington.xy" ]; then
+#  echo "${SLAB}   Found required file: ${ASH3DSHARE_PP}/VAAC_Wellington.xy"
+#else
+#  echo "${SLAB}   ERROR: no ${ASH3DSHARE_PP}/VAAC_Wellington.xy file. Exiting"
+#  rc=$((rc + $?))
+#  exit $rc
+#fi
 
 if [ -f "${ASH3DSHARE_PP}/Ash3d_ash_arrival_time.cpt" ]; then
   echo "${SLAB}   Found required file: ${ASH3DSHARE_PP}/Ash3d_ash_arrival_time.cpt"
@@ -295,15 +295,15 @@ CLEANFILES="T"
 PPDATE=`date -u "+%D %T"`
 
 # Link to shared post-processing files
-ln -sf ${ASH3DSHARE_PP}/VAAC_Anchorage.xy   .
-ln -sf ${ASH3DSHARE_PP}/VAAC_BuenosAires.xy .
-ln -sf ${ASH3DSHARE_PP}/VAAC_Darwin.xy      .
-ln -sf ${ASH3DSHARE_PP}/VAAC_London.xy      .
-ln -sf ${ASH3DSHARE_PP}/VAAC_Montreal.xy    .
-ln -sf ${ASH3DSHARE_PP}/VAAC_Tokyo.xy       .
-ln -sf ${ASH3DSHARE_PP}/VAAC_Toulouse.xy    .
-ln -sf ${ASH3DSHARE_PP}/VAAC_Washington.xy  .
-ln -sf ${ASH3DSHARE_PP}/VAAC_Wellington.xy  .
+#ln -sf ${ASH3DSHARE_PP}/VAAC_Anchorage.xy   .
+#ln -sf ${ASH3DSHARE_PP}/VAAC_BuenosAires.xy .
+#ln -sf ${ASH3DSHARE_PP}/VAAC_Darwin.xy      .
+#ln -sf ${ASH3DSHARE_PP}/VAAC_London.xy      .
+#ln -sf ${ASH3DSHARE_PP}/VAAC_Montreal.xy    .
+#ln -sf ${ASH3DSHARE_PP}/VAAC_Tokyo.xy       .
+#ln -sf ${ASH3DSHARE_PP}/VAAC_Toulouse.xy    .
+#ln -sf ${ASH3DSHARE_PP}/VAAC_Washington.xy  .
+#ln -sf ${ASH3DSHARE_PP}/VAAC_Wellington.xy  .
 ln -sf ${ASH3DSHARE_PP}/world_cities.txt .
 ln -sf ${ASH3DSHARE_PP}/Ash3d_ash_arrival_time.cpt .
 ln -sf ${ASH3DSHARE_PP}/Ash3d_ashcon_max.cpt .
@@ -518,15 +518,15 @@ do
     echo "${SLAB} gmt pscoast $AREA $PROJ $BASE $DETAIL $COAST $BOUNDARIES -K  > temp.ps"
     gmt pscoast $AREA $PROJ $BASE $DETAIL $COAST $BOUNDARIES -K  > temp.ps
 
-    gmt psxy VAAC_Anchorage.xy   $AREA $PROJ -P -A -K -O -W1p,gray -V >> temp.ps
-    gmt psxy VAAC_BuenosAires.xy $AREA $PROJ -P -A -K -O -W1p,gray -V >> temp.ps
+    #gmt psxy VAAC_Anchorage.xy   $AREA $PROJ -P -A -K -O -W1p,gray -V >> temp.ps
+    #gmt psxy VAAC_BuenosAires.xy $AREA $PROJ -P -A -K -O -W1p,gray -V >> temp.ps
     #gmt psxy VAAC_Darwin.xy      $AREA $PROJ -P -A -K -O -W1p,gray -V >> temp.ps
     #gmt psxy VAAC_London.xy      $AREA $PROJ -P -A -K -O -W1p,gray -V >> temp.ps
-    gmt psxy VAAC_Montreal.xy    $AREA $PROJ -P -A -K -O -W1p,gray -V >> temp.ps
+    #gmt psxy VAAC_Montreal.xy    $AREA $PROJ -P -A -K -O -W1p,gray -V >> temp.ps
     #gmt psxy VAAC_Tokyo.xy       $AREA $PROJ -P -A -K -O -W1p,gray -V >> temp.ps
     #gmt psxy VAAC_Toulouse.xy    $AREA $PROJ -P -A -K -O -W1p,gray -V >> temp.ps
-    gmt psxy VAAC_Washington.xy  $AREA $PROJ -P -A -K -O -W1p,gray -V >> temp.ps
-    gmt psxy VAAC_Wellington.xy  $AREA $PROJ -P -A -K -O -W1p,gray -V >> temp.ps
+    #gmt psxy VAAC_Washington.xy  $AREA $PROJ -P -A -K -O -W1p,gray -V >> temp.ps
+    #gmt psxy VAAC_Wellington.xy  $AREA $PROJ -P -A -K -O -W1p,gray -V >> temp.ps
   fi
 
   ##################
