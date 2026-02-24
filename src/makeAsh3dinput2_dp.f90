@@ -306,10 +306,13 @@
 
       open(unit=fid_ctrout_full,file=outfile)
       write(fid_ctrout_full,2010) ! write block 1 header, then content  (Grid specification)
+      ! Since we are using topography, set v_elevation to 0.0. This will ensure that we do not have
+      ! a disconnected plume as the v_elevation is often higher than the smoothed topography. Setting
+      ! v_elevation = 0.0 will pin the plume to the ground
       write(fid_ctrout_full,2011) volcano_name, &
                                   lonLL_new, latLL_new, &
                                   width_new, height_new, &
-                                  v_lon, v_lat, v_elevation, &
+                                  v_lon, v_lat, 0.0_8, &
                                   dx_new, dy_new, &
                                   dz
       write(fid_ctrout_full,2020) ! write block 2 header, then content  (Eruption specification)

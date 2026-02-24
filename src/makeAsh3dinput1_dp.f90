@@ -124,6 +124,7 @@
       integer           :: HS_MonthOfEvent
       integer           :: HS_DayOfEvent
       real(kind=8)      :: HS_HourOfDay
+      real(kind=8)      :: fac
 
       data imonthdays/31,29,31,30,31,30,31,31,30,31,30,31/
 
@@ -471,9 +472,15 @@
         if (e_Volume.lt.min_vol) e_Volume = min_vol
         write(output_unit,*) 'Erupted volume calculated as:',e_Volume
       endif
+      ! Tie the meridional extent to the erupted volume
       Comp_Height  = 2.0_8*(1800.0_8+450.0_8*log10(e_Volume))/109.0_8
-      Comp_Height  = max(Comp_Height,1.0_8)                                     ! make sure height>200km
-      Comp_Width   = aspect_ratio*Comp_Height/cos(3.14_8*v_lat/180.0_8)
+      ! Reset Comp_Height to be an integer multiple of 0.01 degrees
+      fac = int(Comp_Height/0.01_8)
+      Comp_Height = 0.01_8*fac
+      Comp_Height  = max(Comp_Height,1.0_8)                             ! make sure lat extent > 1-degree
+      Comp_Width   = aspect_ratio*Comp_Height/cos(3.14_8*v_lat/180.0_8) ! zonal extent is a lat-depend aspect ratio
+      fac = int(Comp_Width/0.01_8)
+      Comp_Width = 0.01_8*fac
       latLL   = v_lat - Comp_Height/2.0_8
       lonLL   = v_lon - Comp_Width/2.0_8
       latUR   = latLL + Comp_Height
@@ -481,9 +488,13 @@
       dx      = Comp_Width/20.1_8
       dy      = Comp_Height/20.1_8
       dz      = e_Height/10.0_8
-      if (((e_Height-(v_elevation/1000.0_8))/dz).lt.5.0_8) then       ! Added to ensure enough nodes for low plumes
-        dz = (e_Height-(v_elevation/1000.0_8))/5.0_8
-      endif
+      fac     = int(dz/0.1_8)            ! Set dz to be increments of 0.1 km
+      dz      = 0.1_8*fac
+      dz      = min(max(dz,0.1_8),1.0_8) ! Set min(dz)=0.1 and max(dz)=1.0
+
+      !if (((e_Height-(v_elevation/1000.0_8))/dz).lt.5.0_8) then       ! Added to ensure enough nodes for low plumes
+      !  dz = (e_Height-(v_elevation/1000.0_8))/5.0_8
+      !endif
 
       WriteInterval = 3.0_8
 
