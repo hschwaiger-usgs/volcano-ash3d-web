@@ -127,6 +127,7 @@
       integer           :: HS_MonthOfEvent
       integer           :: HS_DayOfEvent
       real(kind=8)      :: HS_HourOfDay
+      real(kind=8)      :: fac
 
       data imonthdays/31,29,31,30,31,30,31,31,30,31,30,31/
 
@@ -497,10 +498,15 @@
         if (e_Volume.lt.min_vol) e_Volume = min_vol
         write(output_unit,*) 'Erupted volume calculated as:',e_Volume
       endif
-      e_Volume= FineAshFraction * e_Volume                    ! adjust for mass in the cloud
+      e_Volume= FineAshFraction * e_Volume                         ! adjust for mass in the cloud
       Comp_Height  = 50.0_8*SimTime*3600.0_8/(109.0_8*1000.0_8)    ! estimate of # of deg. latitude a cloud can travel
-      Comp_Height  = max(Comp_Height,1.5_8)
-      Comp_Width   = aspect_ratio*Comp_Height/cos(3.14_8*v_lat/180.0_8)
+      ! Reset Comp_Height to be an integer multiple of 0.01 degrees
+      fac = int(Comp_Height/0.01_8)
+      Comp_Height = 0.01_8*fac
+      Comp_Height  = max(Comp_Height,1.5_8)                             ! make sure lat extent > 1.5-degree
+      Comp_Width   = aspect_ratio*Comp_Height/cos(3.14_8*v_lat/180.0_8) ! zonal extent is a lat-depend aspect ratio
+      fac = int(Comp_Width/0.01_8)
+      Comp_Width = 0.01_8*fac
       latLL   = v_lat - Comp_Height/2.0_8
       lonLL   = v_lon - Comp_Width/2.0_8
       latUR   = latLL + Comp_Height
@@ -508,9 +514,13 @@
       dx      = Comp_Width/20.1_8
       dy      = Comp_Height/20.1_8
       dz      = e_Height/20.0_8
-      if (((e_Height-(v_elevation/1000.0_8))/dz).lt.5.0_8) then       ! Added to ensure enough nodes for low plumes
-        dz = (e_Height-(v_elevation/1000.0_8))/5.0_8
-      endif
+      fac     = int(dz/0.1_8)            ! Set dz to be increments of 0.1 km
+      dz      = 0.1_8*fac
+      dz      = min(max(dz,0.1_8),1.0_8) ! Set min(dz)=0.1 and max(dz)=1.0
+
+      !if (((e_Height-(v_elevation/1000.0_8))/dz).lt.5.0_8) then       ! Added to ensure enough nodes for low plumes
+      !  dz = (e_Height-(v_elevation/1000.0_8))/5.0_8
+      !endif
 
       if (SimTime.le.8.0_8) then                    ! Calculate time interval between write times
         WriteInterval = 0.5_8
@@ -613,6 +623,7 @@
       write(fid_ctrout_full,2091)
       write(fid_ctrout_full,2100) ! write block 10+ header, then content (Reset Params)
       write(fid_ctrout_full,2101)RunClass
+      ! Here we neglect to write the topography block, but we might add this later in the full run
       !write(fid_ctrout_full,2200) ! write block 10+ header, then content (Topography)
       !write(fid_ctrout_full,2201)
 
@@ -631,7 +642,7 @@
       '# Webapp site: vsc-ash.wr.usgs.gov',/, &
       '# Webapp gen date time: ',/, &
       '# ',/, &
-      '# The following is an input file to the model Ash3d, v1.0 https://code.usgs.gov/vsc/ash3d/volcano-ash3d',/, &
+      '# The following is an input file to the model Ash3d, v1.1 https://code.usgs.gov/vsc/ash3d/volcano-ash3d',/, &
       '# Created by L.G. Mastin, R.P. Denlinger, and H.F. Schwaiger U.S. Geological Survey, 2009. ',/, &
       '# ',/, &
       '# GENERAL SOURCE PARAMETERS. DO NOT DELETE ANY NON-COMMENT LINES ',/, &
@@ -712,7 +723,7 @@
       3f10.3,                     '   # vent location         (km, or deg. if latlonflag=1)  ',/, &
       2f13.3,                   '      # DX, DY of grid cells  (km, or deg.)  ',/, &
       f8.3,   '                        # DZ of grid cells      (always km)  ',/, &
-      '000.      4.                    # diffusion coefficient (m2/s), Suzuki constant  ',/, &
+      '0.0      4.0                    # diffusion coefficient (m2/s), Suzuki constant  ',/, &
       '1                               # neruptions, number of eruptions or pulses')
 2020  format( &
       '******************************************************************************* ',/, &
@@ -965,7 +976,7 @@
 !      '******************* BLOCK 10+ *************************************************',/, &
 !      'OPTMOD=TOPO',/, &
 !      'no  0                           # use topography?; z-mod (0=none,1=shift,2=sigma)',/, &
-!      '1 20.0                          # Topofile format, smoothing radius',/, &
+!      '1  6.0                          # Topofile format, smoothing radius',/, &
 !      'GEBCO_2023.nc                   # topofile name',/, &
 !      '*******************************************************************************')
 
@@ -997,7 +1008,7 @@
       write(error_unit,*)"2024 11 07 12.6666666666666666 0 # ",&
                          "Start time (year, month, day, hour UTC) [Not Actual Eruption]"
       write(error_unit,*)"20                               # ",&
-                         "iwindformat; normally 20 (0.5 GFS), but can be 34 (0.25 ECMWF)"
+                         "iwindformat; normally 20 (0.5 GFS) or 25 (NCEP), but can be 34 (0.25 ECMWF)"
 
       end subroutine print_usage
 

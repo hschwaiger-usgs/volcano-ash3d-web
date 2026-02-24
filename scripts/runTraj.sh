@@ -148,7 +148,9 @@ echo "${SLAB} ${USGSROOT}/bin/MetTraj_F $LON $LAT ${YEAR} ${MONTH} ${DAY} ${FHOU
 ${USGSROOT}/bin/MetTraj_F $LON $LAT ${YEAR} ${MONTH} ${DAY} ${FHOURS} 24 7 1.52 3.05 4.57 6.10 9.14 12.20 15.24
 rc=$((rc + $?))
 if [[ "$rc" -gt 0 ]] ; then
+  echo "${SLAB} !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
   echo "${SLAB}   Error running MetTraj_F: rc=$rc"
+  echo "${SLAB} !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
   exit $rc
 fi
 

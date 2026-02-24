@@ -354,7 +354,7 @@
       '# Webapp site: vsc-ash.wr.usgs.gov',/, &
       '# Webapp gen date time: ',/, &
       '# ',/, &
-      '# The following is an input file to the model Ash3d, v1.0 https://code.usgs.gov/vsc/ash3d/volcano-ash3d',/, &
+      '# The following is an input file to the model Ash3d, v1.1 https://code.usgs.gov/vsc/ash3d/volcano-ash3d',/, &
       '# Created by L.G. Mastin, R.P. Denlinger, and H.F. Schwaiger U.S. Geological Survey, 2009. ',/, &
       '# ',/, &
       '# GENERAL SOURCE PARAMETERS. DO NOT DELETE ANY NON-COMMENT LINES ',/, &
