@@ -222,8 +222,10 @@ if [ $PASSID -eq 0 ]; then
     echo "${SLAB} Cannot find file map_range_traj.txt.  Exiting script"
     exit $rc
   fi
-  DLON=`echo "$URLON-$LLLON" | bc -l`
-  DLAT=`echo "$URLAT-$LLLAT" | bc -l`
+  DLON=`echo "$URLON - $LLLON" | bc -l`
+  DLAT=`echo "$URLAT - $LLLAT" | bc -l`
+  echo "${SLAB} Found map_range. Lon: $LLLON $URLON $DLON"
+  echo "${SLAB}                  Lat: $LLLAT $URLAT $DLAT"
   # Now we need to adjust the limits so that the map has the approximately correct aspect ratio
   dum=`echo "$DLAT * 2.0" | bc -l`
   test1=`echo "$DLON < $dum" | bc -l`
@@ -231,7 +233,7 @@ if [ $PASSID -eq 0 ]; then
   if [ $test1 -eq 1 ]; then
     echo "${SLAB} Resetting DLON"
     DLON=$dum
-    URLON=`echo "$LLLON+$DLON" | bc -l`
+    URLON=`echo "$LLLON + $DLON" | bc -l`
   fi
 fi
 

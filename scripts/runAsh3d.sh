@@ -168,28 +168,28 @@ GFS_LAST="${WINDROOT}/gfs/last_downloaded.txt"             # Needed to link to t
 AIRPORT="${ASH3DSHARE}/GlobalAirports_ewert.txt"
 TOPOFILE=${TOPOROOT}/GEBCO/GEBCO_2023.nc
 if [ -f "${GFS_LAST}" ]; then
-  echo "${SLAB}   Found file required file: ${GFS_LAST}"
+  echo "${SLAB}   Found required file: ${GFS_LAST}"
 else
   echo "${SLAB}   ERROR: no ${GFS_LAST} file. Exiting"
   rc=$((rc + $?))
   exit $rc
 fi
 if [ -f "${AIRPORT}" ]; then
-  echo "${SLAB}   Found file required file: ${AIRPORT}"
+  echo "${SLAB}   Found required file: ${AIRPORT}"
 else
   echo "${SLAB}   ERROR: no ${AIRPORT} file. Exiting"
   rc=$((rc + $?))
   exit $rc
 fi
 if [ -f "${TOPOFILE}" ]; then
-  echo "${SLAB}   Found file required file: ${TOPOFILE}"
+  echo "${SLAB}   Found required file: ${TOPOFILE}"
 else
   echo "${SLAB}   ERROR: no ${TOPOFILE} file. Exiting"
   rc=$((rc + $?))
   exit $rc
 fi
 if [ -f "${ASH3DSCRIPTDIR}/pp_ashfalltime_shp.ctr" ]; then
-  echo "${SLAB}   Found file required file: ${ASH3DSCRIPTDIR}/pp_ashfalltime_shp.ctr"
+  echo "${SLAB}   Found required file: ${ASH3DSCRIPTDIR}/pp_ashfalltime_shp.ctr"
 else
   echo "${SLAB}   ERROR: no ${ASH3DSCRIPTDIR}/pp_ashfalltime_shp.ctr file. Exiting"
   rc=$((rc + $?))

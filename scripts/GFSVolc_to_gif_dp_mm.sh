@@ -18,11 +18,11 @@
 #      and its documentation for any purpose.  We assume no responsibility to provide
 #      technical support to users of this software.
 #
-# This script is called from runAsh3d.sh and runAsh3d_dp.sh and plots a transient variable
-# identified by varID.
+# This script is called from runAsh3d.sh and runAsh3d_dp.sh and plots the final deposit
+# thickness in mm.
 # Run information is extracted from 3d_tephra_fall.nc
 #
-#      Usage: GFSVolc_to_gif_tvar.sh varID RunDir
+#      Usage: GFSVolc_to_gif_dp_mm.sh [RunDir]
 #       e.g. /opt/USGS/Ash3d/bin/scripts/GFSVolc_to_gif_dp_mm.sh          \
 #               /var/www/html/ash3d-api/htdocs/ash3druns/ash3d_run_334738/
 #
@@ -40,7 +40,7 @@
 #   convert               : ImageMagick package
 #   identify              : ImageMagick package
 #   composite             : ImageMagick package
-#   Ash3d_PostProc        : used for generatinve shapefiles
+#   Ash3d_PostProc        : used for generating shapefiles
 #
 SLAB="[GFSVolc_to_gif_dp_mm.sh]: "            # Script label prepended on all echo to stdout
 #
@@ -68,8 +68,8 @@ ASH3DSHARE_PP="${ASH3DSHARE}/post_proc"
 
 # Parsing command-line arguments
 #  [rundirectory]
-echo "------------------------------------------------------------"
-echo "${SLAB} Running GFSVolc_to_gif_dp_mm.sh"
+echo "${SLAB} ------------------------------------------------------------"
+echo "${SLAB} Running GFSVolc_to_gif_dp_mm.sh:"
 if [ "$#" -eq 1 ]; then
    echo "Command line argument detected: setting run directory"
    RUNHOME=$1
@@ -140,9 +140,6 @@ command -v composite > /dev/null 2>&1 ||  { echo >&2 "${SLAB} composite not foun
 # We need to know if we must prefix all gmt commands with 'gmt', as required by version 5/6
 source ${ASH3DSCRIPTDIR}/gmt_test.sh
 
-##################################################################################
-#### PRELIMINARY SCRIPT CALL CHECK
-##################################################################################
 rc=0                                             # error message accumulator
 CLEANFILES="T"
 # Date of post-processing (may not be run date of simulation)
@@ -163,7 +160,8 @@ fi
 
 # variable netcdfnames
 var_n=(depothick ashcon_max cloud_height cloud_load depotime depothick depothick ash_arrival_time)
-var=${var_n[6]}
+varID=6
+var=${var_n[varID]}
 echo "${SLAB}  "
 echo "${SLAB}                 Generating images for *** $var ***"
 echo "${SLAB}  "
@@ -203,7 +201,7 @@ lonmin=$LLLON
 latmin=$LLLAT
 lonmax=`echo "$LLLON + $DLON" | bc -l`
 latmax=`echo "$LLLAT + $DLAT" | bc -l`
-echo "lonmin="$lonmin ", lonmax="$lonmax ", latmin="$latmin ", latmax="$latmax
+echo "${SLAB}  lonmin="$lonmin ", lonmax="$lonmax ", latmin="$latmin ", latmax="$latmax
 echo "$lonmin $lonmax $latmin $latmax $VCLON $VCLAT" > map_range.txt
 
 echo "${SLAB} Preparing to make the GMT maps for deposit."
@@ -251,8 +249,8 @@ echo "${SLAB} Preparing to make the GMT maps for deposit."
 
 ######################
 # Get the number of time steps we need
- #   depotime;       Fin.Dep (in);  Fin.Dep (mm)     ash_arrival_time
-#if [ $1 -eq 4 ] || [ $1 -eq 5 ] || [ $1 -eq 6 ] || [ $1 -eq 7 ] ; then
+#     depotime;           Fin.Dep (in);       Fin.Dep (mm)        ash_arrival_time
+#if [ $varID -eq 4 ] || [ $varID -eq 5 ] || [ $varID -eq 6 ] || [ $varID -eq 7 ] ; then
 #    #  For final times or non-time-series, set time to the last value
     tstart=$(( $tmax-1 ))
     echo "${SLAB} We are working on a final/static variable so set tstart = $tstart"
@@ -324,14 +322,14 @@ echo "${SLAB} Starting base map for final/non-time-series plot"
 
   RIVERS="-I1/1p,blue -I2/0.25p,blue" # Perm. large rivers used 1p blue line, other large rivers 0.25p blue line
 
-  mapscale1_x=`echo "$lonmin + 0.6*$DLON" | bc -l`                #x location of km scale bar
-  mapscale1_y=`echo "$latmin + 0.07 * ($latmax - $latmin)" | bc -l`      #y location of km scale bar
-  km_symbol=`echo "$mapscale1_y + 0.05 * ($latmax - $latmin)" | bc -l`  #location of km symbol
-  mapscale2_x=`echo "$lonmin + 0.6*$DLON" | bc -l`                #x location of km scale bar
-  mapscale2_y=`echo "$latmin + 0.15 * ($latmax - $latmin)" | bc -l`      #y location of km scale bar
-  mile_symbol=`echo "$mapscale2_y + 0.05 * ($latmax - $latmin)" | bc -l`  #location of km symbol
-  SCALE1="-L${mapscale1_x}/${mapscale1_y}/${km_symbol}/${KMSCALE}"  #specs for drawing km scale bar
-  SCALE2="-L${mapscale2_x}/${mapscale2_y}/${mile_symbol}/${MISCALE}M+"  #specs for drawing mile scale bar
+  mapscale1_x=`echo "$lonmin + 0.6 * $DLON"                     | bc -l`  # x location of km scale bar
+  mapscale1_y=`echo "$latmin + 0.07 * ($latmax - $latmin)"      | bc -l`  # y location of km scale bar
+  km_symbol=`echo "$mapscale1_y + 0.05 * ($latmax - $latmin)"   | bc -l`  # location of km symbol
+  mapscale2_x=`echo "$lonmin + 0.6 * $DLON"                     | bc -l`  # x location of km scale bar
+  mapscale2_y=`echo "$latmin + 0.15 * ($latmax - $latmin)"      | bc -l`  # y location of km scale bar
+  mile_symbol=`echo "$mapscale2_y + 0.05 * ($latmax - $latmin)" | bc -l`  # location of km symbol
+  SCALE1="-L${mapscale1_x}/${mapscale1_y}/${km_symbol}/${KMSCALE}"        # specs for drawing km scale bar
+  SCALE2="-L${mapscale2_x}/${mapscale2_y}/${mile_symbol}/${MISCALE}M+"    # specs for drawing mile scale bar
 
 #############################################################################
 ### Plot the base map
@@ -417,7 +415,7 @@ convert \
     -font Courier-New \
     pango:@caption_pgo1.txt legend1.png
 
-    cat << EOF > caption_pgo2.txt
+  cat << EOF > caption_pgo2.txt
 <b>Eruption start:</b> ${year} ${month} ${day} ${hour}:${minute} UTC
 <b>Plume height:</b> $EPlH km asl
 <b>Duration:</b> $EDur hours
@@ -428,6 +426,7 @@ convert \
     -pointsize 8 \
     -font Courier-New \
     pango:@caption_pgo2.txt legend2.png
+
 convert +append -background white legend1.png legend2.png ${LOGO} legend.png
 
 echo "${SLAB} adding cities"
@@ -471,7 +470,6 @@ vidx_UL=$(($width*72/100))
 vidy_UL=$(($height*85/100))
 convert temp.gif deposit_thickness_mm.gif
 convert -append -background white deposit_thickness_mm.gif ${CAVEAT} deposit_thickness_mm.gif
-
 composite -geometry +${legendx_UL}+${legendy_UL} ${LEGEND} \
           deposit_thickness_mm.gif  deposit_thickness_mm.gif
 #  End of time loop would go here
@@ -507,7 +505,7 @@ echo "${SLAB} eruption duration (hrs) ="$EDur
 echo "${SLAB} erupted volume (km3 DRE) ="$EVol
 echo "${SLAB}  "
 echo "${SLAB} ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
-echo "${SLAB} finished GFSVolc_to_gif_dp_mm.sh $varID $var"
+echo "${SLAB} finished GFSVolc_to_gif_dp_mm.sh $var"
 echo `date`
 echo "${SLAB} ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
 

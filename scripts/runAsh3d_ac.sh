@@ -158,14 +158,14 @@ rc=0                                                       # error message accum
 GFS_LAST="${WINDROOT}/gfs/last_downloaded.txt"             # Needed to link to the correct forecast package
 AIRPORT="${ASH3DSHARE}/GlobalAirports_ewert.txt"
 if [ -f "${GFS_LAST}" ]; then
-  echo "${SLAB}   Found file required file: ${GFS_LAST}"
+  echo "${SLAB}   Found required file: ${GFS_LAST}"
 else
   echo "${SLAB}   ERROR: no ${GFS_LAST} file. Exiting"
   rc=$((rc + $?))
   exit $rc
 fi
 if [ -f "${AIRPORT}" ]; then
-  echo "${SLAB}   Found file required file: ${AIRPORT}"
+  echo "${SLAB}   Found required file: ${AIRPORT}"
 else
   echo "${SLAB}   ERROR: no ${AIRPORT} file. Exiting"
   rc=$((rc + $?))
@@ -243,7 +243,7 @@ if [[ $? -ne 0 ]]; then
 fi
 echo "${SLAB} Checking for ${INFILE_SIMPLE} in ${RUNDIR}"
 if [ -f "${INFILE_SIMPLE}" ]; then
-  echo "${SLAB}   Found file required file: ${INFILE_SIMPLE}"
+  echo "${SLAB}   Found required file: ${INFILE_SIMPLE}"
 else
   echo "${SLAB}   ERROR: no ${INFILE_SIMPLE} file. Exiting"
   rc=$((rc + $?))

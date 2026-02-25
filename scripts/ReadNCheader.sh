@@ -111,8 +111,8 @@ LLLON=`ncdump -h ${ASH3D_NCFILE} | grep b1l3 | cut -d\" -f2 | awk '{print $1}'`
 LLLAT=`ncdump -h ${ASH3D_NCFILE} | grep b1l3 | cut -d\" -f2 | awk '{print $2}'`
 DLON=`ncdump -h ${ASH3D_NCFILE} | grep b1l4 | cut -d\" -f2 | awk '{print $1}'`
 DLAT=`ncdump -h ${ASH3D_NCFILE} | grep b1l4 | cut -d\" -f2 | awk '{print $2}'`
-URLON=`echo "$LLLON+$DLON" | bc -l`
-URLAT=`echo "$LLLAT+$DLAT" | bc -l`
+URLON=`echo "$LLLON + $DLON" | bc -l`
+URLAT=`echo "$LLLAT + $DLAT" | bc -l`
 
 #get volcano longitude, latitude
 VCLON=`ncdump -h ${ASH3D_NCFILE} | grep b1l5 | cut -d\" -f2 | awk '{print $1}'`

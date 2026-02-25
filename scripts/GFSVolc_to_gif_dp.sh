@@ -18,11 +18,11 @@
 #      and its documentation for any purpose.  We assume no responsibility to provide
 #      technical support to users of this software.
 #
-# This script is called from runAsh3d.sh and runAsh3d_dp.sh and plots a transient variable
-# identified by varID.
+# This script is called from runAsh3d.sh and runAsh3d_dp.sh and plots the final deposit
+# thickness in inches.
 # Run information is extracted from 3d_tephra_fall.nc
 #
-#      Usage: GFSVolc_to_gif_dp.sh varID RunDir
+#      Usage: GFSVolc_to_gif_dp.sh [RunDir]
 #       e.g. /opt/USGS/Ash3d/bin/scripts/GFSVolc_to_gif_dp.sh          \
 #               /var/www/html/ash3d-api/htdocs/ash3druns/ash3d_run_334738/
 #
@@ -40,7 +40,7 @@
 #   convert               : ImageMagick package
 #   identify              : ImageMagick package
 #   composite             : ImageMagick package
-#   Ash3d_PostProc        : used for generatinve shapefiles
+#   Ash3d_PostProc        : used for generating shapefiles
 #
 SLAB="[GFSVolc_to_gif_dp.sh]: "            # Script label prepended on all echo to stdout
 #
@@ -78,6 +78,7 @@ if [ "$#" -eq 1 ]; then
   RUNHOME=`pwd`
 fi
 cd ${RUNHOME}
+echo `date`
 echo "${SLAB} ------------------------------------------------------------"
 
 ###############################################################################
@@ -104,6 +105,7 @@ else
   exit $rc
 fi
 LEGEND=${ASH3DSHARE_PP}/legend_dep_nws.png
+echo "${SLAB} Checking for ${LEGEND}"
 if [ -f "${LOGO}" ]; then
   echo "${SLAB}   Found file required file: ${LEGEND}"
 else
@@ -112,6 +114,7 @@ else
   exit $rc
 fi
 CAVEAT=${ASH3DSHARE_PP}/caveats_notofficial.png
+echo "${SLAB} Checking for ${CAVEAT}"
 if [ -f "${LOGO}" ]; then
   echo "${SLAB}   Found file required file: ${CAVEAT}"
 else
@@ -121,18 +124,18 @@ else
 fi
 
 # Test for the existance/executability of required programs and files.
-command -v "${ASH3DSCRIPTDIR}/gmt_test.sh"     > /dev/null 2>&1 ||  { echo >&2 "${SLAB}  gmt_test.sh not found. Exiting"; exit 1;}
-command -v "${ASH3DSCRIPTDIR}/ReadNCheader.sh" > /dev/null 2>&1 ||  { echo >&2 "${SLAB}  ReadNCheader.sh not found. Exiting"; exit 1;}
-command -v "${ASH3DBINDIR}/legend_placer_dp"   > /dev/null 2>&1 ||  { echo >&2 "${SLAB}  legend_placer_dp not found. Exiting"; exit 1;}
-command -v "${ASH3DBINDIR}/Ash3d_PostProc"     > /dev/null 2>&1 ||  { echo >&2 "${SLAB}  Ash3d_PostProc not found. Exiting"; exit 1;}
-command -v date      > /dev/null 2>&1 ||  { echo >&2 "${SLAB}  date not found. Exiting"; exit 1;}
-command -v awk       > /dev/null 2>&1 ||  { echo >&2 "${SLAB}  awk not found. Exiting"; exit 1;}
-command -v sed       > /dev/null 2>&1 ||  { echo >&2 "${SLAB}  sed not found. Exiting"; exit 1;}
-command -v bc        > /dev/null 2>&1 ||  { echo >&2 "${SLAB}  bc not found. Exiting"; exit 1;}
-command -v head      > /dev/null 2>&1 ||  { echo >&2 "${SLAB}  head not found. Exiting"; exit 1;}
-command -v convert   > /dev/null 2>&1 ||  { echo >&2 "${SLAB}  convert not found. Exiting"; exit 1;}
-command -v identify  > /dev/null 2>&1 ||  { echo >&2 "${SLAB}  identify not found. Exiting"; exit 1;}
-command -v composite > /dev/null 2>&1 ||  { echo >&2 "${SLAB}  composite not found. Exiting"; exit 1;}
+command -v "${ASH3DSCRIPTDIR}/gmt_test.sh"     > /dev/null 2>&1 ||  { echo >&2 "${SLAB} gmt_test.sh not found. Exiting"; exit 1;}
+command -v "${ASH3DSCRIPTDIR}/ReadNCheader.sh" > /dev/null 2>&1 ||  { echo >&2 "${SLAB} ReadNCheader.sh not found. Exiting"; exit 1;}
+command -v "${ASH3DBINDIR}/legend_placer_dp"   > /dev/null 2>&1 ||  { echo >&2 "${SLAB} legend_placer_dp not found. Exiting"; exit 1;}
+command -v "${ASH3DBINDIR}/Ash3d_PostProc"     > /dev/null 2>&1 ||  { echo >&2 "${SLAB} Ash3d_PostProc not found. Exiting"; exit 1;}
+command -v date      > /dev/null 2>&1 ||  { echo >&2 "${SLAB} date not found. Exiting"; exit 1;}
+command -v awk       > /dev/null 2>&1 ||  { echo >&2 "${SLAB} awk not found. Exiting"; exit 1;}
+command -v sed       > /dev/null 2>&1 ||  { echo >&2 "${SLAB} sed not found. Exiting"; exit 1;}
+command -v bc        > /dev/null 2>&1 ||  { echo >&2 "${SLAB} bc not found. Exiting"; exit 1;}
+command -v head      > /dev/null 2>&1 ||  { echo >&2 "${SLAB} head not found. Exiting"; exit 1;}
+command -v convert   > /dev/null 2>&1 ||  { echo >&2 "${SLAB} convert not found. Exiting"; exit 1;}
+command -v identify  > /dev/null 2>&1 ||  { echo >&2 "${SLAB} identify not found. Exiting"; exit 1;}
+command -v composite > /dev/null 2>&1 ||  { echo >&2 "${SLAB} composite not found. Exiting"; exit 1;}
 
 # We need to know if we must prefix all gmt commands with 'gmt', as required by version 5/6
 source ${ASH3DSCRIPTDIR}/gmt_test.sh
@@ -157,7 +160,8 @@ fi
 
 # variable netcdfnames
 var_n=(depothick ashcon_max cloud_height cloud_load depotime depothick depothick ash_arrival_time)
-var=${var_n[5]}
+varID=5
+var=${var_n[varID]}
 echo "${SLAB}  "
 echo "${SLAB}                 Generating images for *** $var ***"
 echo "${SLAB}  "
@@ -245,7 +249,7 @@ echo "${SLAB} Preparing to make the GMT maps for deposit."
 
 ######################
 # Get the number of time steps we need
- #   depotime;       Fin.Dep (in);  Fin.Dep (mm)     ash_arrival_time
+#     depotime;           Fin.Dep (in);       Fin.Dep (mm)        ash_arrival_time
 #if [ $varID -eq 4 ] || [ $varID -eq 5 ] || [ $varID -eq 6 ] || [ $varID -eq 7 ] ; then
 #    #  For final times or non-time-series, set time to the last value
     tstart=$(( $tmax-1 ))
@@ -318,14 +322,14 @@ echo "${SLAB} Starting base map for final/non-time-series plot"
 
   RIVERS="-I1/1p,blue -I2/0.25p,blue" # Perm. large rivers used 1p blue line, other large rivers 0.25p blue line
 
-  mapscale1_x=`echo "$lonmin + 0.6*$DLON" | bc -l`                #x location of km scale bar
-  mapscale1_y=`echo "$latmin + 0.07 * ($latmax - $latmin)" | bc -l`      #y location of km scale bar
-  km_symbol=`echo "$mapscale1_y + 0.05 * ($latmax - $latmin)" | bc -l`  #location of km symbol
-  mapscale2_x=`echo "$lonmin + 0.6*$DLON" | bc -l`                #x location of km scale bar
-  mapscale2_y=`echo "$latmin + 0.15 * ($latmax - $latmin)" | bc -l`      #y location of km scale bar
-  mile_symbol=`echo "$mapscale2_y + 0.05 * ($latmax - $latmin)" | bc -l`  #location of km symbol
-  SCALE1="-L${mapscale1_x}/${mapscale1_y}/${km_symbol}/${KMSCALE}"  #specs for drawing km scale bar
-  SCALE2="-L${mapscale2_x}/${mapscale2_y}/${mile_symbol}/${MISCALE}M+"  #specs for drawing mile scale bar
+  mapscale1_x=`echo "$lonmin + 0.6 * $DLON"                     | bc -l`  # x location of km scale bar
+  mapscale1_y=`echo "$latmin + 0.07 * ($latmax - $latmin)"      | bc -l`  # y location of km scale bar
+  km_symbol=`echo "$mapscale1_y + 0.05 * ($latmax - $latmin)"   | bc -l`  # location of km symbol
+  mapscale2_x=`echo "$lonmin + 0.6 * $DLON"                     | bc -l`  # x location of km scale bar
+  mapscale2_y=`echo "$latmin + 0.15 * ($latmax - $latmin)"      | bc -l`  # y location of km scale bar
+  mile_symbol=`echo "$mapscale2_y + 0.05 * ($latmax - $latmin)" | bc -l`  # location of km symbol
+  SCALE1="-L${mapscale1_x}/${mapscale1_y}/${km_symbol}/${KMSCALE}"        # specs for drawing km scale bar
+  SCALE2="-L${mapscale2_x}/${mapscale2_y}/${mile_symbol}/${MISCALE}M+"    # specs for drawing mile scale bar
 
 #############################################################################
 ### Plot the base map
@@ -391,7 +395,7 @@ convert \
     -font Courier-New \
     pango:@caption_pgo1.txt legend1.png
 
-    cat << EOF > caption_pgo2.txt
+  cat << EOF > caption_pgo2.txt
 <b>Eruption start:</b> ${year} ${month} ${day} ${hour}:${minute} UTC
 <b>Plume height:</b> $EPlH km asl
 <b>Duration:</b> $EDur hours
@@ -402,6 +406,7 @@ convert \
     -pointsize 8 \
     -font Courier-New \
     pango:@caption_pgo2.txt legend2.png
+
 convert +append -background white legend1.png legend2.png ${LOGO} legend.png
 
 echo "${SLAB} adding cities"

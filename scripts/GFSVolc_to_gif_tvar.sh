@@ -492,14 +492,14 @@ do
 
   RIVERS="-I1/1p,blue -I2/0.25p,blue" # Perm. large rivers used 1p blue line, other large rivers 0.25p blue line
 
-  mapscale1_x=`echo "$lonmin + 0.6*$DLON" | bc -l`                #x location of km scale bar
-  mapscale1_y=`echo "$latmin + 0.07 * ($latmax - $latmin)" | bc -l`      #y location of km scale bar
-  km_symbol=`echo "$mapscale1_y + 0.05 * ($latmax - $latmin)" | bc -l`  #location of km symbol
-  mapscale2_x=`echo "$lonmin + 0.6*$DLON" | bc -l`                #x location of km scale bar
-  mapscale2_y=`echo "$latmin + 0.15 * ($latmax - $latmin)" | bc -l`      #y location of km scale bar
-  mile_symbol=`echo "$mapscale2_y + 0.05 * ($latmax - $latmin)" | bc -l`  #location of km symbol
-  SCALE1="-L${mapscale1_x}/${mapscale1_y}/${km_symbol}/${KMSCALE}"  #specs for drawing km scale bar
-  SCALE2="-L${mapscale2_x}/${mapscale2_y}/${mile_symbol}/${MISCALE}M+"  #specs for drawing mile scale bar
+  mapscale1_x=`echo "$lonmin + 0.6 * $DLON"                     | bc -l`  # x location of km scale bar
+  mapscale1_y=`echo "$latmin + 0.07 * ($latmax - $latmin)"      | bc -l`  # y location of km scale bar
+  km_symbol=`echo "$mapscale1_y + 0.05 * ($latmax - $latmin)"   | bc -l`  # location of km symbol
+  mapscale2_x=`echo "$lonmin + 0.6 * $DLON"                     | bc -l`  # x location of km scale bar
+  mapscale2_y=`echo "$latmin + 0.15 * ($latmax - $latmin)"      | bc -l`  # y location of km scale bar
+  mile_symbol=`echo "$mapscale2_y + 0.05 * ($latmax - $latmin)" | bc -l`  # location of km symbol
+  SCALE1="-L${mapscale1_x}/${mapscale1_y}/${km_symbol}/${KMSCALE}"        # specs for drawing km scale bar
+  SCALE2="-L${mapscale2_x}/${mapscale2_y}/${mile_symbol}/${MISCALE}M+"    # specs for drawing mile scale bar
 
   #############################################################################
   ### Plot the base map
